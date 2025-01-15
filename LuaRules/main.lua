@@ -1,13 +1,3 @@
-local VFSMODE = VFS.ZIP_ONLY
----@type LuaScript
-local LuaScript = VFS.Include("LuaRules/synced/lua_unit_scripts.lua", nil, VFSMODE)
+GADGETS_INCLUDE = { "LuaGadgets/Gadgets/unit_script.lua" }
 
-LuaScript.Initialize()
-
-function GameFrame(gameFrame)
-	LuaScript.GameFrame(gameFrame)
-end
-
-function UnitCreated(unitID, unitDefID)
-	LuaScript.UnitCreated(unitID, unitDefID)
-end
+VFS.Include("LuaGadgets/gadgets.lua", nil, VFS.GAME)

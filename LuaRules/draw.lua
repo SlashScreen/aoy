@@ -1,1 +1,1 @@
-Spring.Echo("LOADING UNSYNCED LUARULES <draw.lua>")
+Spring.Echo("Loading unsynced gadgets")

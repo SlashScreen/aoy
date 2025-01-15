@@ -1,5 +1,4 @@
 -- Author: Tobi Vollebregt
--- Module modifications by badosu
 
 --[[
 Please, think twice before editing this file. Compared to most gadgets, there
@@ -19,22 +18,28 @@ Known issues:
 
 To do:
 - Test real world performance (compared to COB)
-]]
---
+]]--
 
----@class LuaScript
-local M = {
-	info = {
-		name = "LUS",
-		desc = "Manages Lua unit scripts",
-		author = "Tobi Vollebregt",
-		date = "2 September 2009",
-		license = "GPL v2",
-		layer = 0,
-		enabled = true, --  loaded by default?
-		script = true,
-	},
-}
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+function gadget:GetInfo()
+	return {
+		name      = "Lua unit script framework",
+		desc      = "Manages Lua unit scripts",
+		author    = "Tobi Vollebregt",
+		date      = "2 September 2009",
+		license   = "GPL v2",
+		layer     = 0,
+		enabled   = true --  loaded by default?
+	}
+end
+
+
+if (not gadgetHandler:IsSyncedCode()) then
+	return false
+end
+
 
 -- This lists all callins which may be wrapped in a coroutine (thread).
 -- The ones which should not be thread-wrapped are commented out.
@@ -105,8 +110,6 @@ local co_resume = coroutine.resume
 local co_yield = coroutine.yield
 local co_running = coroutine.running
 
-local debugMode = false
-
 local bit_and = math.bit_and
 local floor = math.floor
 
@@ -117,25 +120,23 @@ local sp_SetUnitShieldState = Spring.SetUnitShieldState
 
 -- Keep local reference to engine's CallAsUnit/WaitForMove/WaitForTurn,
 -- as we overwrite them with (safer) framework version later on.
-local sp_CallAsUnit = Spring.UnitScript.CallAsUnit
+local sp_CallAsUnit  = Spring.UnitScript.CallAsUnit
 local sp_WaitForMove = Spring.UnitScript.WaitForMove
 local sp_WaitForTurn = Spring.UnitScript.WaitForTurn
 local sp_SetPieceVisibility = Spring.UnitScript.SetPieceVisibility
 local sp_SetDeathScriptFinished = Spring.UnitScript.SetDeathScriptFinished
-local sp_Turn = Spring.UnitScript.Turn
 
 local LUA_WEAPON_MIN_INDEX = 1
 local LUA_WEAPON_MAX_INDEX = LUA_WEAPON_MIN_INDEX + 31
 
 local UNITSCRIPT_DIR = (UNITSCRIPT_DIR or "scripts/"):lower()
 local VFSMODE = VFS.ZIP_ONLY
-if Spring.IsDevLuaEnabled() then
+if (Spring.IsDevLuaEnabled()) then
 	VFSMODE = VFS.RAW_ONLY
 end
 
 -- needed here too, and gadget handler doesn't expose it
-VFS.Include("LuaGadgets/system.lua", nil, VFSMODE)
-VFS.Include("gamedata/VFSUtils.lua", nil, VFSMODE)
+VFS.Include('LuaGadgets/system.lua', nil, VFSMODE)
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -176,6 +177,7 @@ Format: {
 --]]
 local units = {}
 
+
 -- this keeps track of the unit that is active (ie.
 -- running a script) at the time a callin triggers
 --
@@ -183,18 +185,11 @@ local units = {}
 -- top of the stack (index #activeUnitStack)
 local activeUnitStack = {}
 
-local function PushActiveUnitID(unitID)
-	activeUnitStack[#activeUnitStack + 1] = unitID
-end
-local function PopActiveUnitID()
-	activeUnitStack[#activeUnitStack] = nil
-end
-local function GetActiveUnitID()
-	return activeUnitStack[#activeUnitStack]
-end
-local function GetActiveUnit()
-	return units[GetActiveUnitID()]
-end
+local function PushActiveUnitID(unitID)   activeUnitStack[#activeUnitStack + 1] = unitID   end
+local function PopActiveUnitID()   activeUnitStack[#activeUnitStack] = nil   end
+local function GetActiveUnitID()   return activeUnitStack[#activeUnitStack]   end
+local function GetActiveUnit()   return units[GetActiveUnitID()]   end
+
 
 --[[
 This is the bed, it stores all the sleeping threads,
@@ -207,7 +202,7 @@ Format: {
 (inner tables are in order the calls to Sleep were made)
 --]]
 local sleepers = {}
-local section = "LuaRules/synced/lua_unit_scripts.lua"
+local section = 'unit_script.lua'
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -219,8 +214,8 @@ local section = "LuaRules/synced/lua_unit_scripts.lua"
 --   no holes --> uses table.remove() instead of tab[i] = nil.
 local function RemoveTableElement(tab, item)
 	local n = #tab
-	for i = 1, n do
-		if tab[i] == item then
+	for i = 1,n do
+		if (tab[i] == item) then
 			table_remove(tab, i)
 			return
 		end
@@ -231,8 +226,8 @@ end
 local function Destroy()
 	local activeUnit = GetActiveUnit()
 
-	if activeUnit ~= nil then
-		for _, thread in pairs(activeUnit.threads) do
+	if (activeUnit ~= nil) then
+		for _,thread in pairs(activeUnit.threads) do
 			if thread.container then
 				RemoveTableElement(thread.container, thread)
 			end
@@ -246,23 +241,19 @@ local function RunOnError(thread)
 	local fun = thread.onerror
 	if fun then
 		local good, err = pcall(fun, err)
-		if not good then
-			Spring.Log(section, LOG.ERROR, "error in error handler: " .. err)
+		if (not good) then
+			Spring.Log(section, LOG.ERROR, "error in error handler: " .. tostring(err))
 		end
 	end
 end
 
--- Helper for AnimFinished, StartThread and M.GameFrame.
+-- Helper for AnimFinished, StartThread and gadget:GameFrame.
 -- Resumes a sleeping or waiting thread; displays any errors.
 local function WakeUp(thread, ...)
 	thread.container = nil
 	local co = thread.thread
-	if debugMode and not co then
-		Spring.Echo("Error in WakeUp", thread.unitID)
-		Spring.Utilities.UnitEcho(thread.unitID, UnitDefs[Spring.GetUnitDefID(thread.unitID)].name)
-	end
 	local good, err = co_resume(co, ...)
-	if not good then
+	if (not good) then
 		Spring.Log(section, LOG.ERROR, err)
 		Spring.Log(section, LOG.ERROR, debug.traceback(co))
 		RunOnError(thread)
@@ -278,7 +269,7 @@ local function AnimFinished(waitingForAnim, piece, axis)
 	if wthreads then
 		waitingForAnim[index] = {}
 
-		while #wthreads > 0 do
+		while (#wthreads > 0) do	
 			wthread = wthreads[#wthreads]
 			wthreads[#wthreads] = nil
 
@@ -298,7 +289,6 @@ end
 local function TurnFinished(piece, axis)
 	local activeUnit = GetActiveUnit()
 	local activeAnim = activeUnit.waitingForTurn
-	activeUnit.pieceRotSpeeds[piece][axis] = 0
 	return AnimFinished(activeAnim, piece, axis)
 end
 
@@ -308,7 +298,7 @@ end
 -- overwrites engine's CallAsUnit
 function Spring.UnitScript.CallAsUnit(unitID, fun, ...)
 	PushActiveUnitID(unitID)
-	local ret = { sp_CallAsUnit(unitID, fun, ...) }
+	local ret = {sp_CallAsUnit(unitID, fun, ...)}
 	PopActiveUnitID()
 
 	return unpack(ret)
@@ -325,12 +315,12 @@ end
 local function WaitForAnim(threads, waitingForAnim, piece, axis)
 	local index = piece * 3 + axis
 	local wthreads = waitingForAnim[index]
-	if not wthreads then
+	if (not wthreads) then
 		wthreads = {}
 		waitingForAnim[index] = wthreads
 	end
 	local thread = threads[co_running() or error("not in a thread", 2)]
-	wthreads[#wthreads + 1] = thread
+	wthreads[#wthreads+1] = thread
 	thread.container = wthreads
 	-- yield the running thread:
 	-- it will be resumed once the wait finished (in AnimFinished).
@@ -346,48 +336,21 @@ function Spring.UnitScript.WaitForMove(piece, axis)
 end
 
 -- overwrites engine's WaitForTurn
-local tau = 2 * math.pi
 function Spring.UnitScript.WaitForTurn(piece, axis)
-	local activeUnit = GetActiveUnit()
-	local speed = activeUnit.pieceRotSpeeds[piece][axis]
-	if speed == 0 then
-		return
-	end
-
-	local currRot = select(axis, Spring.UnitScript.GetPieceRotation(piece))
-	if not currRot then
-		-- Unit is probably dead or destroyed.
-		return
-	end
-
-	local targetRot = activeUnit.pieceRotTargets[piece][axis]
-	local diffRot = (currRot - targetRot) % tau
-	if diffRot < speed or diffRot > (tau - speed) then
-		return
-	end
-
 	if sp_WaitForTurn(piece, axis) then
+		local activeUnit = GetActiveUnit()
 		return WaitForAnim(activeUnit.threads, activeUnit.waitingForTurn, piece, axis)
 	end
 end
 
-function Spring.UnitScript.Turn(piece, axis, targetRot, speed)
-	local activeUnit = GetActiveUnit()
-	if speed then
-		activeUnit.pieceRotTargets[piece][axis] = targetRot
-		activeUnit.pieceRotSpeeds[piece][axis] = speed / Game.gameSpeed
-	end
-	return sp_Turn(piece, axis, targetRot, speed)
-end
+
 
 function Spring.UnitScript.Sleep(milliseconds)
 	local n = floor(milliseconds / 33)
-	if n <= 0 then
-		n = 1
-	end
+	if (n <= 0) then n = 1 end
 	n = n + sp_GetGameFrame()
 	local zzz = sleepers[n]
-	if not zzz then
+	if (not zzz) then
 		zzz = {}
 		sleepers[n] = zzz
 	end
@@ -395,19 +358,17 @@ function Spring.UnitScript.Sleep(milliseconds)
 	local activeUnit = GetActiveUnit() or error("[Sleep] no active unit on stack?", 2)
 	local activeThread = activeUnit.threads[co_running() or error("[Sleep] not in a thread?", 2)]
 
-	zzz[#zzz + 1] = activeThread
+	zzz[#zzz+1] = activeThread
 	activeThread.container = zzz
 	-- yield the running thread:
-	-- it will be resumed in frame #n (in M.GameFrame).
+	-- it will be resumed in frame #n (in gadget:GameFrame).
 	co_yield()
 end
 
+
+
 function Spring.UnitScript.StartThread(fun, ...)
 	local activeUnit = GetActiveUnit()
-	if debugMode and not fun then
-		Spring.Echo("Error in StartThread", activeUnit.unitID)
-		Spring.Utilities.UnitEcho(activeUnit.unitID, UnitDefs[Spring.GetUnitDefID(activeUnit.unitID)].name)
-	end
 	local co = co_create(fun)
 	-- signal_mask is inherited from current thread, if any
 	local thd = co_running() and activeUnit.threads[co_running()]
@@ -440,21 +401,7 @@ end
 function Spring.UnitScript.SetSignalMask(mask)
 	local activeUnit = GetActiveUnit()
 	local activeThread = activeUnit.threads[co_running() or error("[SetSignalMask] not in a thread", 2)]
-	if activeThread.signal_mask_set then
-		local ud = UnitDefs[Spring.GetUnitDefID(activeUnit.unitID)]
-		Spring.Log(
-			M.info.name,
-			LOG.WARNING,
-			"Warning: Spring.UnitScript.SetSignalMask called second time for the same thread (possible lack of StartThread?)"
-		)
-		Spring.Log(
-			M.info.name,
-			LOG.WARNING,
-			"UnitDef: " .. ud.name .. " Old mask: " .. activeThread.signal_mask .. " New mask: " .. mask
-		)
-	end
 	activeThread.signal_mask = mask
-	activeThread.signal_mask_set = true
 end
 
 function Spring.UnitScript.Signal(mask)
@@ -463,15 +410,15 @@ function Spring.UnitScript.Signal(mask)
 	-- beware, unsynced loop order
 	-- (doesn't matter here as long as all threads get removed)
 	if type(mask) == "number" then
-		for _, thread in pairs(activeUnit.threads) do
+		for _,thread in pairs(activeUnit.threads) do
 			local signal_mask = thread.signal_mask
-			if type(signal_mask) == "number" and bit_and(signal_mask, mask) ~= 0 and thread.container then
+			if (type(signal_mask) == "number" and bit_and(signal_mask, mask) ~= 0 and thread.container) then
 				RemoveTableElement(thread.container, thread)
 			end
 		end
 	else
-		for _, thread in pairs(activeUnit.threads) do
-			if thread.signal_mask == mask and thread.container then
+		for _,thread in pairs(activeUnit.threads) do
+			if (thread.signal_mask == mask and thread.container) then
 				RemoveTableElement(thread.container, thread)
 			end
 		end
@@ -499,12 +446,8 @@ function Spring.UnitScript.GetLongestReloadTime(unitID)
 	local longest = 0
 	for i = LUA_WEAPON_MIN_INDEX, LUA_WEAPON_MAX_INDEX do
 		local reloadTime = sp_GetUnitWeaponState(unitID, i, "reloadTime")
-		if not reloadTime then
-			break
-		end
-		if reloadTime > longest then
-			longest = reloadTime
-		end
+		if (not reloadTime) then break end
+		if (reloadTime > longest) then longest = reloadTime end
 	end
 	return 1000 * longest
 end
@@ -517,6 +460,7 @@ local scriptHeader = VFS.LoadFile("gamedata/unit_script_header.lua", VFSMODE)
 -- Newlines (and comments) are stripped to not change line numbers in stacktraces.
 scriptHeader = scriptHeader:gsub("%-%-[^\r\n]*", ""):gsub("[\r\n]", " ")
 
+
 --[[
 Dictionary mapping script name (without path or extension) to a Lua chunk which
 returns a new closure (read; instance) of this unitscript.
@@ -527,37 +471,41 @@ Format: {
 --]]
 local scripts = {}
 
+
 -- Creates a new prototype environment for a unit script.
 -- This environment is used as prototype for the unit script instances.
 -- (To save on time copying and space for a copy for each and every unit.)
 local prototypeEnv
 do
 	local script = {}
-	for k, v in pairs(System) do
+	for k,v in pairs(System) do
 		script[k] = v
 	end
 	--script._G = _G  -- the global table. (Update: _G points to unit environment now)
-	script.GG = GG -- the shared table (shared with gadgets!)
+	script.GG = GG  -- the shared table (shared with gadgets!)
 	prototypeEnv = script
 end
+
 
 local function Basename(filename)
 	return filename:match("[^\\/:]*$") or filename
 end
 
+
 local function LoadChunk(filename)
 	local text = VFS.LoadFile(filename, VFSMODE)
-	if text == nil then
+	if (text == nil) then
 		Spring.Log(section, LOG.ERROR, "Failed to load: " .. filename)
 		return nil
 	end
 	local chunk, err = loadstring(scriptHeader .. text, filename)
-	if chunk == nil then
+	if (chunk == nil) then
 		Spring.Log(section, LOG.ERROR, "Failed to load: " .. Basename(filename) .. "  (" .. err .. ")")
 		return nil
 	end
 	return chunk
 end
+
 
 local function LoadScript(scriptName, filename)
 	local chunk = LoadChunk(filename)
@@ -565,18 +513,9 @@ local function LoadScript(scriptName, filename)
 	return chunk
 end
 
-local function ToggleScriptDebug(cmd, line, words, player)
-	if not Spring.IsCheatingEnabled() then
-		return
-	end
 
-	debugMode = not debugMode
-	Spring.Echo("Script debug mode", debugMode)
-end
-
-function M.Initialize()
-	Spring.Log(section, LOG.INFO, string.format("Loading module %s", M.info.name))
-	-- gadgetHandler:AddChatAction("scriptdebug", ToggleScriptDebug, "Toggles script debug output.")
+function gadget:Initialize()
+	Spring.Log(section, LOG.INFO, string.format("Loading gadget: %-18s  <%s>", ghInfo.name, ghInfo.basename))
 
 	-- This initialization code has following properties:
 	--  * all used scripts are loaded => early syntax error detection
@@ -588,10 +527,10 @@ function M.Initialize()
 
 	-- Recursively collect files below UNITSCRIPT_DIR.
 	local scriptFiles = {}
-	for _, filename in ipairs(RecursiveFileSearch(UNITSCRIPT_DIR, "*.lua", VFSMODE)) do
+	for _,filename in ipairs(VFS.DirList(UNITSCRIPT_DIR, "*.lua", VFSMODE, true)) do
 		local basename = Basename(filename)
-		scriptFiles[filename] = filename -- for exact match
-		scriptFiles[basename] = filename -- for basename match
+		scriptFiles[filename] = filename  -- for exact match
+		scriptFiles[basename] = filename  -- for basename match
 	end
 
 	-- Go through all UnitDefs and load scripts.
@@ -600,14 +539,15 @@ function M.Initialize()
 	--  * basename match
 	--  * exact match where .cob->.lua
 	--  * basename match where .cob->.lua
-	for i = 1, #UnitDefs do
+	for i=1,#UnitDefs do
 		local unitDef = UnitDefs[i]
-		if unitDef and not scripts[unitDef.scriptName] then
-			local fn = UNITSCRIPT_DIR .. unitDef.scriptName:lower()
-			local bn = Basename(fn)
+		if (unitDef and not scripts[unitDef.scriptName]) then
+			local fn  = UNITSCRIPT_DIR .. unitDef.scriptName:lower()
+			local bn  = Basename(fn)
 			local cfn = fn:gsub("%.cob$", "%.lua")
 			local cbn = bn:gsub("%.cob$", "%.lua")
-			local filename = scriptFiles[fn] or scriptFiles[bn] or scriptFiles[cfn] or scriptFiles[cbn]
+			local filename = scriptFiles[fn] or scriptFiles[bn] or
+			                 scriptFiles[cfn] or scriptFiles[cbn]
 			if filename then
 				Spring.Log(section, LOG.INFO, "  Loading unit script: " .. filename)
 				LoadScript(unitDef.scriptName, filename)
@@ -617,9 +557,9 @@ function M.Initialize()
 
 	-- Fake UnitCreated events for existing units. (for '/luarules reload')
 	local allUnits = Spring.GetAllUnits()
-	for i = 1, #allUnits do
+	for i=1,#allUnits do
 		local unitID = allUnits[i]
-		M.UnitCreated(unitID, Spring.GetUnitDefID(unitID))
+		gadget:UnitCreated(unitID, Spring.GetUnitDefID(unitID))
 	end
 end
 
@@ -627,17 +567,25 @@ end
 
 local StartThread = Spring.UnitScript.StartThread
 
+
 local function Wrap_AimWeapon(unitID, callins)
 	local AimWeapon = callins["AimWeapon"]
-	if not AimWeapon then
-		return
-	end
+	if (not AimWeapon) then return end
 
 	-- SetUnitShieldState wants true or false, while
 	-- SetUnitWeaponState wants 1.0 or 0.0, niiice =)
+	--
+	-- NOTE:
+	--   the LuaSynced* API functions all EXPECT 1-based arguments
+	--   the LuaUnitScript::*Weapon* callins all SUPPLY 1-based arguments
+	--
+	--   therefore on the Lua side all weapon indices are ASSUMED to be
+	--   1-based and if LuaConfig::LUA_WEAPON_BASE_INDEX is changed to 0
+	--   no Lua code should need to be updated
 	local function AimWeaponThread(weaponNum, heading, pitch)
 		local bAimReady = AimWeapon(weaponNum, heading, pitch) or false
 		local fAimReady = (bAimReady and 1.0) or 0.0
+
 		return sp_SetUnitWeaponState(unitID, weaponNum, "aimReady", fAimReady)
 	end
 
@@ -646,38 +594,16 @@ local function Wrap_AimWeapon(unitID, callins)
 	end
 end
 
-local function Wrap_EndBurst(unitID, unitDefID, callins)
-	local EndBurst = callins.EndBurst
-
-	callins.EndBurst = function(weaponNum)
-		-- scriptCallins:ScriptEndBurst(unitID, unitDefID, weaponNum)
-		if EndBurst then
-			return StartThread(EndBurst, weaponNum)
-		end
-	end
-end
-
-local function Wrap_FireWeapon(unitID, unitDefID, callins)
-	local FireWeapon = callins.FireWeapon
-
-	callins.FireWeapon = function(weaponNum)
-		-- scriptCallins:ScriptFireWeapon(unitID, unitDefID, weaponNum)
-		if FireWeapon then
-			return StartThread(FireWeapon, weaponNum)
-		end
-	end
-end
 
 local function Wrap_AimShield(unitID, callins)
 	local AimShield = callins["AimShield"]
-	if not AimShield then
-		return
-	end
+	if (not AimShield) then return end
 
 	-- SetUnitShieldState wants true or false, while
 	-- SetUnitWeaponState wants 1 or 0, niiice =)
 	local function AimShieldThread(weaponNum)
 		local enabled = AimShield(weaponNum) and true or false
+
 		return sp_SetUnitShieldState(unitID, weaponNum, enabled)
 	end
 
@@ -686,11 +612,10 @@ local function Wrap_AimShield(unitID, callins)
 	end
 end
 
-local function Wrap_Killed(callins)
+
+local function Wrap_Killed(unitID, callins)
 	local Killed = callins["Killed"]
-	if not Killed then
-		return
-	end
+	if (not Killed) then return end
 
 	local function KilledThread(recentDamage, maxHealth)
 		-- It is *very* important the sp_SetDeathScriptFinished is executed, even on error.
@@ -701,15 +626,14 @@ local function Wrap_Killed(callins)
 
 	callins["Killed"] = function(recentDamage, maxHealth)
 		StartThread(KilledThread, recentDamage, maxHealth)
-		-- no return value signals Spring to wait for SetDeathScriptFinished call.
+		return -- no return value signals Spring to wait for SetDeathScriptFinished call.
 	end
 end
 
+
 local function Wrap(callins, name)
 	local fun = callins[name]
-	if not fun then
-		return
-	end
+	if (not fun) then return end
 
 	callins[name] = function(...)
 		return StartThread(fun, ...)
@@ -724,6 +648,7 @@ Format: { [filename] = chunk }
 --]]
 local include_cache = {}
 
+
 -- core of include() function for unit scripts
 local function ScriptInclude(filename)
 	--Spring.Echo("  Loading include: " .. UNITSCRIPT_DIR .. filename)
@@ -733,6 +658,7 @@ local function ScriptInclude(filename)
 		return chunk
 	end
 end
+
 
 -- memoize it so we don't need to decompress and parse the .lua file everytime..
 local function MemoizedInclude(filename, env)
@@ -746,12 +672,10 @@ end
 
 --------------------------------------------------------------------------------
 
-function M.UnitCreated(unitID, unitDefID)
+function gadget:UnitCreated(unitID, unitDefID)
 	local ud = UnitDefs[unitDefID]
 	local chunk = scripts[ud.scriptName]
-	if not chunk then
-		return
-	end
+	if (not chunk) then return end
 
 	-- Global variables in the script are still per unit.
 	-- Set up a new environment that is an instance of the prototype
@@ -765,7 +689,7 @@ function M.UnitCreated(unitID, unitDefID)
 	local env = {
 		unitID = unitID,
 		unitDefID = unitDefID,
-		script = {}, -- will store the callins
+		script = {},     -- will store the callins
 	}
 
 	-- easy self-referencing (Note: use of _G differs from _G in gadgets & widgets)
@@ -777,8 +701,8 @@ function M.UnitCreated(unitID, unitDefID)
 
 	env.piece = function(...)
 		local p = {}
-		for _, name in ipairs({ ... }) do
-			p[#p + 1] = pieces[name] or error("piece not found: " .. tostring(name), 2)
+		for _,name in ipairs{...} do
+			p[#p+1] = pieces[name] or error("piece not found: " .. tostring(name), 2)
 		end
 		return unpack(p)
 	end
@@ -797,32 +721,31 @@ function M.UnitCreated(unitID, unitDefID)
 
 	-- AimWeapon/AimShield is required for a functional weapon/shield,
 	-- so it doesn't hurt to not check other weapons.
-	if (not callins.AimWeapon and callins.AimWeapon1) or (not callins.AimShield and callins.AimShield1) then
-		for j = 1, #weapon_funcs do
+	if ((not callins.AimWeapon and callins.AimWeapon1) or
+	    (not callins.AimShield and callins.AimShield1)) then
+		for j=1,#weapon_funcs do
 			local name = weapon_funcs[j]
 			local dispatch = {}
 			local n = 0
-			for i = 1, #ud.weapons do
+			for i=1,#ud.weapons do
 				local fun = callins[name .. i]
 				if fun then
 					dispatch[i] = fun
 					n = n + 1
 				end
 			end
-			if n == #ud.weapons then
+			if (n == #ud.weapons) then
 				-- optimized case
 				callins[name] = function(w, ...)
 					return dispatch[w](...)
 				end
-			elseif n > 0 then
+			elseif (n > 0) then
 				-- needed for QueryWeapon / AimFromWeapon to return -1
 				-- while AimWeapon / AimShield should return false, etc.
 				local ret = default_return_values[name]
 				callins[name] = function(w, ...)
 					local fun = dispatch[w]
-					if fun then
-						return fun(...)
-					end
+					if fun then return fun(...) end
 					return ret
 				end
 			end
@@ -830,22 +753,20 @@ function M.UnitCreated(unitID, unitDefID)
 	end
 
 	-- Wrap certain callins in a thread and/or safety net.
-	for i = 1, #thread_wrap do
+	for i=1,#thread_wrap do
 		Wrap(callins, thread_wrap[i])
 	end
 	Wrap_AimWeapon(unitID, callins)
 	Wrap_AimShield(unitID, callins)
-	Wrap_Killed(callins)
-	Wrap_EndBurst(unitID, unitDefID, callins)
-	Wrap_FireWeapon(unitID, unitDefID, callins)
+	Wrap_Killed(unitID, callins)
 
 	-- Wrap everything so activeUnit get's set properly.
-	for k, _ in pairs(callins) do
+	for k,v in pairs(callins) do
 		local fun = callins[k]
 
 		callins[k] = function(...)
 			PushActiveUnitID(unitID)
-			local ret = fun(...)
+			ret = fun(...)
 			PopActiveUnitID()
 
 			return ret
@@ -855,23 +776,13 @@ function M.UnitCreated(unitID, unitDefID)
 	-- Register the callins with Spring.
 	Spring.UnitScript.CreateScript(unitID, callins)
 
-	-- cache piece rotation values for WaitForTurn
-	local pieceRotSpeeds = {}
-	local pieceRotTargets = {}
-	for _, pieceID in pairs(pieces) do
-		pieceRotSpeeds[pieceID] = { 0, 0, 0 }
-		pieceRotTargets[pieceID] = { 0, 0, 0 }
-	end
-
 	-- Register (must be last: it shouldn't be done in case of error.)
 	units[unitID] = {
 		env = env,
 		unitID = unitID,
 		waitingForMove = {},
 		waitingForTurn = {},
-		threads = setmetatable({}, { __mode = "kv" }), -- weak table
-		pieceRotSpeeds = pieceRotSpeeds,
-		pieceRotTargets = pieceRotTargets,
+		threads = setmetatable({}, {__mode = "kv"}), -- weak table
 	}
 
 	-- Now it's safe to start a thread which will run Create().
@@ -881,34 +792,35 @@ function M.UnitCreated(unitID, unitDefID)
 	end
 end
 
-function M.GameFrame(gameFrame)
-	local zzz = sleepers[gameFrame]
 
-	if not zzz then
-		return
-	end
+function gadget:GameFrame()
+	local n = sp_GetGameFrame()
+	local zzz = sleepers[n]
 
-	sleepers[gameFrame] = nil
+	if zzz then
+		sleepers[n] = nil
 
-	-- Wake up the lazy bastards for this frame (in reverse order).
-	-- NOTE:
-	--   1. during WakeUp() a thread t1 might Signal (kill) another thread t2
-	--   2. t2 might also be registered in sleepers[n] and not yet woken up
-	--   3. if so, t1's signal would cause t2 to be removed from sleepers[n]
-	--      via Signal --> RemoveTableElement
-	--   4. therefore we cannot use the "for i = 1, #zzz" pattern since the
-	--      container size/contents might change while we are iterating over
-	--      it (and a Lua for-loop range expression is only evaluated once)
-	while #zzz > 0 do
-		local sleeper = zzz[#zzz]
-		local unitID = sleeper.unitID
+		-- Wake up the lazy bastards for this frame (in reverse order).
+		-- NOTE:
+		--   1. during WakeUp() a thread t1 might Signal (kill) another thread t2
+		--   2. t2 might also be registered in sleepers[n] and not yet woken up
+		--   3. if so, t1's signal would cause t2 to be removed from sleepers[n]
+		--      via Signal --> RemoveTableElement
+		--   4. therefore we cannot use the "for i = 1, #zzz" pattern since the
+		--      container size/contents might change while we are iterating over
+		--      it (and a Lua for-loop range expression is only evaluated once)
+		while (#zzz > 0) do
+			local sleeper = zzz[#zzz]
+			local unitID = sleeper.unitID
 
-		zzz[#zzz] = nil
+			zzz[#zzz] = nil
 
-		PushActiveUnitID(unitID)
-		sp_CallAsUnit(unitID, WakeUp, sleeper)
-		PopActiveUnitID()
+			PushActiveUnitID(unitID)
+			sp_CallAsUnit(unitID, WakeUp, sleeper)
+			PopActiveUnitID()
+		end
 	end
 end
 
-return M
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+  "workspace.library": [
+    ".lua_library/tracy.lua"
+  ],
+  "runtime.version": "Lua 5.1",
+  "runtime.special": {
+    "VFS.Include": "require",
+    "include": "require",
+    "shard_include": "require"
+  }
+}

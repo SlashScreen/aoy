@@ -1,5 +1,3 @@
--- include("constants.lua")
-
 -- pieces
 local head = piece("head")
 local hips = piece("hips")
@@ -8,7 +6,6 @@ local chest = piece("chest")
 -- left arm
 local lshoulder = piece("lshoulder")
 local lforearm = piece("lforearm")
-local gun = piece("gun")
 local magazine = piece("magazine")
 local flare = piece("flare")
 local ejector = piece("ejector")
@@ -28,13 +25,9 @@ local rshin = piece("rshin")
 local rfoot = piece("rfoot")
 
 -- groups
-local shoulder = { lshoulder, rshoulder }
-local forearm = { lforearm, rforearm }
 local thigh = { lthigh, rthigh }
 local shin = { lshin, rshin }
 local foot = { lfoot, rfoot }
-
-local smokePiece = { head, hips, chest }
 
 --constants
 local runspeed = 8.5 * (UnitDefs[unitDefID].speed / 115) -- run animation rate, future-proofed
@@ -206,15 +199,15 @@ local function RestoreAfterDelay()
 	StartThread(Idle)
 end
 
-function script.QueryWeapon(num)
+function script.QueryWeapon()
 	return flare
 end
 
-function script.AimFromWeapon(num)
+function script.AimFromWeapon()
 	return head
 end
 
-function script.AimWeapon(num, heading, pitch)
+function script.AimWeapon(_, heading, pitch)
 	Signal(SIG_Aim)
 	Signal(SIG_Idle)
 	SetSignalMask(SIG_Aim)
@@ -234,7 +227,7 @@ function script.AimWeapon(num, heading, pitch)
 	return true
 end
 
-function script.FireWeapon(num)
+function script.FireWeapon()
 	Spin(magazine, y_axis, 2)
 	EmitSfx(ejector, 1024)
 	EmitSfx(flare, 1025)
