@@ -11,6 +11,7 @@ return lowerkeys({
 		metalCost = 65,
 		movementClass = [[KBOT2]],
 		noAutoFire = false,
+		-- allowNonBlockingAim = true,
 		objectName = [[spherebot.s3o]],
 		script = [[cloakraid.lua]],
 
@@ -20,6 +21,10 @@ return lowerkeys({
 		sightDistance = 560,
 		speed = 115.5,
 		turnRate = 3000,
+
+		collisionVolumeOffsets = [[0 -2 0]],
+		collisionVolumeScales = [[18 28 18]],
+		collisionVolumeType = [[cylY]],
 
 		weapons = {
 
