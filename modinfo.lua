@@ -1,6 +1,6 @@
 return {
 	name = "Peewees vs AKs",
-	shortname = "ZK",
+	shortname = "pwsvsaks",
 	version = "$VERSION",
 	modtype = 1,
 	depend = {
