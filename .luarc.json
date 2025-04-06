@@ -1,9 +1,14 @@
 {
-  "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
-  "workspace.library": [
-    ".lua_library/tracy.lua"
-  ],
+  "$schema": "https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json",
   "runtime.version": "Lua 5.1",
+  "completion.requireSeparator": "/",
+  "runtime.path": [
+    "?",
+    "?.lua"
+  ],
+  "workspace.library": [
+    "recoil-lua-library"
+  ],
   "runtime.special": {
     "VFS.Include": "require",
     "include": "require",
