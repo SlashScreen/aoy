@@ -2,6 +2,7 @@ return lowerkeys({
 	cloakraid = {
 		name = [[Glaive]],
 		description = [[Light Raider Bot]],
+		category    = [[LAND SMALL TOOFAST]],
 		acceleration = 1.5,
 		brakeRate = 2.4,
 
@@ -26,10 +27,16 @@ return lowerkeys({
 		collisionVolumeScales = [[18 28 18]],
 		collisionVolumeType = [[cylY]],
 
+		corpse = "",
+		explodeAs = "",
+		selfDestructAs = "",
+
 		weapons = {
 
 			{
 				def = [[EMG]],
+				badTargetCategory  = [[FIXEDWING]],
+      			onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
 			},
 		},
 

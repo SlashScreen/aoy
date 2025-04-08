@@ -52,6 +52,7 @@ local function GetSpeedMod()
 end
 
 function script.Create()
+	Spring.Echo("Created cloakraid")
 	-- StartThread(GG.Script.SmokeUnit, unitID, smokePiece)
 	Turn(flare, x_axis, 1.6, 5)
 	Turn(lshoulder, x_axis, math.rad(-10))
