@@ -1,7 +1,7 @@
 return lowerkeys({
-	testmelee = {
-		name                   = [[Glaive Melee]],
-		description            = [[Light Raider Bot]],
+	demon_witch_healer = {
+		name                   = [[Witch Healer]],
+		description            = [[The Witches are human-like demons from the far-off land of Through-and-Through. Spiritually-attuned, they can see the unseen. Some of them are quite skilled healers, and are willing to lend a hand.]],
 		category               = [[LAND SMALL TOOFAST]],
 		acceleration           = 1.5,
 		brakeRate              = 2.4,
@@ -34,7 +34,7 @@ return lowerkeys({
 		weapons                = {
 
 			{
-				def                = [[Spike]],
+				def                = [[Slice]],
 				badTargetCategory  = [[FIXEDWING]],
       			onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
 			},
@@ -45,7 +45,7 @@ return lowerkeys({
 		weaponDefs = {
 
 			Spike = {
-				name                    = [[Spike]],
+				name                    = [[Slice]],
 				areaOfEffect            = 8,
 				beamTime                = 4 / 30,
 				canattackground         = true,

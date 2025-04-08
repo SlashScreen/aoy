@@ -1,7 +1,7 @@
 return lowerkeys({
-	testmelee = {
-		name                   = [[Glaive Melee]],
-		description            = [[Light Raider Bot]],
+	demon_witch_mortician = {
+		name                   = [[Witch Mortician]],
+		description            = [[The Witches are human-like demons from the far-off land of Through-and-Through. Spiritually-attuned, they can see the unseen. The morticians practice the traditional Witch art of Necromancy. It's a whole thing.]],
 		category               = [[LAND SMALL TOOFAST]],
 		acceleration           = 1.5,
 		brakeRate              = 2.4,
@@ -34,7 +34,7 @@ return lowerkeys({
 		weapons                = {
 
 			{
-				def                = [[Spike]],
+				def                = [[Slice]],
 				badTargetCategory  = [[FIXEDWING]],
       			onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
 			},
@@ -45,7 +45,7 @@ return lowerkeys({
 		weaponDefs = {
 
 			Spike = {
-				name                    = [[Spike]],
+				name                    = [[Slice]],
 				areaOfEffect            = 8,
 				beamTime                = 4 / 30,
 				canattackground         = true,

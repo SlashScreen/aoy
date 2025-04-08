@@ -1,7 +1,7 @@
 return lowerkeys({
-	testmelee = {
-		name                   = [[Glaive Melee]],
-		description            = [[Light Raider Bot]],
+	demon_guard = {
+		name                   = [[Guard]],
+		description            = [[In case of danger, call a guard. These are necessary for pushing back the hostile fauna of Anvilhead.]],
 		category               = [[LAND SMALL TOOFAST]],
 		acceleration           = 1.5,
 		brakeRate              = 2.4,
@@ -34,7 +34,7 @@ return lowerkeys({
 		weapons                = {
 
 			{
-				def                = [[Spike]],
+				def                = [[Slice]],
 				badTargetCategory  = [[FIXEDWING]],
       			onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
 			},
@@ -45,7 +45,7 @@ return lowerkeys({
 		weaponDefs = {
 
 			Spike = {
-				name                    = [[Spike]],
+				name                    = [[Slice]],
 				areaOfEffect            = 8,
 				beamTime                = 4 / 30,
 				canattackground         = true,

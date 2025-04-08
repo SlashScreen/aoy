@@ -1,7 +1,7 @@
 return lowerkeys({
-	testmelee = {
-		name                   = [[Glaive Melee]],
-		description            = [[Light Raider Bot]],
+	demon_sphinx = {
+		name                   = [[Sphinx]],
+		description            = [[These huge demons are a bit slow, but can easily smash structures. Believe it or not, they are the same species as the Chiropter, just in a different form.]],
 		category               = [[LAND SMALL TOOFAST]],
 		acceleration           = 1.5,
 		brakeRate              = 2.4,
@@ -34,7 +34,7 @@ return lowerkeys({
 		weapons                = {
 
 			{
-				def                = [[Spike]],
+				def                = [[Crush]],
 				badTargetCategory  = [[FIXEDWING]],
       			onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
 			},
@@ -45,7 +45,7 @@ return lowerkeys({
 		weaponDefs = {
 
 			Spike = {
-				name                    = [[Spike]],
+				name                    = [[Crush]],
 				areaOfEffect            = 8,
 				beamTime                = 4 / 30,
 				canattackground         = true,
