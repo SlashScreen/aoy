@@ -1,19 +1,19 @@
 --//=============================================================================
 
-TabBar = LayoutPanel:Inherit{
-  classname    = "tabbar",
-  orientation  = "horizontal",
-  resizeItems  = false,
-  centerItems  = false,
-  padding      = {0, 0, 0, 0},
-  itemPadding  = {0, 0, 0, 0},
-  itemMargin   = {0, 0, 0, 0},
-  minItemWidth  = 70,
-  minItemHeight = 20,
-  tabs         = {},
-  selected     = nil,
-  OnChange     = {},
-}
+TabBar = LayoutPanel:Inherit({
+	classname = "tabbar",
+	orientation = "horizontal",
+	resizeItems = false,
+	centerItems = false,
+	padding = { 0, 0, 0, 0 },
+	itemPadding = { 0, 0, 0, 0 },
+	itemMargin = { 0, 0, 0, 0 },
+	minItemWidth = 70,
+	minItemHeight = 20,
+	tabs = {},
+	selected = nil,
+	OnChange = {},
+})
 
 local this = TabBar
 local inherited = this.inherited
@@ -21,19 +21,21 @@ local inherited = this.inherited
 --//=============================================================================
 
 function TabBar:New(obj)
-	obj = inherited.New(self,obj)
-	if (obj.tabs) then
-		for i=1,#obj.tabs do
+	obj = inherited.New(self, obj)
+	if obj.tabs then
+		for i = 1, #obj.tabs do
 			obj:AddChild(
-				TabBarItem:New{caption = obj.tabs[i], defaultWidth = obj.minItemWidth, defaultHeight = obj.minItemHeight} --FIXME inherit font too
+				TabBarItem:New({
+					caption = obj.tabs[i],
+					defaultWidth = obj.minItemWidth,
+					defaultHeight = obj.minItemHeight,
+				}) --FIXME inherit font too
 			)
 		end
 	end
 
 	if not obj.children[1] then
-		obj:AddChild(
-			TabBarItem:New{caption = "tab"}
-		)
+		obj:AddChild(TabBarItem:New({ caption = "tab" }))
 	end
 
 	obj:Select(obj.selected)
@@ -44,13 +46,13 @@ end
 --//=============================================================================
 
 function TabBar:SetOrientation(orientation)
-  inherited.SetOrientation(self,orientation)
+	inherited.SetOrientation(self, orientation)
 end
 
 --//=============================================================================
 
 function TabBar:Select(tabname)
-	for i=1,#self.children do
+	for i = 1, #self.children do
 		local c = self.children[i]
 		if c.caption == tabname then
 			if self.selected_obj then
@@ -75,6 +77,5 @@ function TabBar:Select(tabname)
 
 	return false
 end
-
 
 --//=============================================================================

@@ -1,136 +1,111 @@
 --//=============================================================================
 
---- Progressbar module
+--- ProgressBar module
+--- A control that displays progress visually as a filled bar.
 
---- Progressbar fields.
+--- ProgressBar fields
 -- Inherits from Control.
 -- @see control.Control
--- @table Progressbar
--- @int[opt=0] min minimum value of the Progressbar
--- @int[opt=100] max maximum value of the Progressbar
--- @int[opt=100] value value of the Progressbar
--- @string[opt=""] caption text to be displayed
--- @tparam {r,g,b,a} color specifies the color of the bar (default: {0,0,1,1})
--- @tparam {r,g,b,a} backgroundColor specifies the background color (default: {1,1,1,1})
--- @tparam {func1,fun2,...} OnChange function listeners for value change (default {})
-Progressbar = Control:Inherit{
-  classname = "progressbar",
+-- @table ProgressBar
+-- @number[opt=0] value Current progress value (0-1)
+-- @string[opt="horizontal"] orientation Bar orientation ("horizontal" or "vertical")
+-- @tparam {r,g,b,a} color Bar fill color (default {0.5,1,0,0.8})
+-- @tparam {r,g,b,a} backgroundColor Background color
+-- @bool[opt=true] reverse Reverse fill direction
+-- @bool[opt=false] noSkin Disable skin/theme
+-- @tparam function{} OnChange Value change event listeners
 
-  defaultWidth     = 90,
-  defaultHeight    = 20,
+ProgressBar = Control:Inherit({
+	classname = "progressbar",
+	value = 0,
+	orientation = "horizontal",
 
-  min       = 0,
-  max       = 100,
-  value     = 100,
+	color = { 0.5, 1, 0, 0.8 },
+	backgroundColor = { 0, 0, 0, 0.5 },
 
-  caption   = "",
+	reverse = false,
+	noSkin = false,
 
-  color     = {0,0,1,1},
-  backgroundColor = {1,1,1,1},
+	OnChange = {},
+})
 
-  OnChange  = {},
-}
-
-local this = Progressbar
+local this = ProgressBar
 local inherited = this.inherited
 
---//=============================================================================
-
-function Progressbar:New(obj)
-  obj = inherited.New(self,obj)
-  obj:SetMinMax(obj.min,obj.max)
-  obj:SetValue(obj.value)
-  return obj
+--- Creates a new ProgressBar instance
+-- @function ProgressBar:New
+-- @param obj Table of progressbar properties
+-- @return ProgressBar The newly created progressbar
+function ProgressBar:New(obj)
+	obj = inherited.New(self, obj)
+	obj.value = math.min(1, math.max(0, obj.value))
+	return obj
 end
 
---//=============================================================================
+--- Sets the current progress value
+-- @function ProgressBar:SetValue
+-- @param value New value (0-1)
+-- @param skipEvent Don't trigger change event
+function ProgressBar:SetValue(value, skipEvent)
+	value = math.min(1, math.max(0, value))
+	if self.value == value then
+		return
+	end
 
-function Progressbar:_Clamp(v)
-  if (self.min<self.max) then
-    if (v<self.min) then
-      v = self.min
-    elseif (v>self.max) then
-      v = self.max
-    end
-  else
-    if (v>self.min) then
-      v = self.min
-    elseif (v<self.max) then
-      v = self.max
-    end
-  end
-  return v
+	self.value = value
+	self:Invalidate()
+
+	if not skipEvent then
+		self:CallListeners(self.OnChange, value)
+	end
 end
 
---//=============================================================================
-
---- Sets the new color
--- @tparam {r,g,b,a} c color table 
-function Progressbar:SetColor(...)
-  local color = _ParseColorArgs(...)
-  table.merge(color,self.color)
-  if (not table.iequal(color,self.color)) then
-    self.color = color
-    self:Invalidate()
-  end
+--- Gets the current progress value
+-- @function ProgressBar:GetValue
+-- @return number Current value (0-1)
+function ProgressBar:GetValue()
+	return self.value
 end
 
---- Sets the minimum and maximum value of the progress bar
--- @int[opt=0] min minimum value
--- @int[opt=1] max maximum value (why is 1 the default?)
-function Progressbar:SetMinMax(min,max)
-  self.min = tonumber(min) or 0
-  self.max = tonumber(max) or 1
-  self:SetValue(self.value)
+--- Draws the progress bar
+-- @function ProgressBar:DrawControl
+function ProgressBar:DrawControl()
+	-- Draw background
+	if not self.noSkin then
+		gl.Color(self.backgroundColor)
+		gl.Rect(0, 0, self.width, self.height)
+	end
+
+	-- Calculate fill dimensions
+	local w, h = self.width, self.height
+	local fill
+	if self.orientation == "horizontal" then
+		fill = w * self.value
+		if self.reverse then
+			fill = w - fill
+		end
+	else
+		fill = h * self.value
+		if self.reverse then
+			fill = h - fill
+		end
+	end
+
+	-- Draw fill bar
+	gl.Color(self.color)
+	if self.orientation == "horizontal" then
+		if self.reverse then
+			gl.Rect(fill, 0, w, h)
+		else
+			gl.Rect(0, 0, fill, h)
+		end
+	else
+		if self.reverse then
+			gl.Rect(0, fill, w, h)
+		else
+			gl.Rect(0, 0, w, fill)
+		end
+	end
 end
-
---- Sets the value of the progress bar
--- @int v value of the progress abr
--- @bool[opt=false] setcaption whether the caption should be set as well
-function Progressbar:SetValue(v,setcaption)
-  v = self:_Clamp(v)
-  local oldvalue = self.value
-  if (v ~= oldvalue) then
-    self.value = v
-
-    if (setcaption) then
-      self:SetCaption(v)
-    end
-
-    self:CallListeners(self.OnChange,v,oldvalue)
-    self:Invalidate()
-  end
-end
-
---- Sets the caption
--- @string str caption to be set
-function Progressbar:SetCaption(str)
-  if (self.caption ~= str) then
-    self.caption = str
-    self:Invalidate()
-  end
-end
-
---//=============================================================================
-
-
-function Progressbar:DrawControl()
-  local percent = (self.value-self.min)/(self.max-self.min)
-  local x = self.x
-  local y = self.y
-  local w = self.width
-  local h = self.height
-
-  gl.Color(self.backgroundColor)
-  gl.Rect(w*percent,y,w,h)
-
-  gl.Color(self.color)
-  gl.Rect(0,y,w*percent,h)
-
-  if (self.caption) then
-    (self.font):Print(self.caption, w*0.5, h*0.5, "center", "center")
-  end
-end
-
 
 --//=============================================================================

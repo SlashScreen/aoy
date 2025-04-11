@@ -1074,14 +1074,26 @@ end
 
 local hourTimer = 0
 
+--[[
+Gets the current hour timer value.
+@return number Current hour timer value (0-3600)
+]]
 function widgetHandler:GetHourTimer()
 	return hourTimer
 end
 
+--[[
+Gets the current view sizes.
+@return number, number Width and height of the current view
+]]
 function widgetHandler:GetViewSizes()
 	return self.xViewSize, self.yViewSize
 end
 
+--[[
+Forces a layout update of the UI.
+Sets the forceLayout flag which triggers a layout refresh.
+]]
 function widgetHandler:ForceLayout()
 	forceLayout = true --  in main.lua
 end
@@ -1096,6 +1108,10 @@ end
 --  The call-in distribution routines
 --
 
+--[[
+Handles the shutdown process for all widgets.
+Saves configuration data and calls Shutdown() on each widget in the ShutdownList.
+]]
 function widgetHandler:Shutdown()
 	self:SaveConfigData()
 	for _, w in ipairs(self.ShutdownList) do
@@ -1104,6 +1120,11 @@ function widgetHandler:Shutdown()
 	return
 end
 
+--[[
+Updates all active widgets.
+@param deltaTime number Time elapsed since last update in seconds
+Updates the hour timer and calls Update() on each widget in the UpdateList.
+]]
 function widgetHandler:Update()
 	local deltaTime = Spring.GetLastUpdateSeconds()
 	-- update the hour timer

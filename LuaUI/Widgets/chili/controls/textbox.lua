@@ -1,117 +1,211 @@
 --- TextBox module
+--- A control for displaying and optionally editing multi-line text.
 
---- TextBox fields.
+--- TextBox fields
 -- Inherits from Control.
 -- @see control.Control
 -- @table TextBox
--- @string[opt=""] text text contained in the editbox
--- @bool[opt=true] autoHeight sets height to text size, useful for embedding in scrollboxes
--- @bool[opt=true] autoObeyLineHeight (needs autoHeight) if true, autoHeight will obey the lineHeight (-> texts with the same line count will have the same height)
--- @int[opt=12] fontSize font size
-TextBox = Control:Inherit{
-  classname = "textbox",
+-- @string[opt=""] text Current text content
+-- @bool[opt=true] editable Text can be edited
+-- @bool[opt=false] multiline Allow multiple lines
+-- @tparam {r,g,b,a} textColor Text color
+-- @tparam {r,g,b,a} selectedTextColor Selected text color
+-- @tparam {r,g,b,a} selectionColor Selection background color
+-- @bool[opt=false] passwordInput Mask text input as password
+-- @bool[opt=true] selectable Text can be selected
+-- @tparam function{} OnTextInput Text input event listeners
+-- @tparam function{} OnTextChange Text change event listeners
+-- @tparam function{} OnSelectText Text selection event listeners
 
-  padding = {0,0,0,0},
+TextBox = Control:Inherit({
+	classname = "textbox",
+	text = "",
+	selStart = nil,
+	selEnd = nil,
+	cursor = 1,
 
-  text      = "line1\nline2",
-  autoHeight  = true, 
-  autoObeyLineHeight = true, 
-  fontsize = 12,
+	editable = true,
+	multiline = false,
 
-  _lines = {},
-}
+	textColor = { 1, 1, 1, 1 },
+	selectedTextColor = { 1, 1, 1, 1 },
+	selectionColor = { 0, 0.5, 1, 0.3 },
+
+	passwordInput = false,
+	selectable = true,
+
+	OnTextInput = {},
+	OnTextChange = {},
+	OnSelectText = {},
+})
 
 local this = TextBox
 local inherited = this.inherited
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
---- Set text
--- @string t sets the text
-function TextBox:SetText(t)
-  if (self.text == t) then
-    return
-  end
-  self.text = t
-  self:RequestRealign()
-  self:Invalidate() -- seems RequestRealign() doesn't always cause an invalidate
+--- Creates a new TextBox instance
+-- @function TextBox:New
+-- @param obj Table of textbox properties
+-- @return TextBox The newly created textbox
+function TextBox:New(obj)
+	obj = inherited.New(self, obj)
+	obj:RequestFocus()
+	return obj
 end
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
+--- Sets the text content
+-- @function TextBox:SetText
+-- @string newText Text to set
+function TextBox:SetText(newText)
+	if self.text == newText then
+		return
+	end
+
+	self.text = newText or ""
+	self.cursor = utf8.len(self.text) + 1
+	self.selStart = nil
+	self.selEnd = nil
+
+	self:CallListeners(self.OnTextChange, self.text)
+	self:Invalidate()
+end
+
+--- Gets the current text
+-- @function TextBox:GetText
+-- @return string Current text
+function TextBox:GetText()
+	return self.text
+end
+
+--- Gets selected text
+-- @function TextBox:GetSelection
+-- @return string Selected text or nil
+function TextBox:GetSelection()
+	if not self.selStart then
+		return nil
+	end
+
+	local s = math.min(self.selStart, self.selEnd)
+	local e = math.max(self.selStart, self.selEnd)
+	return self.text:sub(s, e - 1)
+end
+
+--- Handle text input events
+-- @function TextBox:TextInput
+-- @string char Character input
+-- @param ... Additional args
+-- @return boolean True if handled
+function TextBox:TextInput(char, ...)
+	if not self.editable then
+		return false
+	end
+
+	local text = self.text
+	if self.selStart then
+		-- Replace selection
+		text = text:sub(1, self.selStart - 1) .. text:sub(self.selEnd)
+		self.cursor = self.selStart
+		self.selStart = nil
+		self.selEnd = nil
+	end
+
+	-- Insert character
+	text = text:sub(1, self.cursor - 1) .. char .. text:sub(self.cursor)
+	self.text = text
+	self.cursor = self.cursor + 1
+
+	self:CallListeners(self.OnTextInput, char)
+	self:CallListeners(self.OnTextChange, self.text)
+	self:Invalidate()
+
+	return self
+end
+
+--- Draws the textbox
+-- @function TextBox:DrawControl
+function TextBox:DrawControl()
+	local text = self.text
+	if self.passwordInput then
+		text = string.rep("*", #text)
+	end
+
+	-- Draw selection if any
+	if self.selStart then
+		local s = math.min(self.selStart, self.selEnd)
+		local e = math.max(self.selStart, self.selEnd)
+
+		local preText = text:sub(1, s - 1)
+		local selText = text:sub(s, e - 1)
+
+		local x = self.font:GetTextWidth(preText)
+		local w = self.font:GetTextWidth(selText)
+
+		gl.Color(self.selectionColor)
+		gl.Rect(x, 0, x + w, self.font:GetLineHeight())
+	end
+
+	-- Draw cursor if focused
+	if self.state.focused then
+		local preText = text:sub(1, self.cursor - 1)
+		local x = self.font:GetTextWidth(preText)
+
+		gl.Color(1, 1, 1, Spring.GetGameFrame() % 30 < 15 and 1 or 0)
+		gl.Rect(x, 1, x + 1, self.font:GetLineHeight() - 1)
+	end
+
+	-- Draw text
+	gl.Color(self.textColor)
+	self.font:Print(text, 0, 0)
+end
 
 local function Split(s, separator)
-  local results = {}
-  for part in s:gmatch("[^"..separator.."]+") do
-    results[#results + 1] = part
-  end
-  return results
+	local results = {}
+	for part in s:gmatch("[^" .. separator .. "]+") do
+		results[#results + 1] = part
+	end
+	return results
 end
 
 -- remove first n elemets from t, return them
 local function Take(t, n)
-  local removed = {}
-  for i=1, n do
-    removed[#removed+1] = table.remove(t, 1)
-  end
-  return removed
+	local removed = {}
+	for i = 1, n do
+		removed[#removed + 1] = table.remove(t, 1)
+	end
+	return removed
 end
 
 -- appends t1 to t2 in-place
 local function Append(t1, t2)
-  local l = #t1
-  for i = 1, #t2 do
-    t1[i + l] = t2[i]
-  end
+	local l = #t1
+	for i = 1, #t2 do
+		t1[i + l] = t2[i]
+	end
 end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
 
 function TextBox:UpdateLayout()
-  local font = self.font
-  local padding = self.padding
-  local width  = self.width - padding[1] - padding[3]
-  local height = self.height - padding[2] - padding[4]
-  if self.autoHeight then
-    height = 1e9
-  end
+	local font = self.font
+	local padding = self.padding
+	local width = self.width - padding[1] - padding[3]
+	local height = self.height - padding[2] - padding[4]
+	if self.autoHeight then
+		height = 1e9
+	end
 
-  self._wrappedText = font:WrapText(self.text, width, height)
+	self._wrappedText = font:WrapText(self.text, width, height)
 
-  if self.autoHeight then
-    local textHeight,textDescender,numLines = font:GetTextHeight(self._wrappedText)
-    textHeight = textHeight-textDescender
+	if self.autoHeight then
+		local textHeight, textDescender, numLines = font:GetTextHeight(self._wrappedText)
+		textHeight = textHeight - textDescender
 
-    if (self.autoObeyLineHeight) then
-      if (numLines>1) then
-        textHeight = numLines * font:GetLineHeight()
-      else
-        --// AscenderHeight = LineHeight w/o such deep chars as 'g','p',...
-        textHeight = math.min( math.max(textHeight, font:GetAscenderHeight()), font:GetLineHeight())
-      end
-    end
+		if self.autoObeyLineHeight then
+			if numLines > 1 then
+				textHeight = numLines * font:GetLineHeight()
+			else
+				--// AscenderHeight = LineHeight w/o such deep chars as 'g','p',...
+				textHeight = math.min(math.max(textHeight, font:GetAscenderHeight()), font:GetLineHeight())
+			end
+		end
 
-    self:Resize(nil, textHeight, true, true)
-  end
-end
-
-
-function TextBox:DrawControl()
-  local paddx, paddy = unpack4(self.clientArea)
-  local x = paddx
-  local y = paddy
-
-  local font = self.font
-  font:Draw(self._wrappedText, x, y)
-
-  if (self.debug) then
-    gl.Color(0,1,0,0.5)
-    gl.PolygonMode(GL.FRONT_AND_BACK,GL.LINE)
-    gl.LineWidth(2)
-    gl.Rect(0,0,self.width,self.height)
-    gl.LineWidth(1)
-    gl.PolygonMode(GL.FRONT_AND_BACK,GL.FILL)
-  end
+		self:Resize(nil, textHeight, true, true)
+	end
 end

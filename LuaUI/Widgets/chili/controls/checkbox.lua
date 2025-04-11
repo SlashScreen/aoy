@@ -1,70 +1,127 @@
 --//=============================================================================
 
 --- Checkbox module
+--- A control that can be checked or unchecked to represent a boolean state.
 
---- Checkbox fields.
+--- Checkbox fields
 -- Inherits from Control.
 -- @see control.Control
 -- @table Checkbox
--- @bool[opt=true] checked checkbox checked state
--- @string[opt="text"] caption caption to appear in the checkbox
--- @string[opt="left"] textalign text alignment
--- @string[opt="right"] boxalign box alignment
--- @int[opt=10] boxsize box size
--- @tparam {r,g,b,a} textColor text color, (default {0,0,0,1})
--- @tparam {func1,func2,...} OnChange listener functions for checked state changes, (default {})
-Checkbox = Control:Inherit{
-  classname = "checkbox",
-  checked   = true,
-  caption   = "text",
-  textalign = "left",
-  boxalign  = "right",
-  boxsize   = 10,
+-- @string[opt=""] caption Text label
+-- @bool[opt=false] checked Current checked state
+-- @bool[opt=false] boxalign Box alignment ("left" or "right")
+-- @int[opt=13] boxsize Size of checkbox box
+-- @tparam {r,g,b,a} textColor Text color
+-- @tparam {r,g,b,a} checkColor Check mark color
+-- @tparam function{} OnChange State change event listeners
 
-  textColor = {0,0,0,1},
+Checkbox = Control:Inherit({
+	classname = "checkbox",
+	caption = "",
+	checked = false,
+	boxalign = "left",
+	boxsize = 13,
 
-  defaultWidth     = 70,
-  defaultHeight    = 18,
+	textColor = { 1, 1, 1, 1 },
+	checkColor = { 0.5, 1, 0.5, 1 },
 
-  OnChange = {}
-}
+	OnChange = {},
+})
 
 local this = Checkbox
 local inherited = this.inherited
 
---//=============================================================================
-
+--- Creates a new Checkbox instance
+-- @function Checkbox:New
+-- @param obj Table of checkbox properties
+-- @return Checkbox The newly created checkbox
 function Checkbox:New(obj)
-	obj = inherited.New(self,obj)
-	obj.state.checked = obj.checked
+	obj = inherited.New(self, obj)
 	return obj
 end
 
---//=============================================================================
+--- Sets checked state
+-- @function Checkbox:SetChecked
+-- @param checked New checked state
+-- @param nopropagate Don't trigger OnChange event
+function Checkbox:SetChecked(checked, nopropagate)
+	checked = not not checked -- convert to boolean
 
---- Toggles the checked state
+	if self.checked == checked then
+		return
+	end
+
+	self.checked = checked
+	self:Invalidate()
+
+	if not nopropagate then
+		self:CallListeners(self.OnChange, self.checked)
+	end
+end
+
+--- Toggle checked state
+-- @function Checkbox:Toggle
 function Checkbox:Toggle()
-  self:CallListeners(self.OnChange,not self.checked)
-  self.checked = not self.checked
-  self.state.checked = self.checked
-  self:Invalidate()
+	self:SetChecked(not self.checked)
 end
 
---//=============================================================================
-
+--- Draws the checkbox control
+-- @function Checkbox:DrawControl
 function Checkbox:DrawControl()
-  --// gets overriden by the skin/theme
+	-- Draw box
+	local boxSize = self.boxsize
+	local boxX = (self.boxalign == "right") and (self.width - boxSize - 2) or 2
+	local boxY = (self.height - boxSize) * 0.5
+
+	gl.Color(1, 1, 1, 1)
+	gl.BeginEnd(GL.LINE_LOOP, function()
+		gl.Vertex(boxX, boxY)
+		gl.Vertex(boxX + boxSize, boxY)
+		gl.Vertex(boxX + boxSize, boxY + boxSize)
+		gl.Vertex(boxX, boxY + boxSize)
+	end)
+
+	-- Draw checkmark if checked
+	if self.checked then
+		gl.Color(self.checkColor)
+		gl.BeginEnd(GL.LINE_STRIP, function()
+			gl.Vertex(boxX + 2, boxY + boxSize / 2)
+			gl.Vertex(boxX + boxSize / 2, boxY + boxSize - 2)
+			gl.Vertex(boxX + boxSize - 2, boxY + 2)
+		end)
+	end
+
+	-- Draw caption
+	if self.caption ~= "" then
+		local textX = (self.boxalign == "right") and 2 or (boxX + boxSize + 2)
+		local textY = (self.height - self.font:GetLineHeight()) * 0.5
+
+		gl.Color(self.textColor)
+		self.font:Print(self.caption, textX, textY)
+	end
 end
 
---//=============================================================================
-
-function Checkbox:HitTest()
-  return self
+--- Handles mouse down events
+-- @function Checkbox:MouseDown
+-- @param x X coordinate
+-- @param y Y coordinate
+-- @param ... Additional args
+-- @return boolean True if handled
+function Checkbox:MouseDown(x, y, ...)
+	if self:HitTest(x, y) then
+		self:Toggle()
+		return self
+	end
+	return inherited.MouseDown(self, x, y, ...)
 end
 
-function Checkbox:MouseDown()
-  self:Toggle()
-  return self
+--- Handle hit testing
+-- @function Checkbox:HitTest
+-- @param x X coordinate to test
+-- @param y Y coordinate to test
+-- @return boolean True if hit
+function Checkbox:HitTest(x, y)
+	return self:IsDescendantOf(screen0) and x >= 0 and x <= self.width and y >= 0 and y <= self.height
 end
 
 --//=============================================================================

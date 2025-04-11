@@ -1,115 +1,137 @@
 --//=============================================================================
 
 --- Label module
+--- A control for displaying static text with various formatting options.
 
---- Label fields.
+--- Label fields
 -- Inherits from Control.
 -- @see control.Control
 -- @table Label
--- @string[opt="left"] align alignment
--- @string[opt="linecenter"] valign vertical alignment
--- @string[opt="no text"] caption text to be displayed
-Label = Control:Inherit{
-  classname= "label",
+-- @string[opt=""] caption Text to display
+-- @bool[opt=false] autosize Automatically size to fit text
+-- @bool[opt=false] autoObeyLineHeight Adjust height to match line height
+-- @string[opt="left"] align Horizontal text alignment ("left", "center", "right")
+-- @string[opt="top"] valign Vertical text alignment ("top", "center", "bottom")
+-- @tparam {r,g,b,a} textColor Text color (default {1,1,1,1})
+-- @bool[opt=false] shadow Draw text shadow
 
-  defaultWidth = 70,
-  defaultHeight = 20,
+Label = Control:Inherit({
+	classname = "label",
+	caption = "",
 
-  padding = {0,0,0,0},
+	autosize = false,
+	autoObeyLineHeight = false,
 
-  autosize = true,
-  autoObeyLineHeight = true, --// (needs autosize) if true, autosize will obey the lineHeight (-> texts with the same line count will have the same height)
+	align = "left",
+	valign = "top",
 
-  align    = "left",
-  valign   = "linecenter", --// usefull too "ascender"
-  caption  = "no text",
-}
+	textColor = { 1, 1, 1, 1 },
+	shadow = false,
+})
 
 local this = Label
 local inherited = this.inherited
 
---//=============================================================================
-
+--- Creates a new Label instance
+-- @function Label:New
+-- @param obj Table of label properties
+-- @return Label The newly created label
 function Label:New(obj)
-  obj = inherited.New(self,obj)
-  obj:SetCaption(obj.caption)
-  return obj
+	obj = inherited.New(self, obj)
+	obj:UpdateLayout()
+	return obj
 end
 
---//=============================================================================
-
---- Set the label caption
--- @string newcaption new caption to be set
-function Label:SetCaption(newcaption)
-  if (self.caption == newcaption) then return end
-  self.caption = newcaption
-  self:UpdateLayout()
-  self:Invalidate()
+--- Sets the label text
+-- @function Label:SetCaption
+-- @string newCaption Text to display
+function Label:SetCaption(newCaption)
+	if self.caption == newCaption then
+		return
+	end
+	self.caption = newCaption
+	self:UpdateLayout()
+	self:Invalidate()
 end
 
-
+--- Updates the label layout
+-- @function Label:UpdateLayout
 function Label:UpdateLayout()
-  local font = self.font
+	local font = self.font
 
-  if (self.autosize) then
-    self._caption  = self.caption
-    local w = font:GetTextWidth(self.caption);
-    local h, d, numLines = font:GetTextHeight(self.caption);
+	if self.autosize then
+		local w = font:GetTextWidth(self.caption)
+		local h, d, numLines = font:GetTextHeight(self.caption)
 
-    h = h + 1
-    if (self.autoObeyLineHeight) then
-      h = math.ceil(numLines * font:GetLineHeight())
-    else
-      h = math.ceil(h-d)
-    end
+		if self.autoObeyLineHeight then
+			h = math.ceil(numLines * font:GetLineHeight())
+		else
+			h = math.ceil(h - d)
+		end
 
-    if font.shadow then
-      w = w + 2 + font.size * 0.1
-      h = h + 2 + font.size * 0.1
-    elseif font.outline then
-      w = w + 2 + font.size * font.outlineWidth
-      h = h + 2 + font.size * font.outlineWidth
-    end
+		local x = self.x
+		local y = self.y
 
-    local x = self.x
-    local y = self.y
+		-- Handle vertical alignment
+		if self.valign == "center" then
+			y = y + (self.height - h) * 0.5
+		elseif self.valign == "bottom" then
+			y = y + self.height - h
+		end
 
-    if self.valign == "center" then
-      y = math.round(y + (self.height - h) * 0.5)
-    elseif self.valign == "bottom" then
-      y = y + self.height - h
-    elseif self.valign == "top" then
-    else
-    end
+		-- Handle horizontal alignment
+		if self.align == "right" then
+			x = x + self.width - w
+		elseif self.align == "center" then
+			x = x + (self.width - w) * 0.5
+		end
 
-    if self.align == "left" then
-    elseif self.align == "right" then
-      x = x + self.width - w
-    elseif self.align == "center" then
-      x = math.round(x + (self.width - w) * 0.5)
-    end
+		w = w + self.padding[1] + self.padding[3]
+		h = h + self.padding[2] + self.padding[4]
 
-    self:_UpdateConstraints(x,y,w,h)
-  else
-    self._caption = font:WrapText(self.caption, self.width, self.height)
-  end
-
+		self:_UpdateConstraints(x, y, w, h)
+	end
 end
 
---//=============================================================================
-
+--- Draws the label
+-- @function Label:DrawControl
 function Label:DrawControl()
-  local font = self.font
-  font:DrawInBox(self._caption,0,0,self.width,self.height,self.align,self.valign)
+	local font = self.font
 
-  if (self.debug) then
-    gl.Color(0,1,0,0.5)
-    gl.PolygonMode(GL.FRONT_AND_BACK,GL.LINE)
-    gl.LineWidth(2)
-    gl.Rect(0,0,self.width,self.height)
-    gl.LineWidth(1)
-    gl.PolygonMode(GL.FRONT_AND_BACK,GL.FILL)
-  end
+	-- Calculate position
+	local x = 0
+	local y = 0
+	local w = self.width
+	local h = self.height
+	local th, td = font:GetTextHeight(self.caption)
+
+	-- Handle vertical alignment
+	if self.valign == "center" then
+		y = y + (h - th) * 0.5
+	elseif self.valign == "bottom" then
+		y = y + h - th
+	elseif self.valign == "top" then
+		y = y + self.padding[2]
+	end
+
+	-- Handle horizontal alignment
+	if self.align == "right" then
+		x = x + w - font:GetTextWidth(self.caption) - self.padding[3]
+	elseif self.align == "center" then
+		x = x + (w - font:GetTextWidth(self.caption)) * 0.5
+	elseif self.align == "left" then
+		x = x + self.padding[1]
+	end
+
+	-- Draw shadow if enabled
+	if self.shadow then
+		gl.Color(0, 0, 0, self.textColor[4])
+		font:Print(self.caption, x + 1, y + 1)
+	end
+
+	-- Draw text
+	gl.Color(self.textColor)
+	font:Print(self.caption, x, y)
 end
 
 --//=============================================================================
