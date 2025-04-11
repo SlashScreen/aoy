@@ -1,3 +1,7 @@
+local widget = {}
+
+---Gets the widget information.
+---@return table { version: string, name: string, desc: string, author: string, date: string, license: string, layer: number, enabled: boolean, handler: boolean }
 function widget:GetInfo()
 	return {
 		version = "0.1",
@@ -12,13 +16,20 @@ function widget:GetInfo()
 	}
 end
 
+---@type number
 local vsx, vsy = Spring.GetViewGeometry()
+---@type number
 local widgetScale = (0.5 + (vsx * vsy / 5700000))
 
 --------------------------------------------------------------------------------
 -- Hotkeys
 VFS.Include("luaui/configs/build_hotkeys_config.lua")
+---@type function
 local sGetKeySymbol = Spring.GetKeySymbol
+
+---Gets the key symbol for a given key code.
+---@param k number Key code
+---@return string Key symbol
 local function getKeySymbol(k)
 	if k >= 97 and k <= 122 then
 		return string.char(k):upper()
@@ -27,60 +38,89 @@ local function getKeySymbol(k)
 	local keySymbol = sGetKeySymbol(k)
 	return keySymbol:sub(1, 1):upper() .. keySymbol:sub(2)
 end
+
+---@type table<string, table<number, string>>
 local nameToKeySymbols = {}
 for unitDefID = 1, #UnitDefs do
+	---@type table
 	local ud = UnitDefs[unitDefID]
+	---@type string
 	local trimmedName = ud.name
 	if trimmedName:find("_up", -5) then
 		trimmedName = trimmedName:sub(1, -5)
 	end
 	if nameToKeyCode[trimmedName] then
-		-- local str = ""
-		-- local leng = #nameToKeyCode[name]
-		-- for i = 1, leng do
-		--     str = str .. getKeySymbol(nameToKeyCode[name][i])
-		--     if i < leng then str = str .. " + " end
-		-- end
-		-- nameToKeySymbols[name] = str
 		nameToKeySymbols[ud.name] = {}
 		for i = 1, #nameToKeyCode[trimmedName] do
 			nameToKeySymbols[ud.name][i] = getKeySymbol(nameToKeyCode[trimmedName][i])
 		end
 	end
 end
+
+---@type table<number, Label>
 local hotkeyLabels = {}
 --------------------------------------------------------------------------------
 -- Localize
+---@type function
 local sForceLayoutUpdate = Spring.ForceLayoutUpdate
+---@type function
 local sSetActiveCommand = Spring.SetActiveCommand
+---@type function
 local sGetCmdDescIndex = Spring.GetCmdDescIndex
+---@type function
 local sGetActiveCommand = Spring.GetActiveCommand
+---@type function
 local sGetWindowGeometry = Spring.GetWindowGeometry
 
+---@type function
 local stringfind = string.find
+---@type function
 local stringsub = string.sub
+---@type function
 local stringgsub = string.gsub
+---@type function
 local mathceil = math.ceil
+---@type function
 local mathmax = math.max
+---@type function
 local mathmin = math.min
 
-local glGetTextWidth = gl.GetTextWidth
+---@type function
+glGetTextWidth = gl.GetTextWidth
 
 -- Chili classes
+---@type any
 local Chili, Window, Image, Button, Grid, Label, ScrollPanel, color2incolor
 
 -- Global vars
-local orderWindow, buildWindow, orderGrid, buildGrid, updateRequired, tooltip, btWidth
+---@type Window
+local orderWindow, buildWindow
+---@type Grid
+local orderGrid, buildGrid
+---@type boolean
+local updateRequired
+---@type string
+local tooltip
+---@type number
+local btWidth
+---@type table<string, any>
 local chiliCache = {}
+---@type number
 local vsx, vsy = sGetWindowGeometry()
 
+---@type function
 local sGetConfigInt = Spring.GetConfigInt
+---@type number
 local buildOrderUI = sGetConfigInt("evo_buildorderui", 2)
+---@type boolean
 local showCost = sGetConfigInt("evo_showcost", 1) == 1
+---@type boolean
 local showTechReq = sGetConfigInt("evo_showtechreq", 1) == 1
+---@type boolean
 local showHotkeys = sGetConfigInt("evo_showhotkeys", 1) == 1
 WG.buildOrderUI = { updateConfigInt = false }
 
+---@type number
 local fontSize = 12 * widgetScale
 
 --Horizontal
@@ -381,9 +421,15 @@ local function deepEquals(t1, t2, ignore_mt)
 	return true
 end --deepEquals
 
+---Processes a relative coordinate.
+---@param code string|number Coordinate code
+---@param total number Total value
+---@return number Processed coordinate
 local function processRelativeCoord(code, total)
+	---@type number?
 	local num = tonumber(code)
 	if type(code) == "string" then
+		---@type number
 		local percent = tonumber(code:sub(1, -2)) or 0
 		if percent < 0 then
 			percent = 0
@@ -398,7 +444,11 @@ local function processRelativeCoord(code, total)
 	end
 end --processRelativeCoord
 
+---Creates a grid window.
+---@param config table Configuration table
+---@return Grid, Window The grid and the window
 local function createGridWindow(config)
+	---@type ScrollPanel
 	local scroll = ScrollPanel:New({
 		name = "scroll_" .. config.name,
 		x = "0%",
@@ -407,6 +457,7 @@ local function createGridWindow(config)
 		height = "100%",
 		padding = config.padding,
 	})
+	---@type Grid
 	local grid = Grid:New({
 		name = "grid_" .. config.name,
 		x = "0%",
@@ -418,6 +469,7 @@ local function createGridWindow(config)
 		orientation = config.orientation,
 		padding = { 0, 0, 0, 0 },
 	})
+	---@type Window
 	local gridWindow = Window:New({
 		name = "window_" .. config.name,
 		parent = Chili.Screen0,
@@ -437,8 +489,10 @@ local function createGridWindow(config)
 	})
 
 	local function updateGrid()
-		local rowsNeeded = mathceil(#grid.children / grid.columns)
+		---@type number
+		local rowsNeeded = math.ceil(#grid.children / grid.columns)
 		if rowsNeeded > grid.rows then
+			---@type number
 			local ratio = (gridWindow.height / config.rows) / (gridWindow.width / config.columns)
 			grid:SetPos(nil, nil, nil, (grid.width / grid.columns) * ratio * rowsNeeded)
 			grid.rows = rowsNeeded
@@ -463,12 +517,21 @@ local function createGridWindow(config)
 	return grid, gridWindow
 end --createGridWindow
 
+---Applies the highlight handler to a button.
+---@param button Button The button to apply the handler to
+---@param cmd table The command associated with the button
+---@return Button The button
 local function applyHighlightHandler(button, cmd)
+	---@type color
 	local selected = { 0.85, 0.65, 0, 0.5 }
+	---@type color
 	local hovered = { 0.75, 0.75, 0.75, 0.25 }
+	---@type color
 	local out = { 0, 0, 0, 0 }
+	---@type color
 	local disabled = { 0, 0, 0, 0.6 }
 
+	---@type Image
 	local highlight = chiliCache["highlight" .. button.cmdID]
 		or Image:New({
 			name = "highlight" .. button.cmdID,
@@ -481,7 +544,9 @@ local function applyHighlightHandler(button, cmd)
 			color = out,
 		})
 	chiliCache["highlight" .. button.cmdID] = highlight
+	---@param cmdID number
 	local function updateSelection(cmdID)
+		---@param color color
 		local function checkColor(color)
 			if highlight.color ~= color then
 				highlight.color = color
@@ -492,12 +557,12 @@ local function applyHighlightHandler(button, cmd)
 		if cmd.disabled then
 			checkColor(disabled)
 			if button.state.hovered then
-				tooltip = stringgsub(cmd.tooltip, "Metal cost %d*\nEnergy cost %d*\n", "")
+				tooltip = string.gsub(cmd.tooltip, "Metal cost %d*\nEnergy cost %d*\n", "")
 			end
 		elseif button.cmdID == cmdID then
 			checkColor(selected)
 		elseif button.state.hovered then
-			tooltip = stringgsub(cmd.tooltip, "Metal cost %d*\nEnergy cost %d*\n", "")
+			tooltip = string.gsub(cmd.tooltip, "Metal cost %d*\nEnergy cost %d*\n", "")
 			checkColor(hovered)
 		else
 			checkColor(out)
@@ -508,22 +573,35 @@ local function applyHighlightHandler(button, cmd)
 	return button
 end --applyHighlightHandler
 
+---Applies the state handler to a button.
+---@param button Button The button to apply the handler to
+---@param cmd table The command associated with the button
+---@return Button The button
 local function applyStateHandler(button, cmd)
+	---@type number
 	local stateCount = #cmd.params - 1
+	---@type number
 	local state = cmd.params[1] + 1
 
+	---@param c number
 	local function curve(c)
 		return -0.5 * c * (c - 4)
 	end -- makes yellow more vivid
+	---@param i number
+	---@return color
 	local function getStateColor(i)
 		local g = (i - 1) / (stateCount - 1)
 		return (i == state) and { curve(1 - g), curve(g), 0, 1 } or { 0.9, 0.9, 0.9, 0.3 }
 	end
 
+	---@type table<number, Image>
 	local stateButtons = {}
 	for i = 1, stateCount do
+		---@type number
 		local pad = 7
+		---@type number
 		local sx = (100 - pad * (stateCount + 3)) / stateCount
+		---@type number
 		local px = pad + i * pad + (i - 1) * sx
 		stateButtons[i] = chiliCache["stateButton_" .. cmd.id .. "_" .. i]
 			or Image:New({
@@ -539,7 +617,9 @@ local function applyStateHandler(button, cmd)
 			})
 		chiliCache["stateButton_" .. cmd.id .. "_" .. i] = stateButtons[i]
 	end
+	---@type function
 	local oldUpdateSelection = button.updateSelection
+	---@param cmdID number
 	local function updateSelection(cmdID)
 		oldUpdateSelection(cmdID)
 		for i = 1, stateCount do
@@ -550,11 +630,18 @@ local function applyStateHandler(button, cmd)
 	return button
 end --applyStateHandler
 --------------------------------------------------------------------------------
+---Initializes the controls.
 local function InitializeControls()
 	orderGrid, orderWindow = createGridWindow(Config.ordermenu)
 	buildGrid, buildWindow = createGridWindow(Config.buildmenu)
 end --InitializeControls
 
+---Handles the action command.
+---@param self Button The button
+---@param x number The x coordinate
+---@param y number The y coordinate
+---@param mouse number The mouse button
+---@param mods table The modifiers
 local function ActionCommand(self, x, y, mouse, mods)
 	local index = sGetCmdDescIndex(self.cmdID)
 	if index then
@@ -564,7 +651,10 @@ local function ActionCommand(self, x, y, mouse, mods)
 	end
 end --ActionCommand
 
+---Adds an order command.
+---@param cmd table The command
 local function addOrderCommand(cmd)
+	---@type Button
 	local button = chiliCache["button" .. cmd.id]
 		or Button:New({
 			name = "button" .. cmd.id,
@@ -589,7 +679,10 @@ local function addOrderCommand(cmd)
 	orderGrid:AddChild(button)
 end --addOrderCommand
 
+---Adds a state command.
+---@param cmd table The command
 local function addStateCommand(cmd)
+	---@type Button
 	local button = chiliCache["button" .. cmd.id]
 		or Button:New({
 			name = "button" .. cmd.id,
@@ -610,7 +703,10 @@ local function addStateCommand(cmd)
 	orderGrid:AddChild(button)
 end --addStateCommand
 
+---Adds a build command.
+---@param cmd table The command
 local function addBuildCommand(cmd)
+	---@type Image
 	local image = chiliCache["button" .. cmd.id]
 		or Image:New({
 			name = "button" .. cmd.id,
@@ -720,6 +816,7 @@ local function addBuildCommand(cmd)
 				})
 			end
 			-- chiliCache['hotkeyLabel' .. cmd.id]:SetCaption(color2incolor(1,1,1) .. nameToKeySymbols[cmd.name])
+			---@param label Label
 			local function updateLabel()
 				local str = color2incolor(1, 1, 1)
 				local leng = #nameToKeySymbols[cmd.name]
@@ -753,6 +850,9 @@ local function addBuildCommand(cmd)
 	buildGrid:AddChild(image)
 end --addBuildCommand
 
+---Processes a command.
+---@param cmd table The command
+---@return number The grid number
 local function processCommand(cmd)
 	if UnitDefNames[cmd.name] then
 		return 3
@@ -763,7 +863,10 @@ local function processCommand(cmd)
 	end
 end --processCommand
 
+---@type table
 local lastCommands
+---Processes all commands.
+---@param flush boolean Whether to flush the commands
 local function processAllCommands(flush)
 	if (deepEquals(lastCommands, widgetHandler.commands)) and not flush then
 		return
@@ -774,7 +877,9 @@ local function processAllCommands(flush)
 	orderGrid:ClearChildren()
 	--chiliCache = {} -- clears all cached chili elements
 
+	---@type number
 	local haveCmd = 0
+	---@type table<number, table>
 	local commands = { [1] = {}, [2] = {}, [3] = {} }
 	for _, cmd in ipairs(lastCommands) do
 		if cmd.name ~= "" and not (Config.hiddenCMDs[cmd.name] or Config.hiddenCMDs[cmd.action]) then
@@ -784,6 +889,7 @@ local function processAllCommands(flush)
 		end
 	end
 
+	---@type table<number, function>
 	local gridFunc = { [1] = addStateCommand, [2] = addOrderCommand, [3] = addBuildCommand }
 	for grid, cmds in ipairs(commands) do
 		for i = 1, #cmds do
@@ -806,8 +912,10 @@ local function processAllCommands(flush)
 	end
 end --processAllCommands
 
+---Updates the selection.
 local function updateSelection()
 	tooltip = nil
+	---@type number
 	local _, cmdID = sGetActiveCommand()
 	for _, bt in ipairs(buildGrid.children) do
 		if bt.updateSelection then
@@ -820,6 +928,8 @@ local function updateSelection()
 		end
 	end
 end --updateSelection
+
+---Updates the label.
 local function updateLabel()
 	for _, label in pairs(hotkeyLabels) do
 		if label.updateLabel then
@@ -828,7 +938,12 @@ local function updateLabel()
 	end
 end --updateLabel
 
+---Overrides the default menu.
 local function OverrideDefaultMenu()
+	---@param xIcons number
+	---@param yIcons number
+	---@param cmdCount number
+	---@param commands table
 	local function layoutHandler(xIcons, yIcons, cmdCount, commands)
 		widgetHandler.commands = commands
 		widgetHandler.commands.n = cmdCount
@@ -840,6 +955,7 @@ local function OverrideDefaultMenu()
 	sForceLayoutUpdate()
 end --OverrideDefaultMenu
 --------------------------------------------------------------------------------
+---Initializes the widget.
 function widget:Initialize()
 	if not WG.Chili then
 		Spring.Echo("No chili detected.")
@@ -864,10 +980,12 @@ function widget:Initialize()
 	InitializeControls()
 end --Initialize
 
+---Handles the commands changed event.
 function widget:CommandsChanged()
 	updateRequired = true
 end --CommandsChanged
 
+---Updates the widget.
 function widget:Update()
 	if WG["topbar"] and WG["topbar"].showingQuit() then
 		return
@@ -891,10 +1009,19 @@ function widget:Update()
 	end
 end --Update
 
+---Handles the world tooltip event.
+---@param ttType number The tooltip type
+---@param data1 number The first data parameter
+---@param data2 number The second data parameter
+---@param data3 number The third data parameter
+---@return string The tooltip
 function widget:WorldTooltip(ttType, data1, data2, data3)
 	return tooltip
 end --WorldTooltip
 
+---Handles the view resize event.
+---@param newX number The new x coordinate
+---@param newY number The new y coordinate
 function widget:ViewResize(newX, newY)
 	vsx, vsy = Spring.GetViewGeometry()
 	widgetScale = (0.5 + (vsx * vsy / 5700000))
@@ -910,6 +1037,7 @@ function widget:ViewResize(newX, newY)
 	buildWindow:SetPos(nil, nil, nil, Config.buildmenu.height)
 end --ViewResize
 
+---Handles the shutdown event.
 function widget:Shutdown()
 	orderWindow:Dispose()
 	buildWindow:Dispose()

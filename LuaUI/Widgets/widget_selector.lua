@@ -464,9 +464,7 @@ function widget:DrawScreen()
 				0,
 				math.min(
 					math.floor(
-						#fullWidgetsList
-								* ((sby1 - sbsize) - (my - math.min(scrollbargrabpos, sbsize)))
-								/ sbheight
+						#fullWidgetsList * ((sby1 - sbsize) - (my - math.min(scrollbargrabpos, sbsize))) / sbheight
 							+ 0.5
 					),
 					#fullWidgetsList - curMaxEntries
