@@ -2,21 +2,17 @@
 
 --- Trackbar module
 --- A control that provides slider/range input functionality.
-
---- Trackbar fields
--- Inherits from Control.
--- @see control.Control
--- @table Trackbar
--- @number[opt=0] min Minimum value
--- @number[opt=1] max Maximum value
--- @number[opt=0] value Current value
--- @number[opt=0.1] step Step size
--- @string[opt="horizontal"] orientation Bar orientation ("horizontal" or "vertical")
--- @tparam {r,g,b,a} color Bar color
--- @tparam {r,g,b,a} backgroundColor Background color
--- @bool[opt=true] showValue Show numeric value
--- @string[opt="%.1f"] valueFormatString Format string for displayed value
--- @tparam function{} OnChange Value change event listeners
+--- @class Trackbar: Control
+--- @field min number Minimum value
+--- @field max number Maximum value
+--- @field value number Current value
+--- @field step number Step size
+--- @field orientation "horizontal" | "vertical" Bar orientation
+--- @field color Color Bar color
+--- @field backgroundColor Color Background color
+--- @field showValue boolean Show numeric value
+--- @field valueFormatString string Format string for displayed value. Default ("%.1f")
+--- @field OnChange function[] Value change event listeners
 
 Trackbar = Control:Inherit({
 	classname = "trackbar",

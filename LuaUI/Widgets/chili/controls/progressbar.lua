@@ -2,18 +2,14 @@
 
 --- ProgressBar module
 --- A control that displays progress visually as a filled bar.
-
---- ProgressBar fields
--- Inherits from Control.
--- @see control.Control
--- @table ProgressBar
--- @number[opt=0] value Current progress value (0-1)
--- @string[opt="horizontal"] orientation Bar orientation ("horizontal" or "vertical")
--- @tparam {r,g,b,a} color Bar fill color (default {0.5,1,0,0.8})
--- @tparam {r,g,b,a} backgroundColor Background color
--- @bool[opt=true] reverse Reverse fill direction
--- @bool[opt=false] noSkin Disable skin/theme
--- @tparam function{} OnChange Value change event listeners
+--- @class ProgressBar: Control
+--- @field value number Current progress value (0-1)
+--- @field orientation "horizontal" | "vertical" Bar orientation
+--- @field color Color Bar fill color (default {0.5,1,0,0.8})
+--- @field backgroundColor Color Background color (default {0,0,0,0.5})
+--- @field reverse boolean Reverse fill direction
+--- @field noSkin boolean Disable skin/theme
+--- @field OnChange function[] Value change event listeners
 
 ProgressBar = Control:Inherit({
 	classname = "progressbar",

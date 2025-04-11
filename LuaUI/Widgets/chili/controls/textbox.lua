@@ -1,21 +1,20 @@
 --- TextBox module
 --- A control for displaying and optionally editing multi-line text.
-
---- TextBox fields
--- Inherits from Control.
--- @see control.Control
--- @table TextBox
--- @string[opt=""] text Current text content
--- @bool[opt=true] editable Text can be edited
--- @bool[opt=false] multiline Allow multiple lines
--- @tparam {r,g,b,a} textColor Text color
--- @tparam {r,g,b,a} selectedTextColor Selected text color
--- @tparam {r,g,b,a} selectionColor Selection background color
--- @bool[opt=false] passwordInput Mask text input as password
--- @bool[opt=true] selectable Text can be selected
--- @tparam function{} OnTextInput Text input event listeners
--- @tparam function{} OnTextChange Text change event listeners
--- @tparam function{} OnSelectText Text selection event listeners
+--- @class TextBox: Control
+--- @field text string Current text content
+--- @field selStart integer? Start of text selection
+--- @field selEnd integer? End of text selection
+--- @field cursor integer Current cursor position
+--- @field editable boolean Text can be edited
+--- @field multiline boolean Allow multiple lines
+--- @field textColor Color Text color (default {1,1,1,1})
+--- @field selectedTextColor Color Selected text color (default {1,1,1,1})
+--- @field selectionColor Color Selection background color (default {0,0.5,1,0.3})
+--- @field passwordInput boolean Mask text input as password
+--- @field selectable boolean Text can be selected
+--- @field OnTextInput function[] Text input event listeners
+--- @field OnTextChange function[] Text change event listeners
+--- @field OnSelectText function[] Text selection event listeners
 
 TextBox = Control:Inherit({
 	classname = "textbox",

@@ -2,13 +2,12 @@
 
 --- Colorbars module
 -- This module defines a Colorbars control, which is a UI element that allows users to adjust RGBA color values interactively.
+--- @class Colorbars: Control
+--- @field color Color RGBA color table
+--- @field OnChange function[] Color change event listeners
+--- @field defaultWidth number Default width of the control
+--- @field defaultHeight number Default height of the control
 
---- Colorbar fields.
--- Inherits from Control.
--- @see control.Control
--- @table Colorbars
--- @tparam {r,g,b,a} color The RGBA color table, where each value is between 0 and 1. Default is {1,1,1,1} (white).
--- @tparam {func1,func2,...} OnChange A list of listener functions that are triggered when the color changes. Default is an empty table.
 Colorbars = Control:Inherit({
 	classname = "colorbars",
 	color = { 1, 1, 1, 1 },

@@ -2,18 +2,14 @@
 
 --- Label module
 --- A control for displaying static text with various formatting options.
-
---- Label fields
--- Inherits from Control.
--- @see control.Control
--- @table Label
--- @string[opt=""] caption Text to display
--- @bool[opt=false] autosize Automatically size to fit text
--- @bool[opt=false] autoObeyLineHeight Adjust height to match line height
--- @string[opt="left"] align Horizontal text alignment ("left", "center", "right")
--- @string[opt="top"] valign Vertical text alignment ("top", "center", "bottom")
--- @tparam {r,g,b,a} textColor Text color (default {1,1,1,1})
--- @bool[opt=false] shadow Draw text shadow
+--- @class Label: Control
+--- @field caption string Text to display
+--- @field autosize boolean Automatically size to fit text
+--- @field autoObeyLineHeight boolean Adjust height to match line height
+--- @field align "left" | "center" | "right" Horizontal text alignment
+--- @field valign "top" | "center" | "bottom" Vertical text alignment
+--- @field textColor Color Text color (default {1,1,1,1})
+--- @field shadow boolean Draw text shadow
 
 Label = Control:Inherit({
 	classname = "label",

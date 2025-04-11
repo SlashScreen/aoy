@@ -1,16 +1,15 @@
 --//=============================================================================
 
 --- Multiprogressbar module
+--- A control that displays multiple progress bars with customizable colors and textures.
+--- @class Multiprogressbar: Control
+--- @field drawBorder boolean Draw border around the control (default false)
+--- @field borderColor Color Border color (default {1,0,0,1})
+--- @field orientation "horizontal" | "vertical" Orientation of the progress bar (default "horizontal")
+--- @field reverse boolean Reverse drawing orientation (default false)
+--- @field scaleFunction function? Function to rescale progress (default nil). Takes 0-1 and must return 0-1
+--- @field bars table[] List of bar components to display
 
---- Multiprogressbar fields.
--- Inherits from Control.
--- @see control.Control
--- @table Multiprogressbar
--- @bool[opt=false] drawBorder should the border be drawn?
--- @tparam {r,g,b,a} borderColor specifies the border color (default: {1,0,0,1})
--- @string[opt="horizontal"] orientation orientation of the progress bar
--- @bool[opt=false] reverse reverse drawing orientation
--- @tparam fnc scaleFunction scaling function that takes 0-1 and must return 0-1
 Multiprogressbar = Control:Inherit({
 	classname = "multiprogressbar",
 

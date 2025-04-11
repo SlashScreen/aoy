@@ -1,21 +1,18 @@
 --- Window module
 --- A container control that provides window functionality like dragging, resizing and minimizing.
-
---- Window fields
--- Inherits from Control.
--- @see control.Control
--- @table Window
--- @bool[opt=true] draggable Window can be dragged
--- @bool[opt=true] resizable Window can be resized
--- @bool[opt=true] minimizable Window can be minimized
--- @tparam {left,top,right,bottom} minWidth Minimum window width
--- @tparam {left,top,right,bottom} minHeight Minimum window height
--- @tparam {r,g,b,a} titleBarColor Title bar color
--- @string[opt=""] caption Window title text
--- @bool[opt=false] minimized Current minimized state
--- @tparam function{} OnMove Window move event listeners
--- @tparam function{} OnResize Window resize event listeners
--- @tparam function{} OnMinimize Window minimize event listeners
+---@class Window
+---@field draggable boolean Window can be dragged
+---@field resizable boolean Window can be resized
+---@field minimizable boolean Window can be minimized
+---@field minWidth number Minimum window width
+---@field minHeight number Minimum window height
+---@field titleBarHeight number Height of the title bar
+---@field titleBarColor Color Title bar color
+---@field caption string Window title text
+---@field minimized boolean Current minimized state
+---@field OnMove function[] Window move event listeners
+---@field OnResize function[] Window resize event listeners
+---@field OnMinimize function[] Window minimize event listeners
 
 Window = Control:Inherit({
 	classname = "window",

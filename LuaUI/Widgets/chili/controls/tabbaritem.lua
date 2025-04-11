@@ -1,5 +1,10 @@
 --//=============================================================================
 
+--- TabBarItem is a button that can be used in a TabBar.
+--- @class TabBarItem: Button
+--- @field caption string Tab name
+--- @field height string Tab height
+
 TabBarItem = Button:Inherit({
 	classname = "tabbaritem",
 	caption = "tab",

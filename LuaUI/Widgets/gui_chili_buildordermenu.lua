@@ -1,11 +1,9 @@
-local widget = {}
-
 ---Gets the widget information.
 ---@return table { version: string, name: string, desc: string, author: string, date: string, license: string, layer: number, enabled: boolean, handler: boolean }
 function widget:GetInfo()
 	return {
 		version = "0.1",
-		name = "chiliBuildOrderMenu",
+		name = "Chili Build Order Menu",
 		desc = "Build/Order menu implemented with chili ui",
 		author = "Adrianulima",
 		date = "WIP",
@@ -89,8 +87,21 @@ local mathmin = math.min
 glGetTextWidth = gl.GetTextWidth
 
 -- Chili classes
----@type any
-local Chili, Window, Image, Button, Grid, Label, ScrollPanel, color2incolor
+---@type table
+local Chili
+---@type Window
+local Window
+---@type Image
+local Image
+---@type Button
+local Button
+---@type Grid
+local Grid
+---@type Label
+local Label
+---@type ScrollPanel
+local ScrollPanel
+local color2incolor
 
 -- Global vars
 ---@type Window

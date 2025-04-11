@@ -1,13 +1,20 @@
 --//=============================================================================
 
 --- ImageListView module
+--- A control that displays a list of images in a grid layout.
+--- @class ImageListView: LayoutPanel
+--- @field autosize boolean Automatically size to fit content
+--- @field autoArrangeH boolean Automatically arrange items horizontally
+--- @field autoArrangeV boolean Automatically arrange items vertically
+--- @field centerItems boolean Center items in cells
+--- @field dir string Initial directory
+--- @field OnDirChange function[] Directory change event listeners
+--- @field iconX number Icon width
+--- @field iconY number Icon height
+--- @field itemMargin [number, number, number, number] Margin between items
+--- @field items string[] List of image file paths
+--- @field useRTT boolean Use Render To Texture for images. Experimental
 
---- ImageListView fields.
--- Inherits from LayoutPanel.
--- @see layoutpanel.LayoutPanel
--- @table ImageListView
--- @string[opt=""] dir initial directory
--- @tparam {func1,func2,...} OnDirChange table of function listeners for directory change (default {})
 ImageListView = LayoutPanel:Inherit({
 	classname = "imagelistview",
 

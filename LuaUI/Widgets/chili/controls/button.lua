@@ -2,22 +2,19 @@
 
 --- Button module
 --- A clickable button control with customizable caption and styling.
-
---- Button fields
--- Inherits from Control.
--- @see control.Control
--- @table Button
--- @string[opt=""] caption Button text
--- @tparam font font Caption font settings
--- @bool[opt=true] toggleable Button can be toggled on/off
--- @bool[opt=false] checked Current toggle state
--- @bool[opt=false] pressed Current pressed state
--- @number[opt=1] borderWidth Border thickness
--- @tparam {r,g,b,a} focusColor Color when focused (default {1,1,1,1})
--- @tparam {r,g,b,a} captionColor Text color (default {1,1,1,0.8})
--- @tparam function{} OnClick Click event listeners
--- @tparam function{} OnMouseUp Mouse up event listeners
--- @tparam function{} OnMouseDown Mouse down event listeners
+--- @class Button: Control
+--- @field caption string Button text
+--- @field defaultWidth number Default button width
+--- @field defaultHeight number Default button height
+--- @field toggleable boolean Button can be toggled on/off
+--- @field checked boolean Current toggle state
+--- @field pressed boolean Current pressed state
+--- @field borderColor Color Border color (default {1,1,1,0.8})
+--- @field focusColor Color Color when focused (default {1,1,1,1})
+--- @field captionColor Color Text color (default {1,1,1,0.8})
+--- @field OnClick function[] Click event listeners
+--- @field OnMouseUp function[] Mouse up event listeners
+--- @field OnMouseDown function[] Mouse down event listeners
 
 Button = Control:Inherit({
 	classname = "button",

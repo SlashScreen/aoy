@@ -15,36 +15,38 @@
 -- Base class for any auto-layout panel like grids, stack panels, tables, etc.
 -- @module LayoutPanel
 
---- LayoutPanel fields.
--- Inherits from Control.
--- @see control.Control
--- @table LayoutPanel
--- @tparam {left,top,right,bottom} itemPadding table of item padding, (default {5,5,5,5})
--- @tparam {left,top,right,bottom} itemMargin table of item margin, (default {5,5,5,5})
--- @int[opt=1] minWidth minimum item width
--- @int[opt=0] maxWidth maximum item width
--- @int[opt=1] minHeight minimum item height
--- @int[opt=0] maxHeight maximum item height
--- @string[opt="horizontal] orientation orientation of the items
--- @bool[opt=false] resizeItems items are resized
--- @bool[opt=true] centerItems items are centered
--- @bool[opt=false] selectable items can be selected
--- @bool[multiSelect=true] multiSelect multiple items can be selected
--- @tparam {func1,func2,...} OnSelectItem function listeners to be called on item selection change (default {})
--- @tparam {func1,func2,...} OnDrawItem function listeners to be called when an item is drawn (default {})
--- @tparam (func1,func2,...} OnDblClickItem function listeners to be called on double click (default {})
--- @field[opt=false] autosize panel automatically resizes to fit content
--- @field[opt=nil] rows number of rows in grid layout
--- @field[opt=nil] columns number of columns in grid layout
--- @field[opt=false] autoArrangeH auto-arrange items horizontally
--- @field[opt=false] autoArrangeV auto-arrange items vertically
--- @field[opt=false] grid use grid layout
--- @field[opt=false] weightedResize use weighted resizing for items
--- @field[opt={}] selectedItems table of selected item indices
--- @field[opt={}] _lines internal - line start indices
--- @field[opt={}] _cells internal - cell dimensions
--- @field[opt={}] _cellPaddings internal - cell padding info
--- @field[opt=false] _inUpdateLayout internal - layout update flag
+---@class LayoutPanel: Control
+---@field itemMargin [number, number, number, number] Margin between cells
+---@field itemPadding [number, number, number, number] Padding inside cells
+---@field minItemWidth number Minimum item width
+---@field minItemHeight number Minimum item height
+---@field maxItemWidth number Maximum item width
+---@field maxItemHeight number Maximum item height
+---@field autosize boolean Automatically size to fit content
+---@field rows number? Number of rows in grid layout
+---@field columns number? Number of columns in grid layout
+---@field orientation "horizontal" | "vertical" Orientation of the items
+---@field autoArrangeH boolean Automatically arrange items horizontally FIXME rename
+---@field autoArrangeV boolean Automatically arrange items vertically FIXME rename
+---@field grid boolean Use grid layout FIXME not implemented yet
+---@field resizeItems boolean Items are resized
+---@field centerItems boolean Items are centered
+---@field weightedResize boolean Use weighted resizing for items.
+---takes weights into account when resizing items (instead of same size for all)
+--- - e.g. "component1.weight = 1, component2.weight = 2" => component2 will be 2 times larger than component1
+--- - if all components have same weight -> same layout as without weightedResize
+--- - default value is 1 (nil interpreted as 1)
+---@field selectable boolean Items can be selected
+---@field multiSelect boolean Multiple items can be selected
+---@field selectedItems boolean[] Table of selected item indices
+---@field OnSelectItem function[] Function listeners to be called on item selection changed
+---@field OnDrawItem function[] Function listeners to be called when an item is drawn FIXME
+---@field OnDblClickItem function[] Function listeners to be called on double click
+---@field private _lines number[] Internal - line start indices
+---@field private _cells number[] Internal - cell dimensions
+---@field private _cellPaddings number[] Internal - cell padding info
+---@field private _inUpdateLayout boolean Internal - layout update flag
+
 LayoutPanel = Control:Inherit({
 	classname = "layoutpanel",
 
@@ -66,11 +68,6 @@ LayoutPanel = Control:Inherit({
 	resizeItems = false,
 	centerItems = true,
 
-	--[[ takes weights into account when resizing items (instead of same size for all)
-       - e.g. "component1.weight = 1, component2.weight = 2" => component2 will be 2 times larger than component1
-       - if all components have same weight -> same layout as without weightedResize
-       - default value is 1 (nil interpreted as 1)
-  ]]
 	weightedResize = false,
 
 	selectable = false,

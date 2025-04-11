@@ -2,18 +2,14 @@
 
 --- Line module
 --- A control that draws lines between points with customizable style.
-
---- Line fields
--- Inherits from Control.
--- @see control.Control
--- @table Line
--- @tparam table points Array of line points {x1,y1, x2,y2, ...}
--- @tparam {r,g,b,a} color Line color (default {1,1,1,1})
--- @number[opt=1] width Line width
--- @bool[opt=false] style Line style ("solid", "dashed", "dotted")
--- @number[opt=5] dashLength Length of dashes
--- @number[opt=5] dotSpacing Spacing between dots
--- @bool[opt=false] relative Points are relative to control position
+--- @class Line: Control
+--- @field points number[] Array of line points {x1,y1, x2,y2, ...}
+--- @field color Color Line color (default {1,1,1,1})
+--- @field width number Line width (default 1)
+--- @field style "solid" | "dashed" | "dotted" Line style (default "solid")
+--- @field dashLength number Length of dashes (default 5)
+--- @field dotSpacing number Spacing between dots (default 5)
+--- @field relative boolean Points are relative to control position (default false)
 
 Line = Control:Inherit({
 	classname = "line",

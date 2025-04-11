@@ -1,3 +1,5 @@
+---@alias Color {r:number, g:number, b:number, a:number}
+
 local includes = {
 	--"headers/autolocalizer.lua",
 	"headers/util.lua",
@@ -59,4 +61,4 @@ for _, file in ipairs(includes) do
 	VFS.Include(Chili.CHILI_DIRNAME .. file, Chili, VFS.RAW_FIRST)
 end
 
-return Chili
+return Chili -- TODO: Needs types somehow.

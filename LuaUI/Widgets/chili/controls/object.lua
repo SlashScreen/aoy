@@ -1,25 +1,32 @@
 --//=============================================================================
 
 --- Object module
+--- @class Object
+--- @field className string Name of class
+--- @field defaultWidth number Default width of object
+--- @field defaultHeight number Default height of object
+--- @field visible boolean Object is visible
+--- @field preserveChildrenOrder boolean Children order is preserved TODO: if reordered?
+--- @field children Object[] The children of the object
+--- @field children_hidden table<Object, boolean>
+--- @field childrenByName table<string, Object>
+--- @field OnDispose function[] function listeners for object disposal
+--- @field OnClick function[] function listeners for mouse click
+--- @field OnDblClick function[] function listeners for mouse double click
+--- @field OnMouseDown function<integer, integer, integer>[] function listeners for mouse press
+--- @field OnMouseUp function[] function listeners for mouse release
+--- @field OnMouseMove function[] function listeners for mouse movement
+--- @field OnMouseWheel function[] function listeners for mouse scrolling
+--- @field OnMouseOver function[] function listeners for mouse over
+--- @field OnMouseOut function[] function listeners for mouse leaving the object
+--- @field OnKeyPress function[] function listeners for key press
+--- @field OnTextInput function[] function listeners for text input
+--- @field OnFocusUpdate function[] function listeners for focus change
+--- @field OnHide function[] function listeners for object hiding
+--- @field OnShow function[] function listeners for object showing
+--- @field disableChildrenHitTest boolean Children are not clickable/draggable etc - their mouse events are not processed
+--- @field inherited table Inherited class TODO: how to type this
 
---- Object fields.
--- @table Object
--- @bool[opt=true] visible control is displayed
--- @tparam {Object1,Object2,...} children table of visible children objects (default {})
--- @tparam {Object1,Object2,...} children_hidden table of invisible children objects (default {})
--- @tparam {"obj1Name"=Object1,"obj2Name"=Object2,...} childrenByName table mapping name->child
--- @tparam {func1,func2,...} OnDispose  function listeners for object disposal, (default {})
--- @tparam {func1,func2,...} OnClick  function listeners for mouse click, (default {})
--- @tparam {func1,func2,...} OnDblClick  function listeners for mouse double click, (default {})
--- @tparam {func1,func2,...} OnMouseDown  function listeners for mouse press, (default {})
--- @tparam {func1,func2,...} OnMouseUp  function listeners for mouse release, (default {})
--- @tparam {func1,func2,...} OnMouseMove  function listeners for mouse movement, (default {})
--- @tparam {func1,func2,...} OnMouseWheel  function listeners for mouse scrolling, (default {})
--- @tparam {func1,func2,...} OnMouseOver  function listeners for mouse over...?, (default {})
--- @tparam {func1,func2,...} OnMouseOut  function listeners for mouse leaving the object, (default {})
--- @tparam {func1,func2,...} OnKeyPress  function listeners for key press, (default {})
--- @tparam {func1,func2,...} OnFocusUpdate  function listeners for focus change, (default {})
--- @bool[opt=false] disableChildrenHitTest if set childrens are not clickable/draggable etc - their mouse events are not processed
 Object = {
 	classname = "object",
 	--x         = 0,

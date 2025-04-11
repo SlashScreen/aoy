@@ -1,18 +1,19 @@
 --//=============================================================================
 
 --- Font module
+--- @class Font: Object
+--- @field font string Font file path
+--- @field size number Font size
+--- @field outlineWidth number Outline width
+--- @field outlineWeight number Outline weight
+--- @field shadow boolean Shadow enabled
+--- @field outline boolean Outline enabled
+--- @field color Color Text color
+--- @field outlineColor Color Outline color
+--- @field autoOutlineColor boolean Auto outline color enabled
 
---- Font fields
--- Inherits from Control.
--- @see control.Control
--- @table Font
--- @string[opt="FreeSansBold.otf"] font font name
--- @int[opt=12] size font size
--- @bool[opt=false] shadow shadow enabled
--- @bool[opt=false] outline outline enabled
--- @tparam {r,g,b,a} color color table (default {1,1,1,1})
--- @tparam {r,g,b,a} outlineColor outlineColor table (default {0,0,0,1})
--- @bool[opt=true] autoOutlineColor ??
+--- Class Methods
+--- @section Methods
 
 local fontfile = LUAUI_DIRNAME .. "fonts/" .. Spring.GetConfigString("ui_font", "JosefinSans-SemiBold.ttf")
 local fontfile2 = LUAUI_DIRNAME .. "fonts/" .. Spring.GetConfigString("ui_font2", "JosefinSans-Bold.ttf")
@@ -37,6 +38,11 @@ local inherited = this.inherited
 
 --//=============================================================================
 
+--- Creates a new Font instance
+--- @class Font
+--- @function Font:New
+--- @param obj table Configuration object
+--- @return Font The new font instance
 function Font:New(obj)
 	obj = inherited.New(self, obj)
 
@@ -46,6 +52,9 @@ function Font:New(obj)
 	return obj
 end
 
+--- Disposes of the font, cleaning up resources
+--- @function Font:Dispose
+--- @param ... any Additional parameters passed to inherited dispose
 function Font:Dispose(...)
 	if not self.disposed then
 		FontHandler.UnloadFont(self._font)
@@ -55,6 +64,9 @@ end
 
 --//=============================================================================
 
+--- Reloads the font with current settings
+--- @function Font:_LoadFont
+--- @local
 function Font:_LoadFont()
 	local oldfont = self._font
 	local uiScale = (WG and WG.uiScale or 1)
@@ -153,19 +165,39 @@ end
 
 --//=============================================================================
 
+--- Gets the line height for the font
+--- @function Font:GetLineHeight
+--- @param size number Optional size override
+--- @return number The line height in pixels
 function Font:GetLineHeight(size)
 	return self._font.lineheight * (size or self.size)
 end
 
+--- Gets the ascender height for the font
+--- @function Font:GetAscenderHeight
+--- @param size number Optional size override
+--- @return number The ascender height in pixels
 function Font:GetAscenderHeight(size)
 	local font = self._font
 	return (font.lineheight + font.descender) * (size or self.size)
 end
 
+--- Gets the width of text when rendered with this font
+--- @function Font:GetTextWidth
+--- @param text string The text to measure
+--- @param size number Optional size override
+--- @return number The text width in pixels
 function Font:GetTextWidth(text, size)
 	return (self._font):GetTextWidth(text) * (size or self.size)
 end
 
+--- Gets the height of text when rendered with this font
+--- @function Font:GetTextHeight
+--- @param text string The text to measure
+--- @param size number Optional size override
+--- @return number height The text height in pixels
+--- @return number descender The descender height in pixels
+--- @return number numlines The number of lines
 function Font:GetTextHeight(text, size)
 	if not size then
 		size = self.size
@@ -174,6 +206,13 @@ function Font:GetTextHeight(text, size)
 	return h * size, descender * size, numlines
 end
 
+--- Wraps text to fit within given dimensions
+--- @function Font:WrapText
+--- @param text string The text to wrap
+--- @param width number Maximum width in pixels
+--- @param height number Maximum height in pixels
+--- @param size number Optional size override
+--- @return string The wrapped text
 function Font:WrapText(text, width, height, size)
 	if not size then
 		size = self.size

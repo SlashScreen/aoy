@@ -1,9 +1,17 @@
 --- Scales module
+--- A control for displaying a scale with customizable properties.
+--- @class Scales: Control
+--- @field min number Minimum value (default -50)
+--- @field max number Maximum value (default 50)
+--- @field step number Step size (default 10)
+--- @field logBase number Logarithmic base (default 1.5)
+--- @field defaultWidth number Default width (default 90)
+--- @field defaultHeight number Default height (default 12)
+--- @field fontsize number Font size (default 8)
+--- @field scaleFunction function? Function to rescale graph (default nil) takes 0-1 and must return 0-1
+--- @field color Color Scale color (default {0,0,0,1})
+--- @field OnChange function[] Value change event listeners
 
---- Scale fields.
--- Inherits from Control.
--- @see control.Control
--- @table Scales
 Scale = Control:Inherit({
 	classname = "scale",
 	min = -50,

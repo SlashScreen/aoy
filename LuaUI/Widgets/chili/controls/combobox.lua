@@ -2,19 +2,15 @@
 
 --- ComboBox module
 --- A control that provides dropdown selection functionality.
-
---- ComboBox fields
--- Inherits from Control.
--- @see control.Control
--- @table ComboBox
--- @tparam table items Array of dropdown items
--- @int[opt=1] selected Index of selected item
--- @number[opt=100] maxDropDownHeight Maximum height of dropdown
--- @bool[opt=false] expanded Dropdown is expanded
--- @tparam {r,g,b,a} color Text color
--- @tparam {r,g,b,a} backgroundColor Background color
--- @tparam {r,g,b,a} selectedColor Selected item color
--- @tparam function{} OnSelect Item selection event listeners
+--- @class ComboBox: Control
+--- @field items Object[] Dropdown items
+--- @field selected number Index of selected item
+--- @field maxDropDownHeight number Maximum height of dropdown
+--- @field expanded boolean Dropdown is expanded
+--- @field color Color Text color. Default is {1,1,1,1}
+--- @field backgroundColor Color Background color. Default is {0,0,0,0.8}
+--- @field selectedColor Color Selected item color. Default is {0.4,0.4,1,0.8}
+--- @field OnSelect function[] Item selection event listeners
 
 ComboBox = Control:Inherit({
 	classname = "combobox",
@@ -30,6 +26,7 @@ ComboBox = Control:Inherit({
 	OnSelect = {},
 })
 
+---@type ComboBox
 local this = ComboBox
 local inherited = this.inherited
 

@@ -1,5 +1,19 @@
 --//=============================================================================
 
+--- @class TreeViewNode : Control
+--- @field padding [number, number, number, number] Padding around the node
+--- @field autosize boolean Automatically size to fit content
+--- @field caption string Node caption
+--- @field expanded boolean Node expansion state
+--- @field root boolean Is this node the root node?
+--- @field nodes TreeViewNode[] List of child nodes
+--- @field treeview TreeView? Reference to the parent tree view
+--- @field private _nodes_hidden table List of hidden nodes
+--- @field OnSelectChange function[] Selection change event listeners
+--- @field OnCollapse function[] Collapse event listeners
+--- @field OnExpand function[] Expand event listeners
+--- @field OnDraw function[] Draw event listeners
+
 TreeViewNode = Control:Inherit({
 	classname = "treeviewnode",
 

@@ -1,16 +1,20 @@
 --- Screen module
+--- A control that serves as a container for other controls, handling input events and layout.
+--- @class Screen: Object
+--- @field x number X position
+--- @field y number Y position
+--- @field width number Width of the screen
+--- @field height number Height of the screen
+--- @field activeControl Control? Currently active control
+--- @field focusedControl Control? Currently focused control
+--- @field hoveredControl Control? Currently hovered control
+--- @field currentTooltip Control? Currently displayed tooltip
+--- @field private _lastHoveredControl Control? Last hovered control
+--- @field private _lastClicked number Last click time
+--- @field private _lastClickedX number Last clicked X position
+--- @field private _lastClickedY number Last clicked Y position
+--- @field preserveChildrenOrder boolean Preserve the order of child controls (default true)
 
---- Screen fields.
--- Inherits from Object.
--- @see object.Object
--- @table Screen
--- @int[opt=0] x x position
--- @int[opt=0] y y position
--- @int[opt=0] width width
--- @int[opt=0] height height
--- @tparam control.Control activeControl active control
--- @tparam control.Control focusedControl focused control
--- @tparam control.Control hoveredControl hovered control
 Screen = Object:Inherit({
 	--Screen = Control:Inherit{
 	classname = "screen",

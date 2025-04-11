@@ -1,26 +1,18 @@
 --//=============================================================================
 
---- TabPanel and TabBar modules
---- Controls for creating tabbed interfaces with selectable pages.
+--- @class TabBar: Control
+--- @field tabs TabBarItem[] Array of tab items
+--- @field selected integer Index of selected tab
+--- @field vertical boolean Tabs are arranged vertically
+--- @field selectedColor Color Selected tab color
+--- @field defaultWidth number Default tab width
+--- @field defaultHeight number Default tab height
+--- @field OnChange function[] Tab change event listeners
 
---- TabBar fields
--- Inherits from Control.
--- @see control.Control
--- @table TabBar
--- @tparam table tabs Array of tab items
--- @int[opt=1] selected Index of selected tab
--- @bool[opt=false] vertical Tabs are arranged vertically
--- @tparam {r,g,b,a} selectedColor Selected tab color
--- @tparam function{} OnChange Tab change event listeners
-
---- TabPanel fields
--- Inherits from Control.
--- @see control.Control
--- @table TabPanel
--- @tparam TabBar tabBar The tab bar control
--- @tparam table tabs Array of tab pages
--- @int[opt=1] currentTab Index of current tab page
--- @tparam function{} OnTabChange Tab change event listeners
+--- @class TabPanel: Control
+--- @field tabs TabBarItem[] Array of tab pages
+--- @field currentTab integer Index of current tab page
+--- @field OnTabChange function[] Tab change event listeners
 
 TabBar = Control:Inherit({
 	classname = "tabbar",

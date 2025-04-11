@@ -2,20 +2,18 @@
 
 --- Image module
 --- A control for displaying images and textures with various sizing and rendering options.
-
---- Image fields
--- Inherits from Control.
--- @see control.Control
--- @table Image
--- @string[opt=""] file Path to image file
--- @bool[opt=false] keepAspect Maintain aspect ratio
--- @bool[opt=false] autosize Size to match image dimensions
--- @string[opt="stretch"] imageLoadType Loading mode ("stretch", "file", "icon")
--- @tparam Color color Tint color (default {1,1,1,1})
--- @tparam table uvCoords UV coordinates for texture mapping
--- @tparam table texRect Source rectangle in texture
--- @bool[opt=false] flipY Flip texture vertically
--- @bool[opt=false] tile Tile the texture
+---@class Image: Control
+---@field file string Path to image file
+---@field keepAspect boolean Maintain aspect ratio
+---@field autosize boolean Size to match image dimensions
+---@field imageLoadType "stretch" | "file" | "icon" Loading mode
+---@field color Color Tint color (default {1,1,1,1})
+---@field uvCoords {left: number, topY: number, right: number, bottom: number}? UV coordinates for texture mapping
+---@field texRect {left: number, topY: number, right: number, bottom: number}? Source rectangle in texture
+---@field flipY boolean Flip texture vertically
+---@field tile boolean Tile the texture
+---@field defaultWidth number Default width (default 64)
+---@field defaultHeight number Default height (default 64)
 
 Image = Control:Inherit({
 	classname = "image",

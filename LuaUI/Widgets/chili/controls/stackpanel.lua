@@ -2,19 +2,16 @@
 
 --- StackPanel module
 --- A panel that automatically arranges child controls in a vertical or horizontal stack.
-
---- StackPanel fields
--- Inherits from LayoutPanel.
--- @see layoutpanel.LayoutPanel
--- @table StackPanel
--- @string[opt="vertical"] orientation Stack direction ("vertical" or "horizontal")
--- @bool[opt=false] resizeItems Resize items to fill width/height
--- @bool[opt=true] autosize Automatically size to fit content
--- @tparam {left,top,right,bottom} itemPadding Padding between items
--- @tparam {left,top,right,bottom} itemMargin Margin around items
--- @int[opt=1] minItemWidth Minimum item width
--- @int[opt=1] minItemHeight Minimum item height
--- @bool[opt=false] centerItems Center items in cross direction
+--- @class StackPanel: LayoutPanel
+--- @field orientation string Stack direction ("vertical" or "horizontal")
+--- @field resizeItems boolean Resize items to fill width/height
+--- @field autosize boolean Automatically size to fit content
+--- @field itemPadding [number, number, number, number] Padding between items
+--- @field itemMargin [number, number, number, number] Margin around items
+--- @field minItemWidth number Minimum item width
+--- @field minItemHeight number Minimum item height
+--- @field centerItems boolean Center items in cross direction
+--- @field OnResize function[] Resize event listeners
 
 StackPanel = LayoutPanel:Inherit({
 	classname = "stackpanel",

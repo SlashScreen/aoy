@@ -2,18 +2,14 @@
 
 --- Checkbox module
 --- A control that can be checked or unchecked to represent a boolean state.
-
---- Checkbox fields
--- Inherits from Control.
--- @see control.Control
--- @table Checkbox
--- @string[opt=""] caption Text label
--- @bool[opt=false] checked Current checked state
--- @bool[opt=false] boxalign Box alignment ("left" or "right")
--- @int[opt=13] boxsize Size of checkbox box
--- @tparam {r,g,b,a} textColor Text color
--- @tparam {r,g,b,a} checkColor Check mark color
--- @tparam function{} OnChange State change event listeners
+--- @class Checkbox: Control
+--- @field caption string label
+--- @field checked boolean Current checked state
+--- @field boxalign "left" | "right" Box alignment
+--- @field boxsize number Size of checkbox box. (default 13)
+--- @field textColor Color Text color (default {1,1,1,1})
+--- @field checkColor Color Check mark color (default {0.5,1,0.5,1})
+--- @field OnChange function[] State change event listeners
 
 Checkbox = Control:Inherit({
 	classname = "checkbox",
@@ -28,6 +24,7 @@ Checkbox = Control:Inherit({
 	OnChange = {},
 })
 
+---@type Checkbox
 local this = Checkbox
 local inherited = this.inherited
 

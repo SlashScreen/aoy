@@ -2,18 +2,14 @@
 
 --- Panel module
 --- A basic container control that can hold and arrange other controls.
-
---- Panel fields
--- Inherits from Control.
--- @see control.Control
--- @table Panel
--- @tparam {left,top,right,bottom} padding Internal padding from edges (default {5,5,5,5})
--- @tparam {left,top,right,bottom} margin External margin around panel (default {0,0,0,0})
--- @bool[opt=false] resizeItems Resize child items to fit
--- @bool[opt=false] autosize Automatically size to fit content
--- @tparam Color backgroundColor Background color
--- @tparam Color borderColor Border color
--- @number[opt=0] borderWidth Border thickness
+--- @class Panel: Control
+--- @field padding [number, number, number, number] Internal padding from edges (default {5,5,5,5})
+--- @field margin [number, number, number, number] External margin around panel (default {0,0,0,0})
+--- @field resizeItems boolean Resize child items to fit
+--- @field autosize boolean Automatically size to fit content
+--- @field backgroundColor Color Background color
+--- @field borderColor Color Border color
+--- @field borderWidth number Border thickness
 
 Panel = Control:Inherit({
 	classname = "panel",

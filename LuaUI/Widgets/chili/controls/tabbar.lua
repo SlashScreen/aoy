@@ -1,5 +1,20 @@
 --//=============================================================================
 
+--- TabBar
+--- A TabBar is a horizontal or vertical bar of tabs. Each tab can be selected, and the selected tab can be used to display different content.
+--- @class TabBar: LayoutPanel
+--- @field orientation string Orientation of the tab bar ("horizontal" or "vertical")
+--- @field resizeItems boolean Resize items to fill width/height
+--- @field centerItems boolean Center items in cross direction
+--- @field padding [number, number, number, number] Padding between items
+--- @field itemPadding [number, number, number, number] Padding around items
+--- @field itemMargin [number, number, number, number] Margin around items
+--- @field minItemWidth number Minimum item width
+--- @field minItemHeight number Minimum item height
+--- @field tabs string[] List of tab names
+--- @field selected string? Selected tab name
+--- @field OnChange function[] Tab change event listeners
+
 TabBar = LayoutPanel:Inherit({
 	classname = "tabbar",
 	orientation = "horizontal",

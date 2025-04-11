@@ -1,17 +1,16 @@
 --- ScrollButton module
 --- A specialized button control used for scrollbar functionality.
-
---- ScrollButton fields
--- Inherits from Button.
--- @see button.Button
--- @table ScrollButton
--- @string[opt="horizontal"] axis Scroll direction ("horizontal" or "vertical")
--- @number[opt=0] position Current scroll position (0-1)
--- @number[opt=0.1] step Step size for incremental scrolling
--- @number[opt=0.1] minSize Minimum button size relative to scrollbar
--- @number[opt=1.0] maxSize Maximum button size relative to scrollbar
--- @tparam function{} OnScroll Scroll event listeners
--- @tparam function{} OnMinimize Minimize event listeners
+--- @class ScrollButton: Button
+--- @field axis string Scroll direction ("horizontal" or "vertical")
+--- @field position number Current scroll position (0-1)
+--- @field step number Step size for incremental scrolling
+--- @field minSize number Minimum button size relative to scrollbar
+--- @field maxSize number Maximum button size relative to scrollbar
+--- @field OnScroll function[] Scroll event listeners
+--- @field OnMinimize function[] Minimize event listeners
+--- @field borderColor Color Border color (default {1,1,1,0.6})
+--- @field backgroundColor Color Background color (default {0.8,0.8,0.8,0.85})
+--- @field focusColor Color Color when focused (default {0.9,0.9,0.9,0.85})
 
 ScrollButton = Button:Inherit({
 	classname = "scrollbutton",

@@ -2,21 +2,23 @@
 
 --- EditBox module
 --- A text input control that allows users to enter and edit text.
-
---- EditBox fields
--- Inherits from Control.
--- @see control.Control
--- @table EditBox
--- @string[opt=""] text Current text content
--- @string[opt=""] hint Hint text shown when empty
--- @bool[opt=true] selectable Text can be selected
--- @bool[opt=false] multiline Allow multiple lines
--- @bool[opt=true] editable Text can be edited
--- @tparam {r,g,b,a} cursorColor Color of text cursor (default {0,0,1,0.7})
--- @tparam {r,g,b,a} selectionColor Color of selected text (default {0,0,1,0.3})
--- @tparam function{} OnTextInput Text input event listeners
--- @tparam function{} OnKeyPress Key press event listeners
--- @tparam function{} OnEnterPress Enter key press listeners
+--- @class EditBox: Control
+--- @field text string Current text content
+--- @field hint string Hint text shown when empty
+--- @field selectable boolean Text can be selected
+--- @field multiline boolean Allow multiple lines
+--- @field editable boolean Text can be edited
+--- @field cursorColor Color Color of text cursor (default {0,0,1,0.7})
+--- @field selectionColor Color Color of selected text (default {0,0,1,0.3})
+--- @field OnTextInput function[] Text input event listeners
+--- @field OnKeyPress function[] Key press event listeners
+--- @field OnEnterPress function[] Enter key press listeners
+--- @field defaultWidth number Default width of the control
+--- @field defaultHeight number Default height of the control
+--- @field padding number[] Padding around the text (default {3,3,3,3})
+--- @field cursorPos number Current cursor position in the string
+--- @field selStart number? Start position of selected text
+--- @field selEnd number? End position of selected text
 
 EditBox = Control:Inherit({
 	classname = "editbox",

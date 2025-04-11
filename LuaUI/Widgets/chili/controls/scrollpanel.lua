@@ -2,23 +2,19 @@
 
 --- ScrollPanel module
 --- A container control that provides scrolling functionality for content that exceeds its bounds.
-
---- ScrollPanel fields
--- Inherits from Control.
--- @see control.Control
--- @table ScrollPanel
--- @bool[opt=true] horizontal Enable horizontal scrolling
--- @bool[opt=true] vertical Enable vertical scrolling
--- @bool[opt=true] smoothScroll Use smooth scrolling
--- @number[opt=1] smoothScrollSpeed Scroll animation speed
--- @number[opt=25] scrollbarSize Width of scrollbars
--- @number[opt=50] scrollbarScale Scale of scrollbar relative to content
--- @number[opt=0] scrollPosX Current horizontal scroll position
--- @number[opt=0] scrollPosY Current vertical scroll position
--- @tparam {r,g,b,a} backgroundColor Background color
--- @tparam {r,g,b,a} borderColor Border color
--- @bool[opt=true] ignoreMouseWheel Ignore mouse wheel input
--- @tparam function{} OnScroll Scroll event listeners
+--- @class ScrollPanel: Control
+--- @field horizontal boolean Enable horizontal scrolling (default true)
+--- @field vertical boolean Enable vertical scrolling (default true)
+--- @field smoothScroll boolean Use smooth scrolling (default true)
+--- @field smoothScrollSpeed number Scroll animation speed (default 1)
+--- @field scrollbarSize number Width of scrollbars (default 12)
+--- @field scrollbarScale number Scale of scrollbar relative to content (default 50)
+--- @field scrollPosX number Current horizontal scroll position (default 0)
+--- @field scrollPosY number Current vertical scroll position (default 0)
+--- @field backgroundColor Color Background color (default {0,0,0,0.5})
+--- @field borderColor Color Border color (default {0.3,0.3,0.3,1})
+--- @field ignoreMouseWheel boolean Ignore mouse wheel input (default true)
+--- @field OnScroll function[] Scroll event listeners
 
 ScrollPanel = Control:Inherit({
 	classname = "scrollpanel",

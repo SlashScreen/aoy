@@ -1,5 +1,11 @@
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
+--- GL Volume Drawing Utilities
+--- Provides functions for drawing 3D volumes and shapes using OpenGL
+--- @module gl.Utilities
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 -- Exported Functions:
 --  gl.Utilities.DrawMyBox(minX,minY,minZ, maxX,maxY,maxZ)
 --  gl.Utilities.DrawMyCylinder(x,y,z, height,radius,divs)
@@ -43,6 +49,13 @@ local stencilBit2 = 0x10
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+--- Draws a 3D box using quads
+--- @param minX number Minimum X coordinate
+--- @param minY number Minimum Y coordinate
+--- @param minZ number Minimum Z coordinate
+--- @param maxX number Maximum X coordinate
+--- @param maxY number Maximum Y coordinate
+--- @param maxZ number Maximum Z coordinate
 function gl.Utilities.DrawMyBox(minX, minY, minZ, maxX, maxY, maxZ)
 	gl.BeginEnd(GL.QUADS, function()
 		--// top
@@ -71,6 +84,15 @@ function gl.Utilities.DrawMyBox(minX, minY, minZ, maxX, maxY, maxZ)
 	end)
 end
 
+--- Draws a 3D triangle with sides
+--- @param x1 number First vertex X coordinate
+--- @param z1 number First vertex Z coordinate
+--- @param x2 number Second vertex X coordinate
+--- @param z2 number Second vertex Z coordinate
+--- @param x3 number Third vertex X coordinate
+--- @param z3 number Third vertex Z coordinate
+--- @param minY number Minimum Y coordinate for height
+--- @param maxY number Maximum Y coordinate for height
 function gl.Utilities.DrawMy3DTriangle(x1, z1, x2, z2, x3, z3, minY, maxY)
 	gl.BeginEnd(GL.TRIANGLES, function()
 		--// top
@@ -95,6 +117,10 @@ function gl.Utilities.DrawMy3DTriangle(x1, z1, x2, z2, x3, z3, minY, maxY)
 	end)
 end
 
+--- Creates lookup tables for sin/cos values
+--- @param divs number Number of divisions for the circle
+--- @return table sinTable Table of sine values
+--- @return table cosTable Table of cosine values
 local function CreateSinCosTable(divs)
 	local sinTable = {}
 	local cosTable = {}
@@ -115,6 +141,13 @@ local function CreateSinCosTable(divs)
 	return sinTable, cosTable
 end
 
+--- Draws a cylinder
+--- @param x number Center X coordinate
+--- @param y number Center Y coordinate
+--- @param z number Center Z coordinate
+--- @param height number Height of the cylinder
+--- @param radius number Radius of the cylinder
+--- @param divs number? Optional number of divisions (default 25)
 function gl.Utilities.DrawMyCylinder(x, y, z, height, radius, divs)
 	divs = divs or 25
 	local sinTable, cosTable = CreateSinCosTable(divs)
@@ -154,6 +187,11 @@ function gl.Utilities.DrawMyCylinder(x, y, z, height, radius, divs)
 	end)
 end
 
+--- Draws a circle in 2D
+--- @param x number Center X coordinate
+--- @param y number Center Y coordinate
+--- @param radius number Radius of the circle
+--- @param divs number? Optional number of divisions (default 25)
 function gl.Utilities.DrawMyCircle(x, y, radius, divs)
 	divs = divs or 25
 	local sinTable, cosTable = CreateSinCosTable(divs)
@@ -165,6 +203,14 @@ function gl.Utilities.DrawMyCircle(x, y, radius, divs)
 	end)
 end
 
+--- Draws a hollow cylinder with inner and outer radius
+--- @param x number Center X coordinate
+--- @param y number Center Y coordinate
+--- @param z number Center Z coordinate
+--- @param height number Height of the cylinder
+--- @param radius number Outer radius
+--- @param inRadius number Inner radius (when < 1 treated as relative to radius, when >= 1 treated as absolute)
+--- @param divs number? Optional number of divisions (default 25)
 function gl.Utilities.DrawMyHollowCylinder(x, y, z, height, radius, inRadius, divs)
 	divs = divs or 25
 	local sinTable, cosTable = CreateSinCosTable(divs)
@@ -214,6 +260,11 @@ local averageGroundHeight = (minheight + maxheight) / 2
 local shapeHeight = heightMargin + (maxheight - minheight) + heightMargin
 
 local box = gl.CreateList(gl.Utilities.DrawMyBox, 0, -0.5, 0, 1, 0.5, 1)
+--- Draws a rectangle on the ground plane
+--- @param x1 number|table First X coordinate or table with {x1,z1,x2,z2}
+--- @param z1 number First Z coordinate (if not using table)
+--- @param x2 number Second X coordinate (if not using table)
+--- @param z2 number Second Z coordinate (if not using table)
 function gl.Utilities.DrawGroundRectangle(x1, z1, x2, z2)
 	if type(x1) == "table" then
 		local rect = x1
@@ -249,6 +300,10 @@ function gl.Utilities.DrawGroundTriangle(args)
 end
 
 local cylinder = gl.CreateList(gl.Utilities.DrawMyCylinder, 0, 0, 0, 1, 1, 35)
+--- Draws a circle on the ground plane
+--- @param x number Center X coordinate
+--- @param z number Center Z coordinate
+--- @param radius number Radius of the circle
 function gl.Utilities.DrawGroundCircle(x, z, radius)
 	gl.PushMatrix()
 	gl.Translate(x, averageGroundHeight, z)
@@ -267,6 +322,10 @@ function gl.Utilities.DrawCircle(x, y, radius)
 end
 
 -- See comment in DrawMergedVolume
+--- Draws a merged circle on the ground plane that works with stencil buffer
+--- @param x number Center X coordinate
+--- @param z number Center Z coordinate
+--- @param radius number Radius of the circle
 function gl.Utilities.DrawMergedGroundCircle(x, z, radius)
 	gl.PushMatrix()
 	gl.Translate(x, averageGroundHeight, z)
@@ -292,6 +351,11 @@ end
 
 --// when innerRadius is < 1, its value is treated as relative to radius
 --// when innerRadius is >=1, its value is treated as absolute value in elmos
+--- Draws a hollow circle on the ground plane
+--- @param x number Center X coordinate
+--- @param z number Center Z coordinate
+--- @param radius number Outer radius
+--- @param innerRadius number Inner radius (when < 1 treated as relative to radius, when >= 1 treated as absolute)
 function gl.Utilities.DrawGroundHollowCircle(x, z, radius, innerRadius)
 	local hollowCylinder = GetHollowCylinder(radius, innerRadius)
 	gl.PushMatrix()
@@ -304,6 +368,8 @@ end
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+--- Draws a volume using stencil buffer
+--- @param vol_dlist number Display list containing the volume geometry
 function gl.Utilities.DrawVolume(vol_dlist)
 	gl.DepthMask(false)
 	if gl.DepthClamp then
@@ -341,6 +407,9 @@ end
 -- Make sure that you start with a clear stencil and that you
 -- clear it using gl.Clear(GL.STENCIL_BUFFER_BIT, 0)
 -- after finishing all the merged volumes
+--- Draws a merged volume using stencil buffer tricks
+--- Make sure to clear the stencil buffer before and after using this
+--- @param vol_dlist number Display list containing the volume geometry
 function gl.Utilities.DrawMergedVolume(vol_dlist)
 	gl.DepthMask(false)
 	if gl.DepthClamp then

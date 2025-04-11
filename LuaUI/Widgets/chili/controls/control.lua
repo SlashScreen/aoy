@@ -2,25 +2,37 @@
 
 --- Control module
 -- This module defines a Control, which is a base UI element that provides common functionality for layout, rendering, and interaction.
-
---- Control fields.
--- Inherits from Object.
--- @see object.Object
--- @table Control
--- @tparam {left,top,right,bottom} padding Table of padding values for the control's content area. Default is {5,5,5,5}.
--- @number[opt=1.5] borderThickness Thickness of the control's border in pixels.
--- @tparam {r,g,b,a} borderColor Primary border color in RGBA format. Default is {1,1,1,0.6}.
--- @tparam {r,g,b,a} borderColor2 Secondary border color in RGBA format. Default is {0,0,0,0.8}.
--- @tparam {r,g,b,a} backgroundColor Background color of the control in RGBA format. Default is {0.8,0.8,1,0.4}.
--- @tparam {r,g,b,a} focusColor Color used to indicate focus in RGBA format. Default is {0.2,0.2,1,0.6}.
--- @bool[opt=false] autosize Whether the control automatically adjusts its size based on its content.
--- @bool[opt=false] draggable Whether the control can be dragged.
--- @bool[opt=false] resizable Whether the control can be resized.
--- @int[opt=10] minWidth Minimum width of the control.
--- @int[opt=10] minHeight Minimum height of the control.
--- @int[opt=1e9] maxWidth Maximum width of the control.
--- @int[opt=1e9] maxHeight Maximum height of the control.
--- @tparam {func1,func2,...} OnResize Listeners triggered when the control is resized. Default is an empty table.
+---@class Control: Object
+---@field padding number[] Padding values for the control's content area.
+---@field borderThickness number Thickness of the control's border in pixels.
+---@field borderColor number[] Primary border color in RGBA format.
+---@field borderColor2 number[] Secondary border color in RGBA format.
+---@field backgroundColor number[] Background color of the control in RGBA format.
+---@field focusColor number[] Color used to indicate focus in RGBA format.
+---@field autosize boolean Whether the control automatically adjusts its size based on its content.
+---@field savespace boolean If true, the control will shrink to its minimum size.
+---@field resizeGripSize number[] Size of the resize grip.
+---@field dragGripSize number[] Size of the drag grip.
+---@field dragUseGrip boolean Whether to use the grip for dragging.
+---@field draggable boolean Whether the control can be dragged.
+---@field resizable boolean Whether the control can be resized.
+---@field tweakDragUseGrip boolean Whether to use the grip for dragging in tweak mode.
+---@field tweakDraggable boolean Whether the control can be dragged in tweak mode.
+---@field tweakResizable boolean Whether the control can be resized in tweak mode.
+---@field minWidth number Minimum width of the control.
+---@field minHeight number Minimum height of the control.
+---@field maxWidth number Maximum width of the control.
+---@field maxHeight number Maximum height of the control.
+---@field fixedRatio boolean Whether to maintain a fixed aspect ratio when resizing.
+---@field tooltip string? Tooltip text for the control.
+---@field font table The font used for text rendering.
+---@field state table The current state of the control (focused, hovered, checked, selected, pressed, enabled).
+---@field skin table The skin applied to the control.
+---@field skinName string? The name of the skin applied to the control.
+---@field drawcontrolv2 boolean? Whether to use the new drawing method. Experimental.
+---@field useRTT boolean Whether to use render-to-texture for rendering. Experimental.
+---@field useDLists boolean Whether to use display lists for rendering. Experimental. FIXME broken in combination with RTT (wrong blending)
+---@field OnResize function[] Listeners triggered when the control is resized.
 
 local fontfile = LUAUI_DIRNAME .. "fonts/" .. Spring.GetConfigString("ui_font", "JosefinSans-SemiBold.ttf")
 local fontfile2 = LUAUI_DIRNAME .. "fonts/" .. Spring.GetConfigString("ui_font2", "JosefinSans-Bold.ttf")
