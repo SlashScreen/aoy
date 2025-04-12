@@ -26,9 +26,21 @@ local pick_up_item_command_desc = {
 	hidden = true,
 }
 
---- @type table<number, table>
+--- @alias UnitID integer
+--- @alias UnitDefID integer
+
+--- @type table<UnitID, integer[]>
 local inventory = {}
+--- @type table<UnitDefID, boolean>
+local is_hero = {}
 local max_inventory_size = 6
+
+-- Initialize is hero table
+for unit_def_id, unit_def in pairs(UnitDefs) do
+	if unit_def.customparams.is_hero then
+		is_hero[unit_def_id] = true
+	end
+end
 
 --- Pick up an item
 --- @param item string
@@ -36,7 +48,7 @@ local max_inventory_size = 6
 --- @return boolean
 local function pick_up_item(item, unit_id)
 	local unit_def_id = Spring.GetUnitDefID(unit_id)
-	if UnitDefs[unit_def_id].customparams.is_hero == nil then
+	if not is_hero[unit_def_id] then
 		return false
 	end
 
@@ -66,3 +78,11 @@ function gadget:AllowCommand(_unitID, unit_def_id, _unitTeam, cmdID, _cmdParams,
 		return true
 	end
 end
+
+--[[
+TODO:
+- Add a function to drop an item
+- Add a function to use an item
+- Since Heroes do not drop iems when they die, do I just keep the items in the inventory until the game ends?
+- Add item definitions and effects
+]]
