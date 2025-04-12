@@ -29,9 +29,8 @@ local this = Label
 local inherited = this.inherited
 
 --- Creates a new Label instance
--- @function Label:New
--- @param obj Table of label properties
--- @return Label The newly created label
+--- @param obj table Table of label properties
+--- @return Label The newly created label
 function Label:New(obj)
 	obj = inherited.New(self, obj)
 	obj:UpdateLayout()
@@ -39,8 +38,7 @@ function Label:New(obj)
 end
 
 --- Sets the label text
--- @function Label:SetCaption
--- @string newCaption Text to display
+--- @param newCaption string Text to display
 function Label:SetCaption(newCaption)
 	if self.caption == newCaption then
 		return
@@ -51,7 +49,6 @@ function Label:SetCaption(newCaption)
 end
 
 --- Updates the label layout
--- @function Label:UpdateLayout
 function Label:UpdateLayout()
 	local font = self.font
 
@@ -90,7 +87,6 @@ function Label:UpdateLayout()
 end
 
 --- Draws the label
--- @function Label:DrawControl
 function Label:DrawControl()
 	local font = self.font
 

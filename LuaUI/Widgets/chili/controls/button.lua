@@ -39,9 +39,8 @@ local this = Button
 local inherited = this.inherited
 
 --- Creates a new Button instance
--- @function Button:New
--- @param obj Table of button properties
--- @return Button The newly created button
+--- @param obj table Table of button properties
+--- @return Button The newly created button
 function Button:New(obj)
 	obj = inherited.New(self, obj)
 	obj:SetCaption(obj.caption)
@@ -49,8 +48,7 @@ function Button:New(obj)
 end
 
 --- Sets the button's caption text
--- @function Button:SetCaption
--- @string caption New caption text
+--- @param caption string New caption text
 function Button:SetCaption(caption)
 	if caption == self.caption then
 		return
@@ -60,17 +58,15 @@ function Button:SetCaption(caption)
 end
 
 --- Draw the button control
--- @function Button:DrawControl
 function Button:DrawControl()
 	-- Gets overriden by theme
 end
 
 --- Handles mouse down events
--- @function Button:MouseDown
--- @param x Mouse x position
--- @param y Mouse y position
--- @param ... Additional args
--- @return boolean True if handled
+--- @param x number Mouse x position
+--- @param y number Mouse y position
+--- @param ... any Additional args
+--- @return boolean True if handled
 function Button:MouseDown(x, y, ...)
 	if self:CheckMouseOver(x, y) then
 		self.pressed = true
@@ -82,11 +78,10 @@ function Button:MouseDown(x, y, ...)
 end
 
 --- Handles mouse up events
--- @function Button:MouseUp
--- @param x Mouse x position
--- @param y Mouse y position
--- @param ... Additional args
--- @return boolean True if handled
+--- @param x number Mouse x position
+--- @param y number Mouse y position
+--- @param ... any Additional args
+--- @return boolean True if handled
 function Button:MouseUp(x, y, ...)
 	if self.pressed then
 		if self:CheckMouseOver(x, y) then
@@ -102,7 +97,6 @@ function Button:MouseUp(x, y, ...)
 end
 
 --- Toggle button checked state
--- @function Button:ToggleState
 function Button:ToggleState()
 	if self.toggleable then
 		self.checked = not self.checked

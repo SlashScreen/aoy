@@ -31,9 +31,8 @@ local this = ComboBox
 local inherited = this.inherited
 
 --- Creates a new ComboBox instance
--- @function ComboBox:New
--- @param obj Table of combobox properties
--- @return ComboBox The newly created combobox
+--- @param obj table Table of combobox properties
+--- @return ComboBox The newly created combobox
 function ComboBox:New(obj)
 	obj = inherited.New(self, obj)
 
@@ -55,7 +54,6 @@ function ComboBox:New(obj)
 end
 
 --- Toggles dropdown visibility
--- @function ComboBox:ToggleDropDown
 function ComboBox:ToggleDropDown()
 	if self.expanded then
 		self:CollapseDropDown()
@@ -65,7 +63,6 @@ function ComboBox:ToggleDropDown()
 end
 
 --- Expands the dropdown
--- @function ComboBox:ExpandDropDown
 function ComboBox:ExpandDropDown()
 	if self.expanded then
 		return
@@ -102,7 +99,6 @@ function ComboBox:ExpandDropDown()
 end
 
 --- Collapses the dropdown
--- @function ComboBox:CollapseDropDown
 function ComboBox:CollapseDropDown()
 	if not self.expanded then
 		return
@@ -116,8 +112,7 @@ function ComboBox:CollapseDropDown()
 end
 
 --- Selects an item
--- @function ComboBox:Select
--- @param index Item index to select
+--- @param index number Item index to select
 function ComboBox:Select(index)
 	if self.selected == index then
 		return
@@ -131,22 +126,19 @@ function ComboBox:Select(index)
 end
 
 --- Gets selected item index
--- @function ComboBox:GetSelected
--- @return number Selected index
+--- @return number Selected index
 function ComboBox:GetSelected()
 	return self.selected
 end
 
 --- Gets selected item text
--- @function ComboBox:GetSelectedItem
--- @return string Selected item text
+--- @return string Selected item text
 function ComboBox:GetSelectedItem()
 	return self.items[self.selected]
 end
 
 --- Sets dropdown items
--- @function ComboBox:SetItems
--- @param items Array of items
+--- @param items {any} Array of items
 function ComboBox:SetItems(items)
 	self.items = items
 	self.selected = 1
@@ -158,7 +150,6 @@ function ComboBox:SetItems(items)
 end
 
 --- Draws the combobox
--- @function ComboBox:DrawControl
 function ComboBox:DrawControl()
 	-- Draw background
 	gl.Color(self.backgroundColor)
@@ -171,8 +162,7 @@ function ComboBox:DrawControl()
 end
 
 --- Handles lost focus
--- @function ComboBox:FocusUpdate
--- @param ... Args
+--- @param ... any Args
 function ComboBox:FocusUpdate(...)
 	inherited.FocusUpdate(self, ...)
 	if not self:IsFocused() then
@@ -181,7 +171,7 @@ function ComboBox:FocusUpdate(...)
 end
 
 --- Closes the dropdown window.
--- Disposes of the dropdown window and resets the pressed state.
+--- Disposes of the dropdown window and resets the pressed state.
 function ComboBox:_CloseWindow()
 	if self._dropDownWindow then
 		self._dropDownWindow:Dispose()
@@ -195,7 +185,7 @@ function ComboBox:_CloseWindow()
 end
 
 --- Updates the focus state of the ComboBox.
--- Closes the dropdown window if the ComboBox loses focus.
+--- Closes the dropdown window if the ComboBox loses focus.
 function ComboBox:FocusUpdate()
 	if not self.state.focused then
 		self:_CloseWindow()
@@ -203,9 +193,9 @@ function ComboBox:FocusUpdate()
 end
 
 --- Handles the mouse up event.
--- Overrides the Button:MouseUp method to prevent changes to the pressed state.
--- @param ... Additional arguments passed to the event.
--- @return ComboBox Returns the ComboBox instance.
+--- Overrides the Button:MouseUp method to prevent changes to the pressed state.
+--- @param ... any Additional arguments passed to the event.
+--- @return ComboBox Returns the ComboBox instance.
 function ComboBox:MouseUp(...)
 	self:Invalidate()
 	return self

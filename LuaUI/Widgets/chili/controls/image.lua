@@ -62,9 +62,8 @@ local function _DrawTextureAspect(x, y, w, h, tw, th, flipy)
 end
 
 --- Creates a new Image instance
--- @function Image:New
--- @param obj Table of image properties
--- @return Image The newly created image
+--- @param obj table Table of image properties
+--- @return Image The newly created image
 function Image:New(obj)
 	if obj.file and not obj.width and not obj.height then
 		obj.autosize = true
@@ -79,7 +78,7 @@ function Image:New(obj)
 end
 
 --- Updates the client area and image dimensions.
--- @bool dontUpdateChildren If true, child controls won't be updated.
+--- @param dontUpdateChildren boolean? If true, child controls won't be updated.
 function Image:UpdateClientArea(dontUpdateChildren)
 	inherited.UpdateClientArea(self, dontUpdateChildren)
 	if self.image then
@@ -101,8 +100,7 @@ function Image:UpdateClientArea(dontUpdateChildren)
 end
 
 --- Loads an image file
--- @function Image:LoadImage
--- @string file Path to image file
+--- @param file string Path to image file
 function Image:LoadImage(file)
 	if not file then
 		return
@@ -130,7 +128,6 @@ function Image:LoadImage(file)
 end
 
 --- Updates image layout
--- @function Image:UpdateLayout
 function Image:UpdateLayout()
 	local texInfo = gl.TextureInfo(self.file)
 	if not texInfo then
@@ -155,7 +152,6 @@ function Image:UpdateLayout()
 end
 
 --- Draws the image
--- @function Image:DrawControl
 function Image:DrawControl()
 	if not self.file or self.file == "" then
 		return
@@ -234,7 +230,6 @@ function Image:DrawControl()
 end
 
 --- Disposes of the image control
--- @function Image:Dispose
 function Image:Dispose(...)
 	if self._tex_loaded then
 		gl.DeleteTexture(self.file)
@@ -242,6 +237,7 @@ function Image:Dispose(...)
 	inherited.Dispose(self, ...)
 end
 
+---@return boolean?
 function Image:IsActive()
 	local onclick = self.OnClick
 	if onclick and onclick[1] then
@@ -249,21 +245,26 @@ function Image:IsActive()
 	end
 end
 
-function Image:HitTest()
+---@param x any?
+---@param y any?
+function Image:HitTest(x, y)
 	--FIXME check if there are any eventhandlers linked (OnClick,OnMouseUp,...)
 	return self:IsActive() and self
 end
 
+---@param ... any
 function Image:MouseDown(...)
 	--// we don't use `this` here because it would call the eventhandler of the button class,
 	--// which always returns true, but we just want to do so if a calllistener handled the event
 	return Control.MouseDown(self, ...) or self:IsActive() and self
 end
 
+---@param ... any
 function Image:MouseUp(...)
 	return Control.MouseUp(self, ...) or self:IsActive() and self
 end
 
+---@param ... any
 function Image:MouseClick(...)
 	return Control.MouseClick(self, ...) or self:IsActive() and self
 end

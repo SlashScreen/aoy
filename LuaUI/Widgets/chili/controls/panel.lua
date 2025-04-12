@@ -26,16 +26,14 @@ local this = Panel
 local inherited = this.inherited
 
 --- Creates a new Panel instance
--- @function Panel:New
--- @param obj Table of panel properties
--- @return Panel The newly created panel
+--- @param obj table Table of panel properties
+--- @return Panel The newly created panel
 function Panel:New(obj)
 	obj = inherited.New(self, obj)
 	return obj
 end
 
 --- Draws the panel background and border
--- @function Panel:DrawControl
 function Panel:DrawControl()
 	-- Draw background
 	if self.backgroundColor then
@@ -58,8 +56,7 @@ function Panel:DrawControl()
 end
 
 --- Updates panel layout
--- @function Panel:UpdateLayout
--- @return boolean True if layout was updated
+--- @return boolean True if layout was updated
 function Panel:UpdateLayout()
 	local contentWidth = 0
 	local contentHeight = 0
@@ -89,10 +86,9 @@ function Panel:UpdateLayout()
 end
 
 --- Handle hit testing for mouse events
--- @function Panel:HitTest
--- @param x X coordinate to test
--- @param y Y coordinate to test
--- @return Control Child control at coordinates or self
+--- @param x number X coordinate to test
+--- @param y number Y coordinate to test
+--- @return Control? Child control at coordinates or self
 function Panel:HitTest(x, y)
 	local children = self.children
 

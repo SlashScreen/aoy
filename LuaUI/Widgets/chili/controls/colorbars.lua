@@ -24,8 +24,8 @@ local inherited = this.inherited
 --//=============================================================================
 
 --- Sets the new color.
--- Updates the color value and triggers the OnChange listeners.
--- @tparam {r,g,b,a} c The new RGBA color table.
+--- Updates the color value and triggers the OnChange listeners.
+--- @param c {r:number,g:number,b:number,a:number} The new RGBA color table.
 function Colorbars:SetColor(c)
 	self:CallListeners(self.OnChange, c)
 	self.value = c
@@ -45,7 +45,7 @@ local glColor = gl.Color
 local glBeginEnd = gl.BeginEnd
 
 --- Draws the Colorbars control.
--- This method renders the color bars and the preview area. It is intended to be overridden by the skin or theme to define the appearance.
+--- This method renders the color bars and the preview area. It is intended to be overridden by the skin or theme to define the appearance.
 function Colorbars:DrawControl()
 	local barswidth = self.width - (self.height + 4)
 
@@ -90,16 +90,16 @@ end
 --//=============================================================================
 
 --- Performs a hit test to determine if the Colorbars control was clicked.
--- @return Colorbars Returns the Colorbars instance if the hit test is successful.
+--- @return Colorbars Returns the Colorbars instance if the hit test is successful.
 function Colorbars:HitTest()
 	return self
 end
 
 --- Handles the mouse down event.
--- Adjusts the color value based on the mouse position.
--- @number x The X-coordinate of the mouse click.
--- @number y The Y-coordinate of the mouse click.
--- @return Colorbars Returns the Colorbars instance.
+--- Adjusts the color value based on the mouse position.
+--- @param x number The X-coordinate of the mouse click.
+--- @param y number The Y-coordinate of the mouse click.
+--- @return Colorbars Returns the Colorbars instance.
 function Colorbars:MouseDown(x, y)
 	local step = self.height / 7
 	local yp = y / step
@@ -121,13 +121,13 @@ function Colorbars:MouseDown(x, y)
 end
 
 --- Handles the mouse move event.
--- Adjusts the color value interactively while the mouse is dragged.
--- @number x The current X-coordinate of the mouse.
--- @number y The current Y-coordinate of the mouse.
--- @number dx The change in X-coordinate since the last event.
--- @number dy The change in Y-coordinate since the last event.
--- @number button The mouse button being held down.
--- @return Colorbars Returns the Colorbars instance.
+--- Adjusts the color value interactively while the mouse is dragged.
+--- @param x number The current X-coordinate of the mouse.
+--- @param y number The current Y-coordinate of the mouse.
+--- @param dx number The change in X-coordinate since the last event.
+--- @param dy number The change in Y-coordinate since the last event.
+--- @param button number The mouse button being held down.
+--- @return Colorbars Returns the Colorbars instance.
 function Colorbars:MouseMove(x, y, dx, dy, button)
 	if button == 1 then
 		return self:MouseDown(x, y)

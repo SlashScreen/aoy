@@ -35,6 +35,7 @@ Trackbar = Control:Inherit({
 local this = Trackbar
 local inherited = this.inherited
 
+---@param num number
 local function FormatNum(num)
 	if num == 0 then
 		return "0"
@@ -54,9 +55,8 @@ local function FormatNum(num)
 end
 
 --- Creates a new Trackbar instance
--- @function Trackbar:New
--- @param obj Table of trackbar properties
--- @return Trackbar The newly created trackbar
+--- @param obj table Table of trackbar properties
+--- @return Trackbar trackbar The newly created trackbar
 function Trackbar:New(obj)
 	obj = inherited.New(self, obj)
 
@@ -75,6 +75,7 @@ function Trackbar:New(obj)
 	return obj
 end
 
+---@param v number
 function Trackbar:_Clamp(v)
 	if self.min < self.max then
 		if v < self.min then
@@ -92,6 +93,8 @@ function Trackbar:_Clamp(v)
 	return v
 end
 
+---@param x number?
+---@param y number?
 function Trackbar:_GetPercent(x, y)
 	if x then
 		local pl, pt, pr, pb = unpack4(self.hitpadding)
@@ -112,8 +115,8 @@ function Trackbar:_GetPercent(x, y)
 end
 
 --- Sets the minimum and maximum value of the track bar
--- @int[opt=0] min minimum value
--- @int[opt=1] max maximum value (why is 1 the default?)
+--- @param min number? minimum value
+--- @param max number? maximum value (why is 1 the default?)
 function Trackbar:SetMinMax(min, max)
 	self.min = tonumber(min) or 0
 	self.max = tonumber(max) or 1
@@ -121,9 +124,8 @@ function Trackbar:SetMinMax(min, max)
 end
 
 --- Sets the current value
--- @function Trackbar:SetValue
--- @param value New value
--- @param skipEvent Don't trigger change event
+--- @param value number New value
+--- @param skipEvent boolean? Don't trigger change event
 function Trackbar:SetValue(value, skipEvent)
 	-- Clamp to bounds and step
 	value = math.min(self.max, math.max(self.min, value))
@@ -149,6 +151,7 @@ function Trackbar:SetValue(value, skipEvent)
 	self:Invalidate()
 end
 
+--- Draws the trackbar
 function Trackbar:DrawControl()
 	-- Draw background
 	gl.Color(self.backgroundColor)
@@ -165,10 +168,14 @@ function Trackbar:DrawControl()
 	end
 end
 
+--- Performs hit testing for the trackbar.
 function Trackbar:HitTest()
 	return self
 end
 
+---@param x number
+---@param y number
+---@param ... any
 function Trackbar:MouseDown(x, y, ...)
 	if not self:HitTest(x, y) then
 		return false
@@ -179,6 +186,11 @@ function Trackbar:MouseDown(x, y, ...)
 	return self
 end
 
+---@param x number
+---@param y number
+---@param dx number
+---@param dy number
+---@param ... any
 function Trackbar:MouseMove(x, y, dx, dy, ...)
 	if not self._dragging then
 		return
@@ -188,6 +200,8 @@ function Trackbar:MouseMove(x, y, dx, dy, ...)
 	return self
 end
 
+---@param x number
+---@param y number
 function Trackbar:UpdateValueFromMouse(x, y)
 	local rel
 	if self.orientation == "horizontal" then
@@ -199,6 +213,9 @@ function Trackbar:UpdateValueFromMouse(x, y)
 	self:SetValue(self:RelativeToValue(rel))
 end
 
+---@param x number
+---@param y number
+---@param ... any
 function Trackbar:MouseUp(x, y, ...)
 	if not self._dragging then
 		return
@@ -210,17 +227,15 @@ function Trackbar:MouseUp(x, y, ...)
 end
 
 --- Gets the relative position for a value
--- @function Trackbar:ValueToRelative
--- @param value Value to convert
--- @return number Relative position (0-1)
+--- @param value number Value to convert
+--- @return number Relative position (0-1)
 function Trackbar:ValueToRelative(value)
 	return (value - self.min) / (self.max - self.min)
 end
 
 --- Gets the value for a relative position
--- @function Trackbar:RelativeToValue
--- @param rel Relative position (0-1)
--- @return number Value at position
+--- @param rel number Relative position (0-1)
+--- @return number Value at position
 function Trackbar:RelativeToValue(rel)
 	return self.min + rel * (self.max - self.min)
 end

@@ -63,6 +63,12 @@ local function drawBarH(x, y, w, h, color1, color2)
 	glVertex(x, y + h)
 end
 
+---@param x number
+---@param y number
+---@param w number
+---@param h number
+---@param color1 Color
+---@param color2 Color
 local function drawBarV(x, y, w, h, color1, color2)
 	glColor(color1)
 	glVertex(x, y)
@@ -72,6 +78,7 @@ local function drawBarV(x, y, w, h, color1, color2)
 	glVertex(x + w, y)
 end
 
+--- Draws the multiprogressbar control.
 function Multiprogressbar:DrawControl()
 	local percentDone = 0
 	local efp
@@ -174,6 +181,8 @@ end
 
 --//=============================================================================
 
+--- Performs hit testing for the multiprogressbar.
+--- @return Multiprogressbar Returns self if hit.
 function Multiprogressbar:HitTest()
 	return self
 end

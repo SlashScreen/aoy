@@ -29,18 +29,16 @@ local this = Checkbox
 local inherited = this.inherited
 
 --- Creates a new Checkbox instance
--- @function Checkbox:New
--- @param obj Table of checkbox properties
--- @return Checkbox The newly created checkbox
+--- @param obj table Table of checkbox properties
+--- @return Checkbox The newly created checkbox
 function Checkbox:New(obj)
 	obj = inherited.New(self, obj)
 	return obj
 end
 
 --- Sets checked state
--- @function Checkbox:SetChecked
--- @param checked New checked state
--- @param nopropagate Don't trigger OnChange event
+--- @param checked boolean New checked state
+--- @param nopropagate? boolean Don't trigger OnChange event
 function Checkbox:SetChecked(checked, nopropagate)
 	checked = not not checked -- convert to boolean
 
@@ -57,13 +55,11 @@ function Checkbox:SetChecked(checked, nopropagate)
 end
 
 --- Toggle checked state
--- @function Checkbox:Toggle
 function Checkbox:Toggle()
 	self:SetChecked(not self.checked)
 end
 
 --- Draws the checkbox control
--- @function Checkbox:DrawControl
 function Checkbox:DrawControl()
 	-- Draw box
 	local boxSize = self.boxsize
@@ -99,11 +95,10 @@ function Checkbox:DrawControl()
 end
 
 --- Handles mouse down events
--- @function Checkbox:MouseDown
--- @param x X coordinate
--- @param y Y coordinate
--- @param ... Additional args
--- @return boolean True if handled
+--- @param x number X coordinate
+--- @param y number Y coordinate
+--- @param ... any Additional args
+--- @return boolean True if handled
 function Checkbox:MouseDown(x, y, ...)
 	if self:HitTest(x, y) then
 		self:Toggle()
@@ -113,10 +108,9 @@ function Checkbox:MouseDown(x, y, ...)
 end
 
 --- Handle hit testing
--- @function Checkbox:HitTest
--- @param x X coordinate to test
--- @param y Y coordinate to test
--- @return boolean True if hit
+--- @param x number X coordinate to test
+--- @param y number Y coordinate to test
+--- @return boolean True if hit
 function Checkbox:HitTest(x, y)
 	return self:IsDescendantOf(screen0) and x >= 0 and x <= self.width and y >= 0 and y <= self.height
 end

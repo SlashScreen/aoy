@@ -89,6 +89,7 @@ local function drawScaleLines(self)
 	end
 end
 
+--- Draws the scale control.
 function Scale:DrawControl()
 	gl.Color(self.color)
 	gl.BeginEnd(GL.LINES, drawScaleLines, self)
@@ -106,6 +107,8 @@ end
 
 --//=============================================================================
 
+--- Performs hit testing for the scale. Always returns false.
+--- @return boolean Always false.
 function Scale:HitTest()
 	return false
 end

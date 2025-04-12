@@ -50,6 +50,7 @@ local image_exts = { ".jpg", ".bmp", ".png", ".tga", ".dds", ".ico", ".gif", ".p
 
 --//=============================================================================
 
+---@param obj table
 function ImageListView:New(obj)
 	obj = inherited.New(self, obj)
 	obj:SetDir(obj.dir)
@@ -58,6 +59,7 @@ end
 
 --//=============================================================================
 
+---@param dir string
 local function GetParentDir(dir)
 	dir = dir:gsub("\\", "/")
 	local lastChar = dir:sub(-1)
@@ -76,6 +78,7 @@ local function GetParentDir(dir)
 	end
 end
 
+---@param filepath string
 local function ExtractFileName(filepath)
 	filepath = filepath:gsub("\\", "/")
 	local lastChar = filepath:sub(-1)
@@ -94,6 +97,7 @@ local function ExtractFileName(filepath)
 	end
 end
 
+---@param filepath string
 local function ExtractDir(filepath)
 	filepath = filepath:gsub("\\", "/")
 	local lastChar = filepath:sub(-1)
@@ -114,6 +118,8 @@ end
 
 --//=============================================================================
 
+---@param name string
+---@param imagefile string
 function ImageListView:_AddFile(name, imagefile)
 	self:AddChild(LayoutPanel:New({
 		width = self.iconX + 10,
@@ -194,6 +200,7 @@ function ImageListView:ScanDir()
 	self:EnableRealign()
 end
 
+---@param directory string
 function ImageListView:SetDir(directory)
 	self:DeselectAll()
 	self.dir = directory
@@ -212,6 +219,7 @@ function ImageListView:GoToParentDir()
 	self:SetDir(GetParentDir(self.dir))
 end
 
+---@param filepath string
 function ImageListView:GotoFile(filepath)
 	local dir = ExtractDir(filepath)
 	local file = ExtractFileName(filepath)
@@ -234,6 +242,7 @@ end
 
 --//=============================================================================
 
+---@param item any
 function ImageListView:Select(item)
 	if type(item) == "number" then
 		self:SelectItem(item)
@@ -251,6 +260,7 @@ end
 
 --//=============================================================================
 
+---@param index number
 function ImageListView:DrawItemBkGnd(index)
 	local cell = self._cells[index]
 	local itemPadding = self.itemPadding
@@ -276,6 +286,8 @@ end
 
 --//=============================================================================
 
+---@param x number
+---@param y number
 function ImageListView:HitTest(x, y)
 	local cx, cy = self:LocalToClient(x, y)
 	local obj = inherited.HitTest(self, cx, cy)
@@ -286,6 +298,8 @@ function ImageListView:HitTest(x, y)
 	return (itemIdx >= 0) and self
 end
 
+---@param x number
+---@param y number
 function ImageListView:MouseDblClick(x, y)
 	local cx, cy = self:LocalToClient(x, y)
 	local itemIdx = self:GetItemIndexAt(cx, cy)

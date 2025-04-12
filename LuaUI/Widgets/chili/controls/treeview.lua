@@ -6,7 +6,7 @@
 ---
 --- @class TreeView
 --- @field nodes table[] Array of root level tree nodes
---- @field selectedNode Node Currently selected tree node
+--- @field selectedNode TreeViewNode Currently selected tree node
 --- @field clickableNodes boolean Whether nodes can be clicked (default: true)
 --- @field expandOnClick boolean Whether clicking a node expands/collapses it (default: true)
 --- @field indentation number Pixels to indent each level of nodes (default: 16)
@@ -51,11 +51,8 @@ function TreeView:New(obj)
 end
 
 --- Creates a new tree node with the specified data
---- @param data table Node configuration data
---- @param data.caption string Text to display for the node
---- @param data.expanded boolean Whether node starts expanded
---- @param data.children table[] Optional child nodes
---- @return table The created node object
+--- @param data {caption: string, expanded: boolean, children: table[]} Node configuration data
+--- @return table obj The created node object
 function TreeView:CreateNode(data)
 	local node = {
 		caption = data.caption or "",
@@ -81,7 +78,7 @@ end
 
 --- Adds a new node to the tree
 --- @param data table Node configuration data
---- @return table The newly added node
+--- @return table n The newly added node
 function TreeView:AddNode(data)
 	local node = self:CreateNode(data)
 	table.insert(self.nodes, node)

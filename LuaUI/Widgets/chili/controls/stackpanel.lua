@@ -34,17 +34,15 @@ local this = StackPanel
 local inherited = this.inherited
 
 --- Creates a new StackPanel instance
--- @function StackPanel:New
--- @param obj Table of properties
--- @return StackPanel The newly created stack panel
+--- @param obj table Table of properties
+--- @return StackPanel The newly created stack panel
 function StackPanel:New(obj)
 	obj = inherited.New(self, obj)
 	return obj
 end
 
 --- Updates the stack panel layout
--- @function StackPanel:UpdateLayout
--- @return boolean True if layout was updated
+--- @return boolean True if layout was updated
 function StackPanel:UpdateLayout()
 	-- Validate children
 	if not self.children[1] then
@@ -119,9 +117,8 @@ function StackPanel:UpdateLayout()
 end
 
 --- Adds a child control to the stack
--- @function StackPanel:AddChild
--- @param child Control to add
--- @param dontUpdateLayout Don't update layout after adding
+--- @param child Control Control to add
+--- @param dontUpdateLayout boolean? Don't update layout after adding
 function StackPanel:AddChild(child, dontUpdateLayout)
 	inherited.AddChild(self, child, true)
 
@@ -132,9 +129,8 @@ function StackPanel:AddChild(child, dontUpdateLayout)
 end
 
 --- Removes a child control from the stack
--- @function StackPanel:RemoveChild
--- @param child Control to remove
--- @param dontUpdateLayout Don't update layout after removing
+--- @param child Control Control to remove
+--- @param dontUpdateLayout boolean? Don't update layout after removing
 function StackPanel:RemoveChild(child, dontUpdateLayout)
 	inherited.RemoveChild(self, child, true)
 

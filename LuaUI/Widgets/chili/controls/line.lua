@@ -27,26 +27,23 @@ local this = Line
 local inherited = this.inherited
 
 --- Creates a new Line instance
--- @function Line:New
--- @param obj Table of line properties
--- @return Line The newly created line
+--- @param obj table Table of line properties
+--- @return Line The newly created line
 function Line:New(obj)
 	obj = inherited.New(self, obj)
 	return obj
 end
 
 --- Sets line points
--- @function Line:SetPoints
--- @param points Array of points {x1,y1, x2,y2, ...}
+--- @param points number[] Array of points {x1,y1, x2,y2, ...}
 function Line:SetPoints(points)
 	self.points = points
 	self:Invalidate()
 end
 
 --- Adds a point to the line
--- @function Line:AddPoint
--- @param x X coordinate
--- @param y Y coordinate
+--- @param x number X coordinate
+--- @param y number Y coordinate
 function Line:AddPoint(x, y)
 	table.insert(self.points, x)
 	table.insert(self.points, y)
@@ -54,14 +51,12 @@ function Line:AddPoint(x, y)
 end
 
 --- Clears all points
--- @function Line:ClearPoints
 function Line:ClearPoints()
 	self.points = {}
 	self:Invalidate()
 end
 
 --- Draws the line
--- @function Line:DrawControl
 function Line:DrawControl()
 	if #self.points < 4 then
 		return
@@ -151,10 +146,9 @@ function Line:DrawControl()
 end
 
 --- Handles hit testing
--- @function Line:HitTest
--- @param x X coordinate
--- @param y Y coordinate
--- @return boolean True if hit
+--- @param x number X coordinate
+--- @param y number Y coordinate
+--- @return boolean True if hit
 function Line:HitTest(x, y)
 	if not self:IsDescendantOf(screen0) then
 		return false

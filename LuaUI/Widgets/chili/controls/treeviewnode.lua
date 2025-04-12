@@ -41,6 +41,7 @@ local inherited = this.inherited
 
 --//=============================================================================
 
+---@param obj table
 function TreeViewNode:New(obj)
 	if obj.root then
 		obj.padding = { 0, 0, 0, 0 }
@@ -52,6 +53,7 @@ function TreeViewNode:New(obj)
 	return obj
 end
 
+---@param obj Object?
 function TreeViewNode:SetParent(obj)
 	obj = UnlinkSafe(obj)
 	local typ = type(obj)
@@ -63,6 +65,8 @@ function TreeViewNode:SetParent(obj)
 	inherited.SetParent(self, obj)
 end
 
+---@param obj Object
+---@param isNode boolean?
 function TreeViewNode:AddChild(obj, isNode)
 	if isNode ~= false then
 		self.nodes[#self.nodes + 1] = MakeWeakLink(obj)
@@ -73,6 +77,7 @@ function TreeViewNode:AddChild(obj, isNode)
 	return inherited.AddChild(self, obj)
 end
 
+---@param obj Object
 function TreeViewNode:RemoveChild(obj)
 	local result = inherited.RemoveChild(self, obj)
 
@@ -111,6 +116,7 @@ TreeViewNode.Clear = TreeViewNode.ClearChildren
 
 --//=============================================================================
 
+---@param item any
 function TreeViewNode:Add(item)
 	local newnode
 	if type(item) == "string" then
@@ -196,6 +202,8 @@ end
 
 --//=============================================================================
 
+---@param caption string
+---@return TreeViewNode|nil
 function TreeViewNode:GetNodeByCaption(caption)
 	for i = 1, #self.nodes do
 		local n = self.nodes[i]
@@ -210,6 +218,9 @@ function TreeViewNode:GetNodeByCaption(caption)
 	end
 end
 
+---@param index number
+---@param _i number
+---@return TreeViewNode|number
 function TreeViewNode:GetNodeByIndex(index, _i)
 	for i = 1, #self.nodes do
 		_i = _i + 1
@@ -230,14 +241,11 @@ end
 
 --//=============================================================================
 
---[[
-Updates the layout of the tree view node and its children.
-This function handles both expanded and collapsed states of nodes.
-In collapsed state, only the first child (label) is shown and sized.
-In expanded state, all children are positioned vertically and sized.
-
-@return boolean Always returns true to indicate successful layout update
-]]
+--- Updates the layout of the tree view node and its children.
+--- This function handles both expanded and collapsed states of nodes.
+--- In collapsed state, only the first child (label) is shown and sized.
+--- In expanded state, all children are positioned vertically and sized.
+--- @return boolean success Always returns true to indicate successful layout update
 function TreeViewNode:UpdateLayout()
 	local clientWidth = self.clientWidth
 	local children = self.children
@@ -269,14 +277,11 @@ end
 
 --//=============================================================================
 
---[[
-Determines if a given point (x,y) is within the node's expand/collapse button area.
-The button area is in the left padding region of the node.
-
-@param x number The x coordinate to test
-@param y number The y coordinate to test
-@return boolean Returns true if the point is within the button area, false otherwise
-]]
+--- Determines if a given point (x,y) is within the node's expand/collapse button area.
+--- The button area is in the left padding region of the node.
+--- @param x number The x coordinate to test
+--- @param y number The y coordinate to test
+--- @return boolean is_within Returns true if the point is within the button area, false otherwise
 function TreeViewNode:_InNodeButton(x, y)
 	if self.root then
 		return false
@@ -290,6 +295,9 @@ function TreeViewNode:_InNodeButton(x, y)
 	return (nodeTop <= y) and (y - nodeTop < self.padding[1])
 end
 
+---@param x number
+---@param y number
+---@param ... TreeViewNode|nil
 function TreeViewNode:HitTest(x, y, ...)
 	local obj = inherited.HitTest(self, x, y, ...)
 	if obj then
@@ -300,6 +308,9 @@ function TreeViewNode:HitTest(x, y, ...)
 	--end
 end
 
+---@param x number
+---@param y number
+---@param ... any
 function TreeViewNode:MouseDown(x, y, ...)
 	if self.root then
 		return inherited.MouseDown(self, x, y, ...)
@@ -325,6 +336,9 @@ function TreeViewNode:MouseDown(x, y, ...)
 	end
 end
 
+---@param x number
+---@param y number
+---@param ... any
 function TreeViewNode:MouseClick(x, y, ...)
 	if self.root then
 		return inherited.MouseClick(self, x, y, ...)
@@ -339,6 +353,9 @@ function TreeViewNode:MouseClick(x, y, ...)
 	return obj
 end
 
+---@param x number
+---@param y number
+---@param ... any
 function TreeViewNode:MouseDblClick(x, y, ...)
 	--//FIXME doesn't get called, related to the FIXME above!
 	if self.root then

@@ -20,6 +20,10 @@ ProgressBar = Control:Inherit({
 	backgroundColor = { 0, 0, 0, 0.5 },
 
 	reverse = false,
+	color = { 0.5, 1, 0, 0.8 },
+	backgroundColor = { 0, 0, 0, 0.5 },
+
+	lse,
 	noSkin = false,
 
 	OnChange = {},
@@ -29,22 +33,20 @@ local this = ProgressBar
 local inherited = this.inherited
 
 --- Creates a new ProgressBar instance
--- @function ProgressBar:New
--- @param obj Table of progressbar properties
--- @return ProgressBar The newly created progressbar
+--- @param obj table Table of progressbar properties
+--- @return ProgressBar The newly created progressbar
 function ProgressBar:New(obj)
 	obj = inherited.New(self, obj)
 	obj.value = math.min(1, math.max(0, obj.value))
 	return obj
 end
 
---- Sets the current progress value
--- @function ProgressBar:SetValue
--- @param value New value (0-1)
--- @param skipEvent Don't trigger change event
-function ProgressBar:SetValue(value, skipEvent)
-	value = math.min(1, math.max(0, value))
-	if self.value == value then
+--- Sets the current value with optional animation
+--- @param v number New value
+--- @param smooth boolean? Whether to animate
+function ProgressBar:SetValue(v, smooth)
+	v = math.min(self.max, math.max(self.min, v))
+	if v == self.value then
 		return
 	end
 
@@ -57,14 +59,18 @@ function ProgressBar:SetValue(value, skipEvent)
 end
 
 --- Gets the current progress value
--- @function ProgressBar:GetValue
--- @return number Current value (0-1)
+--- @return number Current value
 function ProgressBar:GetValue()
 	return self.value
 end
 
+--- Gets progress as fraction between 0-1
+--- @return number Progress fraction
+function ProgressBar:GetProgressFraction()
+	return (self.value - self.min) / (self.max - self.min)
+end
+
 --- Draws the progress bar
--- @function ProgressBar:DrawControl
 function ProgressBar:DrawControl()
 	-- Draw background
 	if not self.noSkin then

@@ -49,9 +49,8 @@ local this = EditBox
 local inherited = this.inherited
 
 --- Creates a new EditBox instance
--- @function EditBox:New
--- @param obj Table of editbox properties
--- @return EditBox The newly created editbox
+--- @param obj table Table of editbox properties
+--- @return EditBox The newly created editbox
 function EditBox:New(obj)
 	obj = inherited.New(self, obj)
 	obj:UpdateLayout()
@@ -59,8 +58,7 @@ function EditBox:New(obj)
 end
 
 --- Sets the editbox text
--- @function EditBox:SetText
--- @string newText Text to set
+--- @param newText string Text to set
 function EditBox:SetText(newText)
 	if self.text == newText then
 		return
@@ -73,17 +71,15 @@ function EditBox:SetText(newText)
 end
 
 --- Gets the current text
--- @function EditBox:GetText
--- @return string Current text
+--- @return string Current text
 function EditBox:GetText()
 	return self.text
 end
 
 --- Handle text input events
--- @function EditBox:TextInput
--- @string char Character being input
--- @param ... Additional args
--- @return boolean True if handled
+--- @param char string Character being input
+--- @param ... any Additional args
+--- @return boolean True if handled
 function EditBox:TextInput(char, ...)
 	if not self.editable then
 		return false
@@ -106,13 +102,12 @@ function EditBox:TextInput(char, ...)
 end
 
 --- Handle key press events
--- @function EditBox:KeyPress
--- @param key Key being pressed
--- @param mods Modifier keys
--- @param isRepeat Is key repeat
--- @param label Key label
--- @param ... Additional args
--- @return boolean True if handled
+--- @param key number Key being pressed
+--- @param mods table Modifier keys
+--- @param isRepeat boolean Is key repeat
+--- @param label string Key label
+--- @param ... any Additional args
+--- @return boolean True if handled
 function EditBox:KeyPress(key, mods, isRepeat, label, ...)
 	-- Handle key commands (copy, paste, etc)
 	if mods.ctrl then
@@ -201,11 +196,10 @@ function EditBox:KeyPress(key, mods, isRepeat, label, ...)
 end
 
 --- Handle mouse down events
--- @function EditBox:MouseDown
--- @param x Mouse x position
--- @param y Mouse y position
--- @param ... Additional args
--- @return boolean True if handled
+--- @param x number Mouse x position
+--- @param y number Mouse y position
+--- @param ... any Additional args
+--- @return boolean True if handled
 function EditBox:MouseDown(x, y, ...)
 	if not self:CheckMouseOver(x, y) then
 		return false
@@ -235,13 +229,12 @@ function EditBox:MouseDown(x, y, ...)
 end
 
 --- Handle mouse move events for text selection
--- @function EditBox:MouseMove
--- @param x Mouse x position
--- @param y Mouse y position
--- @param dx X movement delta
--- @param dy Y movement delta
--- @param ... Additional args
--- @return boolean True if handled
+--- @param x number Mouse x position
+--- @param y number Mouse y position
+--- @param dx number X movement delta
+--- @param dy number Y movement delta
+--- @param ... any Additional args
+--- @return boolean True if handled
 function EditBox:MouseMove(x, y, dx, dy, ...)
 	if not self.selStart then
 		return false
@@ -276,11 +269,10 @@ function EditBox:MouseMove(x, y, dx, dy, ...)
 end
 
 --- Handle mouse up events
--- @function EditBox:MouseUp
--- @param x Mouse x position
--- @param y Mouse y position
--- @param ... Additional args
--- @return boolean True if handled
+--- @param x number Mouse x position
+--- @param y number Mouse y position
+--- @param ... any Additional args
+--- @return boolean True if handled
 function EditBox:MouseUp(x, y, ...)
 	if not self.selStart then
 		return false
@@ -359,6 +351,8 @@ function EditBox:Update(...)
 	end
 end
 
+---@param x number
+---@param y number
 function EditBox:_SetCursorByMousePos(x, y)
 	local clientX = self.clientArea[1]
 	if x - clientX < 0 then
@@ -384,11 +378,11 @@ function EditBox:_SetCursorByMousePos(x, y)
 end
 
 --- Handles mouse down events.
--- Updates cursor position and selection based on click.
--- @number x X-coordinate of click.
--- @number y Y-coordinate of click.
--- @number button Mouse button that was clicked.
--- @return EditBox Returns self if event was handled.
+--- Updates cursor position and selection based on click.
+--- @param x number X-coordinate of click.
+--- @param y number Y-coordinate of click.
+--- @param ... any Additional arguments for the event.
+--- @return EditBox Returns self if event was handled.
 function EditBox:MouseDown(x, y, ...)
 	local _, _, _, shift = Spring.GetModKeyState()
 	local cp = self.cursor
@@ -410,13 +404,13 @@ function EditBox:MouseDown(x, y, ...)
 end
 
 --- Handles mouse move events while dragging.
--- Updates text selection as mouse moves.
--- @number x Current X-coordinate of mouse.
--- @number y Current Y-coordinate of mouse.
--- @number dx Change in X position.
--- @number dy Change in Y position.
--- @number button Mouse button being held.
--- @return EditBox Returns self if event was handled.
+--- Updates text selection as mouse moves.
+--- @param x number Current X-coordinate of mouse.
+--- @param y number Current Y-coordinate of mouse.
+--- @param dx number Change in X position.
+--- @param dy number Change in Y position.
+--- @param button number Mouse button being held.
+--- @return EditBox Returns self if event was handled.
 function EditBox:MouseMove(x, y, dx, dy, button)
 	if button ~= 1 then
 		return inherited.MouseMove(self, x, y, dx, dy, button)
@@ -463,12 +457,13 @@ function EditBox:ClearSelected()
 end
 
 --- Handles key press events.
--- @param key Key code of the pressed key.
--- @param mods Modifier keys being held.
--- @param isRepeat Whether this is a key repeat event.
--- @param label Text label of the key.
--- @param unicode Unicode value of the key.
--- @return boolean True if the key press was handled.
+--- @param key number Key code of the pressed key.
+--- @param mods table Modifier keys being held.
+--- @param isRepeat boolean Whether this is a key repeat event.
+--- @param label string Text label of the key.
+--- @param unicode number Unicode value of the key.
+--- @param ... any
+--- @return boolean True if the key press was handled.
 function EditBox:KeyPress(key, mods, isRepeat, label, unicode, ...)
 	local cp = self.cursor
 	local txt = self.text
@@ -585,9 +580,10 @@ function EditBox:KeyPress(key, mods, isRepeat, label, unicode, ...)
 end
 
 --- Handles text input events.
--- Inserts or modifies text based on input.
--- @string char The character being input.
--- @return boolean True if the input was handled.
+--- Inserts or modifies text based on input.
+--- @param utf8char string The character being input.
+--- @param ... any
+--- @return boolean True if the input was handled.
 function EditBox:TextInput(utf8char, ...)
 	local unicode = utf8char
 	if not self.allowUnicode then

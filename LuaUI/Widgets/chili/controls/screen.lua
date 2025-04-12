@@ -41,6 +41,7 @@ local inherited = this.inherited
 
 --//=============================================================================
 
+---@param obj table
 function Screen:New(obj)
 	local vsx, vsy = gl.GetViewSizes()
 	if (obj.width or -1) <= 0 then
@@ -58,6 +59,7 @@ function Screen:New(obj)
 	return obj
 end
 
+---@param obj Object
 function Screen:OnGlobalDispose(obj)
 	if CompareLinks(self.activeControl, obj) then
 		self.activeControl = nil
@@ -80,36 +82,54 @@ end
 
 --FIXME add new coordspace Device (which does y-invert)
 
+---@param x number
+---@param y number
 function Screen:ParentToLocal(x, y)
 	return x, y
 end
 
+---@param x number
+---@param y number
 function Screen:LocalToParent(x, y)
 	return x, y
 end
 
+---@param x number
+---@param y number
 function Screen:LocalToScreen(x, y)
 	return x, y
 end
 
+---@param x number
+---@param y number
 function Screen:ScreenToLocal(x, y)
 	return x, y
 end
 
+---@param x number
+---@param y number
 function Screen:ScreenToClient(x, y)
 	return x, y
 end
 
+---@param x number
+---@param y number
 function Screen:ClientToScreen(x, y)
 	return x, y
 end
 
+---@param x number
+---@param y number
+---@param w number
+---@param h number
 function Screen:IsRectInView(x, y, w, h)
 	return (x <= self.width) and (x + w >= 0) and (y <= self.height) and (y + h >= 0)
 end
 
 --//=============================================================================
 
+---@param w number
+---@param h number
 function Screen:Resize(w, h)
 	self.width = w
 	self.height = h
@@ -118,6 +138,7 @@ end
 
 --//=============================================================================
 
+---@param ... any
 function Screen:Update(...)
 	--//FIXME create a passive MouseMove event and use it instead?
 	self:RequestUpdate()
@@ -131,6 +152,10 @@ function Screen:Update(...)
 	end
 end
 
+---@param x number
+---@param y number
+---@param ... any
+---@return boolean?
 function Screen:IsAbove(x, y, ...)
 	local activeControl = UnlinkSafe(self.activeControl)
 	if activeControl then
@@ -168,6 +193,7 @@ function Screen:IsAbove(x, y, ...)
 	return not not hoveredControl
 end
 
+---@param control Control?
 function Screen:FocusControl(control)
 	--UnlinkSafe(self.activeControl)
 	if not CompareLinks(control, self.focusedControl) then
@@ -185,6 +211,10 @@ function Screen:FocusControl(control)
 	end
 end
 
+---@param x number
+---@param y number
+---@param ... any
+---@return boolean?
 function Screen:MouseDown(x, y, ...)
 	y = select(2, gl.GetViewSizes()) - y
 
@@ -194,6 +224,10 @@ function Screen:MouseDown(x, y, ...)
 	return not not activeControl
 end
 
+---@param x number
+---@param y number
+---@param ... any
+---@return boolean?
 function Screen:MouseUp(x, y, ...)
 	y = select(2, gl.GetViewSizes()) - y
 
@@ -230,6 +264,12 @@ function Screen:MouseUp(x, y, ...)
 	end
 end
 
+---@param x number
+---@param y number
+---@param dx number
+---@param dy number
+---@param ... any
+---@return boolean?
 function Screen:MouseMove(x, y, dx, dy, ...)
 	y = select(2, gl.GetViewSizes()) - y
 	local activeControl = UnlinkSafe(self.activeControl)
@@ -249,6 +289,10 @@ function Screen:MouseMove(x, y, dx, dy, ...)
 	return (not not inherited.MouseMove(self, x, y, dx, -dy, ...))
 end
 
+---@param x number
+---@param y number
+---@param ... any
+---@return boolean?
 function Screen:MouseWheel(x, y, ...)
 	y = select(2, gl.GetViewSizes()) - y
 	local activeControl = UnlinkSafe(self.activeControl)
@@ -268,6 +312,8 @@ function Screen:MouseWheel(x, y, ...)
 	return (not not inherited.MouseWheel(self, x, y, ...))
 end
 
+---@param ... any
+---@return boolean?
 function Screen:KeyPress(...)
 	local focusedControl = UnlinkSafe(self.focusedControl)
 	if focusedControl then
@@ -276,6 +322,8 @@ function Screen:KeyPress(...)
 	return (not not inherited:KeyPress(...))
 end
 
+---@param ... any
+---@return boolean?
 function Screen:TextInput(...)
 	local focusedControl = UnlinkSafe(self.focusedControl)
 	if focusedControl then

@@ -42,9 +42,8 @@ local this = TextBox
 local inherited = this.inherited
 
 --- Creates a new TextBox instance
--- @function TextBox:New
--- @param obj Table of textbox properties
--- @return TextBox The newly created textbox
+--- @param obj table Table of textbox properties
+--- @return TextBox The newly created textbox
 function TextBox:New(obj)
 	obj = inherited.New(self, obj)
 	obj:RequestFocus()
@@ -52,8 +51,7 @@ function TextBox:New(obj)
 end
 
 --- Sets the text content
--- @function TextBox:SetText
--- @string newText Text to set
+--- @param newText string Text to set
 function TextBox:SetText(newText)
 	if self.text == newText then
 		return
@@ -69,15 +67,13 @@ function TextBox:SetText(newText)
 end
 
 --- Gets the current text
--- @function TextBox:GetText
--- @return string Current text
+--- @return string Current text
 function TextBox:GetText()
 	return self.text
 end
 
 --- Gets selected text
--- @function TextBox:GetSelection
--- @return string Selected text or nil
+--- @return string? Selected text or nil
 function TextBox:GetSelection()
 	if not self.selStart then
 		return nil
@@ -89,10 +85,9 @@ function TextBox:GetSelection()
 end
 
 --- Handle text input events
--- @function TextBox:TextInput
--- @string char Character input
--- @param ... Additional args
--- @return boolean True if handled
+--- @param char string Character input
+--- @param ... any Additional args
+--- @return boolean True if handled
 function TextBox:TextInput(char, ...)
 	if not self.editable then
 		return false
@@ -120,7 +115,6 @@ function TextBox:TextInput(char, ...)
 end
 
 --- Draws the textbox
--- @function TextBox:DrawControl
 function TextBox:DrawControl()
 	local text = self.text
 	if self.passwordInput then
@@ -181,6 +175,7 @@ local function Append(t1, t2)
 	end
 end
 
+--- Updates the textbox layout
 function TextBox:UpdateLayout()
 	local font = self.font
 	local padding = self.padding

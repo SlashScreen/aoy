@@ -33,18 +33,16 @@ local this = ScrollButton
 local inherited = this.inherited
 
 --- Creates a new ScrollButton instance
--- @function ScrollButton:New
--- @param obj Table of scrollbutton properties
--- @return ScrollButton The newly created scrollbutton
+--- @param obj table Table of scrollbutton properties
+--- @return ScrollButton The newly created scrollbutton
 function ScrollButton:New(obj)
 	obj = inherited.New(self, obj)
 	return obj
 end
 
 --- Sets the scroll position
--- @function ScrollButton:SetPosition
--- @param pos New position (0-1)
--- @param noscroll Don't trigger scroll event
+--- @param pos number New position (0-1)
+--- @param noscroll boolean? Don't trigger scroll event
 function ScrollButton:SetPosition(pos, noscroll)
 	pos = math.min(1, math.max(0, pos))
 	if self.position == pos then
@@ -60,25 +58,22 @@ function ScrollButton:SetPosition(pos, noscroll)
 end
 
 --- Scrolls by relative amount
--- @function ScrollButton:ScrollBy
--- @param delta Amount to scroll
--- @param noscroll Don't trigger scroll event
+--- @param delta number Amount to scroll
+--- @param noscroll boolean? Don't trigger scroll event
 function ScrollButton:ScrollBy(delta, noscroll)
 	self:SetPosition(self.position + delta, noscroll)
 end
 
 --- Steps scroll position
--- @function ScrollButton:Step
--- @param up Step direction
+--- @param up boolean Step direction
 function ScrollButton:Step(up)
 	local delta = up and -self.step or self.step
 	self:ScrollBy(delta)
 end
 
 --- Sets button size based on content
--- @function ScrollButton:SetContentSize
--- @param contentSize Total content size
--- @param viewSize Visible view size
+--- @param contentSize number Total content size
+--- @param viewSize number Visible view size
 function ScrollButton:SetContentSize(contentSize, viewSize)
 	local ratio = math.min(1, viewSize / contentSize)
 	ratio = math.max(self.minSize, math.min(self.maxSize, ratio))
@@ -99,11 +94,10 @@ function ScrollButton:SetContentSize(contentSize, viewSize)
 end
 
 --- Handles mouse down events
--- @function ScrollButton:MouseDown
--- @param x X coordinate
--- @param y Y coordinate
--- @param ... Additional args
--- @return boolean True if handled
+--- @param x number X coordinate
+--- @param y number Y coordinate
+--- @param ... any Additional args
+--- @return boolean True if handled
 function ScrollButton:MouseDown(x, y, ...)
 	if not self:HitTest(x, y) then
 		return false
@@ -121,12 +115,11 @@ function ScrollButton:MouseDown(x, y, ...)
 end
 
 --- Handles mouse move events during drag
--- @function ScrollButton:MouseMove
--- @param x X coordinate
--- @param y Y coordinate
--- @param dx X movement
--- @param dy Y movement
--- @param ... Additional args
+--- @param x number X coordinate
+--- @param y number Y coordinate
+--- @param dx number X movement
+--- @param dy number Y movement
+--- @param ... any Additional args
 function ScrollButton:MouseMove(x, y, dx, dy, ...)
 	if not self._dragging then
 		return
@@ -147,10 +140,9 @@ function ScrollButton:MouseMove(x, y, dx, dy, ...)
 end
 
 --- Handles mouse up events
--- @function ScrollButton:MouseUp
--- @param x X coordinate
--- @param y Y coordinate
--- @param ... Additional args
+--- @param x number X coordinate
+--- @param y number Y coordinate
+--- @param ... any Additional args
 function ScrollButton:MouseUp(x, y, ...)
 	if not self._dragging then
 		return

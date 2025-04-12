@@ -39,9 +39,8 @@ local this = TabBar
 local inherited = this.inherited
 
 --- Creates a new TabBar instance
--- @function TabBar:New
--- @param obj Table of properties
--- @return TabBar The newly created tab bar
+--- @param obj table Table of properties
+--- @return TabBar The newly created tab bar
 function TabBar:New(obj)
 	obj = inherited.New(self, obj)
 
@@ -56,9 +55,8 @@ function TabBar:New(obj)
 end
 
 --- Adds a new tab
--- @function TabBar:AddTab
--- @param tabData Tab data/properties
--- @return table Created tab button
+--- @param tabData table Tab data/properties
+--- @return table Created tab button
 function TabBar:AddTab(tabData)
 	local tab = Button:New({
 		x = #self.tabs * self.defaultWidth,
@@ -79,8 +77,7 @@ function TabBar:AddTab(tabData)
 end
 
 --- Selects a tab
--- @function TabBar:Select
--- @param index Tab index to select
+--- @param index number Tab index to select
 function TabBar:Select(index)
 	if self.selected == index then
 		return
@@ -93,9 +90,8 @@ function TabBar:Select(index)
 end
 
 --- Creates a new TabPanel instance
--- @function TabPanel:New
--- @param obj Table of properties
--- @return TabPanel The newly created tab panel
+--- @param obj table Table of properties
+--- @return TabPanel The newly created tab panel
 function TabPanel:New(obj)
 	obj = inherited.New(self, obj)
 
@@ -126,10 +122,9 @@ function TabPanel:New(obj)
 end
 
 --- Adds a new tab page
--- @function TabPanel:AddTab
--- @string caption Tab caption
--- @param children Child controls
--- @return table Created tab page
+--- @param caption string Tab caption
+--- @param children table Child controls
+--- @return table Created tab page
 function TabPanel:AddTab(caption, children)
 	-- Add tab button
 	self.tabBar:AddTab({ caption = caption })
@@ -182,13 +177,27 @@ end
 --//=============================================================================
 
 --- TabPanel module
+--- A control that organizes content into selectable tabs
+---@class TabPanel: LayoutPanel
+---@field tabs TabItem[] Array of tab items
+---@field currentTab number Currently selected tab index
+---@field tabHeight number Height of tab bar
+---@field tabWidth number Width of individual tabs
+---@field minTabWidth number Minimum tab width
+---@field adjustHeight boolean Whether to adjust height to content
+---@field padding number[] Padding around content [left,top,right,bottom]
+---@field tabBarColor Color Tab bar background color [r,g,b,a]
+---@field tabSelectedColor Color Selected tab color [r,g,b,a]
+---@field contentBorderColor Color Content border color [r,g,b,a]
+---@field OnTabChange function[] Called when selected tab changes
 
---- TabPanel fields.
--- Inherits from LayoutPanel.
--- @see layoutpanel.LayoutPanel
--- @table TabPanel
--- @tparam {tab1,tab2,...} tabs contained in the tab panel, each tab has a .name (string) and a .children field (table of Controls)(default {})
--- @tparam chili.Control currentTab currently visible tab
+---@class TabItem
+---@field caption string Tab label text
+---@field control Control Content control for tab
+---@field width number? Custom tab width
+---@field font Font? Custom font for tab
+---@field color Color? Custom tab color
+
 TabPanel = LayoutPanel:Inherit({
 	classname = "tabpanel",
 	orientation = "vertical",
@@ -205,6 +214,9 @@ local inherited = this.inherited
 
 --//=============================================================================
 
+--- Creates a new TabPanel instance
+---@param obj table Table with tab panel properties
+---@return TabPanel The created tab panel
 function TabPanel:New(obj)
 	obj = inherited.New(self, obj)
 
@@ -255,6 +267,8 @@ function TabPanel:New(obj)
 	return obj
 end
 
+--- Adds a new tab page
+--- @param tab table
 function TabPanel:AddTab(tab)
 	local tabbar = self.children[1]
 	tabbar:AddChild(
@@ -273,8 +287,8 @@ function TabPanel:AddTab(tab)
 	tabFrame:SetVisibility(false)
 end
 
---//=============================================================================
-
+--- Changes the current tab to the specified tab name
+---@param tabname string
 function TabPanel:ChangeTab(tabname)
 	if not tabname or not self.tabIndexMapping[tabname] then
 		return
@@ -283,4 +297,3 @@ function TabPanel:ChangeTab(tabname)
 	self.currentFrame = self.tabIndexMapping[tabname]
 	self.currentFrame:SetVisibility(true)
 end
---//=============================================================================

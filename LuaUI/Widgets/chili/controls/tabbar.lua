@@ -35,6 +35,7 @@ local inherited = this.inherited
 
 --//=============================================================================
 
+---@param obj table
 function TabBar:New(obj)
 	obj = inherited.New(self, obj)
 	if obj.tabs then
@@ -60,12 +61,14 @@ end
 
 --//=============================================================================
 
+---@param orientation string
 function TabBar:SetOrientation(orientation)
 	inherited.SetOrientation(self, orientation)
 end
 
 --//=============================================================================
 
+---@param tabname string?
 function TabBar:Select(tabname)
 	for i = 1, #self.children do
 		local c = self.children[i]

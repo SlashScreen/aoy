@@ -1,18 +1,18 @@
 --- Window module
 --- A container control that provides window functionality like dragging, resizing and minimizing.
----@class Window
----@field draggable boolean Window can be dragged
----@field resizable boolean Window can be resized
----@field minimizable boolean Window can be minimized
----@field minWidth number Minimum window width
----@field minHeight number Minimum window height
----@field titleBarHeight number Height of the title bar
----@field titleBarColor Color Title bar color
----@field caption string Window title text
----@field minimized boolean Current minimized state
----@field OnMove function[] Window move event listeners
----@field OnResize function[] Window resize event listeners
----@field OnMinimize function[] Window minimize event listeners
+--- @class Window
+--- @field draggable boolean Window can be dragged
+--- @field resizable boolean Window can be resized
+--- @field minimizable boolean Window can be minimized
+--- @field minWidth number Minimum window width
+--- @field minHeight number Minimum window height
+--- @field titleBarHeight number Height of the title bar
+--- @field titleBarColor Color Title bar color
+--- @field caption string Window title text
+--- @field minimized boolean Current minimized state
+--- @field OnMove function[] Window move event listeners
+--- @field OnResize function[] Window resize event listeners
+--- @field OnMinimize function[] Window minimize event listeners
 
 Window = Control:Inherit({
 	classname = "window",
@@ -38,9 +38,8 @@ local this = Window
 local inherited = this.inherited
 
 --- Creates a new Window instance
--- @function Window:New
--- @param obj Table of window properties
--- @return Window The newly created window
+--- @param obj table Table of window properties
+--- @return Window w The newly created window
 function Window:New(obj)
 	obj = inherited.New(self, obj)
 
@@ -74,7 +73,6 @@ function Window:New(obj)
 end
 
 --- Draws the window
--- @function Window:DrawControl
 function Window:DrawControl()
 	-- Draw title bar
 	if self.caption and self.caption ~= "" then
@@ -94,7 +92,6 @@ function Window:DrawControl()
 end
 
 --- Minimizes/restores the window
--- @function Window:Minimize
 function Window:Minimize()
 	self.minimized = not self.minimized
 
@@ -109,12 +106,11 @@ function Window:Minimize()
 end
 
 --- Handles mouse down events
--- @function Window:MouseDown
--- @param x X coordinate
--- @param y Y coordinate
--- @param button Button pressed
--- @param ... Additional args
--- @return boolean True if handled
+--- @param x number X coordinate
+--- @param y number Y coordinate
+--- @param button number Button pressed
+--- @param ... any Additional args
+--- @return boolean handled True if handled
 function Window:MouseDown(x, y, button, ...)
 	-- Check for dragging title bar
 	if button == 1 and self.draggable and y < self.titleBarHeight and y >= 0 then
@@ -138,12 +134,11 @@ function Window:MouseDown(x, y, button, ...)
 end
 
 --- Handles mouse move events
--- @function Window:MouseMove
--- @param x X coordinate
--- @param y Y coordinate
--- @param dx X movement
--- @param dy Y movement
--- @param button Button held
+--- @param x number X coordinate
+--- @param y number Y coordinate
+--- @param dx number X movement
+--- @param dy number Y movement
+--- @param button number Button held
 function Window:MouseMove(x, y, dx, dy, button)
 	-- Handle dragging
 	if self._dragging then
@@ -167,11 +162,10 @@ function Window:MouseMove(x, y, dx, dy, button)
 end
 
 --- Handles mouse up events
--- @function Window:MouseUp
--- @param x X coordinate
--- @param y Y coordinate
--- @param button Button released
--- @param ... Additional args
+--- @param x number X coordinate
+--- @param y number Y coordinate
+--- @param button number Button released
+--- @param ... any Additional args
 function Window:MouseUp(x, y, button, ...)
 	if button == 1 then
 		self._dragging = false
@@ -181,7 +175,6 @@ function Window:MouseUp(x, y, button, ...)
 end
 
 --- Brings window to front
--- @function Window:BringToFront
 function Window:BringToFront()
 	if self.parent then
 		self.parent:RemoveChild(self)
@@ -192,8 +185,7 @@ end
 VFS.Include(CHILI_DIRNAME .. "headers/skinutils.lua", nil, VFS.RAW_FIRST)
 
 --- Draw debug overlay for window tweaking
--- @function Window:TweakDraw
--- Shows resizable/draggable overlay in tweak mode
+--- Shows resizable/draggable overlay in tweak mode
 function Window:TweakDraw()
 	gl.Color(0.6, 1, 0.6, 0.65)
 
