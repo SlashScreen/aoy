@@ -1,0 +1,1 @@
+Spring.Utilities.CMD = VFS.Include("LuaRules/Configs/command_ids.lua", nil, VFS.GAME)

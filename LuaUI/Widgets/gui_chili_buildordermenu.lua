@@ -19,6 +19,8 @@ local vsx, vsy = Spring.GetViewGeometry()
 ---@type number
 local widgetScale = (0.5 + (vsx * vsy / 5700000))
 
+local REMOVE_DEFAULT_MENU = false
+
 --------------------------------------------------------------------------------
 -- Hotkeys
 VFS.Include("luaui/configs/build_hotkeys_config.lua")
@@ -974,8 +976,10 @@ function widget:Initialize()
 	end
 
 	Spring.Echo("Chili detected, initializing UI.")
-	OverrideDefaultMenu()
-
+	if REMOVE_DEFAULT_MENU then
+		OverrideDefaultMenu()
+	end
+	
 	Chili = WG.Chili
 	Window = Chili.Window
 	Grid = Chili.Grid

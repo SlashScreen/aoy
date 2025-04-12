@@ -1,2 +1,3 @@
-VFS.Include("LuaGadgets/commands.lua", nil, VFS.BASE)
-VFS.Include("LuaGadgets/gadgets.lua", nil, VFS.BASE)
+Spring.Echo("Synced LuaRules: starting loading")
+VFS.Include('LuaRules/gadgets.lua', nil, VFS.GAME)
+Spring.Echo("Synced LuaRules: finished loading")
