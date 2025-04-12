@@ -1,14 +1,10 @@
---//=============================================================================
---// 
-
 local function CheckNoneNil(x, fallback)
-	if (x ~= nil) then
+	if x ~= nil then
 		return x
 	else
 		return fallback
 	end
 end
-
 
 function BackwardCompa(obj)
 	obj.font = obj.font or {}

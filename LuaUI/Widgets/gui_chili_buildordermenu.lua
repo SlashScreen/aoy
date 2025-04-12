@@ -457,7 +457,7 @@ end --processRelativeCoord
 
 ---Creates a grid window.
 ---@param config table Configuration table
----@return Grid, Window The grid and the window
+---@return Grid g, Window w The grid and the window
 local function createGridWindow(config)
 	---@type ScrollPanel
 	local scroll = ScrollPanel:New({
@@ -533,13 +533,13 @@ end --createGridWindow
 ---@param cmd table The command associated with the button
 ---@return Button The button
 local function applyHighlightHandler(button, cmd)
-	---@type color
+	---@type Color
 	local selected = { 0.85, 0.65, 0, 0.5 }
-	---@type color
+	---@type Color
 	local hovered = { 0.75, 0.75, 0.75, 0.25 }
-	---@type color
+	---@type Color
 	local out = { 0, 0, 0, 0 }
-	---@type color
+	---@type Color
 	local disabled = { 0, 0, 0, 0.6 }
 
 	---@type Image
@@ -557,7 +557,7 @@ local function applyHighlightHandler(button, cmd)
 	chiliCache["highlight" .. button.cmdID] = highlight
 	---@param cmdID number
 	local function updateSelection(cmdID)
-		---@param color color
+		---@param color Color
 		local function checkColor(color)
 			if highlight.color ~= color then
 				highlight.color = color
@@ -599,7 +599,7 @@ local function applyStateHandler(button, cmd)
 		return -0.5 * c * (c - 4)
 	end -- makes yellow more vivid
 	---@param i number
-	---@return color
+	---@return Color
 	local function getStateColor(i)
 		local g = (i - 1) / (stateCount - 1)
 		return (i == state) and { curve(1 - g), curve(g), 0, 1 } or { 0.9, 0.9, 0.9, 0.3 }
@@ -827,7 +827,6 @@ local function addBuildCommand(cmd)
 				})
 			end
 			-- chiliCache['hotkeyLabel' .. cmd.id]:SetCaption(color2incolor(1,1,1) .. nameToKeySymbols[cmd.name])
-			---@param label Label
 			local function updateLabel()
 				local str = color2incolor(1, 1, 1)
 				local leng = #nameToKeySymbols[cmd.name]
