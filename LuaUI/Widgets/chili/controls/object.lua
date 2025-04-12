@@ -1,8 +1,10 @@
---//=============================================================================
+--- @module "Headers/links"
 
 --- Object module
 --- @class Object
+--- @field name string Unique name of the object
 --- @field className string Name of class
+--- @field parent Object? Parent object
 --- @field defaultWidth number Default width of object
 --- @field defaultHeight number Default height of object
 --- @field visible boolean Object is visible
@@ -198,7 +200,6 @@ function Object:Dispose(_internal)
 	end
 end
 
----@param _internal boolean?
 function Object:AutoDispose()
 	self:Dispose(true)
 end
@@ -374,7 +375,7 @@ function Object:ClearChildren()
 end
 
 --- Specifies whether the object has any visible children
---- @return bool
+--- @return boolean
 function Object:IsEmpty()
 	return not self.children[1]
 end
@@ -554,7 +555,7 @@ function Object:GetChildByName(name)
 
 	for c in pairs(self.children_hidden) do
 		if name == c.name then
-			return MakeWeakLink(c)
+			return MakeWeakLink(c) --[[@as Object]]
 		end
 	end
 end
@@ -585,7 +586,7 @@ function Object:GetObjectByName(name)
 
 	for c in pairs(self.children_hidden) do
 		if name == c.name then
-			return MakeWeakLink(c)
+			return MakeWeakLink(c) --[[@as Object]]
 		else
 			local result = c:GetObjectByName(name)
 			if result then
@@ -616,7 +617,7 @@ end
 ---@param _already_unlinked boolean?
 function Object:IsDescendantOf(object, _already_unlinked)
 	if not _already_unlinked then
-		object = UnlinkSafe(object)
+		object = UnlinkSafe(object) --[[@as Object]]
 	end
 	if UnlinkSafe(self) == object then
 		return true
