@@ -15,10 +15,6 @@ function gadget:GetInfo()
 	}
 end
 
-if not gadgetHandler:IsSyncedCode() then
-	return
-end
-
 local pick_up_item_command_desc = {
 	id = CMD_PICKUP_ITEM,
 	type = CMDTYPE.ICON_UNIT_FEATURE_OR_AREA,
@@ -28,10 +24,10 @@ local pick_up_item_command_desc = {
 	hidden = true,
 }
 
---- @type table<UnitID, integer[]>
-local inventory = {}
 --- @type table<UnitDefID, boolean>
 local is_hero = {}
+--- @type table<FeatureID, boolean>
+local is_item = {}
 local max_inventory_size = 6
 
 -- Initialize is hero table
@@ -40,50 +36,69 @@ for unit_def_id, unit_def in pairs(UnitDefs) do
 		is_hero[unit_def_id] = true
 	end
 end
-
---- Pick up an item
---- @param item string
---- @param unit_id integer
---- @return boolean
-local function pick_up_item(item, unit_id)
-	local unit_def_id = Spring.GetUnitDefID(unit_id)
-	if not is_hero[unit_def_id] then
-		return false
-	end
-
-	if #inventory[unit_id] >= max_inventory_size then
-		return false
-	end
-
-	if not inventory[unit_id] then
-		inventory[unit_id] = {}
-	end
-
-	table.insert(inventory[unit_id], item)
-	return true
-end
-
-function gadget:CommandFallback(unit_id, unit_def_id, cmd_id, cmd_params, cmd_options)
-	if cmd_id == CMD_PICKUP_ITEM then
-		local item = cmd_params[1]
-		return pick_up_item(item, unit_id)
+-- Initialize is item table
+for feature_id, feature in pairs(FeatureDefs) do
+	if feature.customparams.is_item then
+		is_item[feature_id] = true
 	end
 end
 
-function gadget:AllowCommand(_unitID, unit_def_id, _unitTeam, cmdID, _cmdParams, _cmdOptions, _cmdTag, _synced)
-	if cmdID == CMD_PICKUP_ITEM then
-		return UnitDefs[unit_def_id].customparams.is_hero ~= nil
-	else
+if gadgetHandler:IsSyncedCode() then
+	--- @type table<UnitID, integer[]>
+	local inventory = {}
+
+	--- Pick up an item
+	--- @param item string
+	--- @param unit_id integer
+	--- @return boolean
+	local function pick_up_item(item, unit_id)
+		local unit_def_id = Spring.GetUnitDefID(unit_id)
+		if not is_hero[unit_def_id] then
+			return false
+		end
+
+		if #inventory[unit_id] >= max_inventory_size then
+			return false
+		end
+
+		if not inventory[unit_id] then
+			inventory[unit_id] = {}
+		end
+
+		table.insert(inventory[unit_id], item)
 		return true
 	end
-end
 
----@param type "unit" | "feature"
----@param id UnitID | FeatureID
----@return table | nil
-function gadget:DefaultCommand(type, id)
-	if type == "feature" then
-	else
+	function gadget:CommandFallback(unit_id, unit_def_id, cmd_id, cmd_params, cmd_options)
+		if cmd_id == CMD_PICKUP_ITEM then
+			local item = cmd_params[1]
+			return pick_up_item(item, unit_id)
+		end
+	end
+
+	function gadget:AllowCommand(_unitID, unit_def_id, _unitTeam, cmdID, _cmdParams, _cmdOptions, _cmdTag, _synced)
+		if cmdID == CMD_PICKUP_ITEM then
+			return UnitDefs[unit_def_id].customparams.is_hero ~= nil
+		else
+			return true
+		end
+	end
+else
+	---@param type "unit" | "feature"
+	---@param id UnitID | FeatureID
+	---@return integer
+	function gadget:DefaultCommand(type, id)
+		if type == "feature" then
+			if is_item[id] then
+				local selected_units = Spring.GetSelectedUnits()
+				for _, unit_id in ipairs(selected_units) do
+					if is_hero[Spring.GetUnitDefID(unit_id)] then
+						return CMD_PICKUP_ITEM
+					end
+				end
+			end
+		end
+		return CMD.WAIT
 	end
 end
 
