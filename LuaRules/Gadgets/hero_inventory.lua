@@ -1,5 +1,9 @@
 local gadget = gadget --- @type Gadget
-CMD_PICKUP_ITEM = "pick_up_item"
+--- @alias UnitID integer
+--- @alias UnitDefID integer
+--- @alias FeatureID integer
+
+CMD_PICKUP_ITEM = 0xDEADBEEF
 
 function gadget:GetInfo()
 	return {
@@ -25,9 +29,6 @@ local pick_up_item_command_desc = {
 	tooltip = "Pick up an item",
 	hidden = true,
 }
-
---- @alias UnitID integer
---- @alias UnitDefID integer
 
 --- @type table<UnitID, integer[]>
 local inventory = {}
@@ -76,6 +77,15 @@ function gadget:AllowCommand(_unitID, unit_def_id, _unitTeam, cmdID, _cmdParams,
 		return UnitDefs[unit_def_id].customparams.is_hero ~= nil
 	else
 		return true
+	end
+end
+
+---@param type "unit" | "feature"
+---@param id UnitID | FeatureID
+---@return table | nil
+function gadget:DefaultCommand(type, id)
+	if type == "feature" then
+	else
 	end
 end
 
