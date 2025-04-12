@@ -1,34 +1,29 @@
---- @module "Headers/links"
+--//=============================================================================
 
 --- Object module
---- @class Object
---- @field name string Unique name of the object
---- @field className string Name of class
---- @field parent Object? Parent object
---- @field defaultWidth number Default width of object
---- @field defaultHeight number Default height of object
---- @field visible boolean Object is visible
---- @field preserveChildrenOrder boolean Children order is preserved TODO: if reordered?
---- @field children Object[] The children of the object
---- @field children_hidden table<Object, boolean>
---- @field childrenByName table<string, Object>
---- @field OnDispose function[] function listeners for object disposal
---- @field OnClick function[] function listeners for mouse click
---- @field OnDblClick function[] function listeners for mouse double click
---- @field OnMouseDown function<integer, integer, integer>[] function listeners for mouse press
---- @field OnMouseUp function[] function listeners for mouse release
---- @field OnMouseMove function[] function listeners for mouse movement
---- @field OnMouseWheel function[] function listeners for mouse scrolling
---- @field OnMouseOver function[] function listeners for mouse over
---- @field OnMouseOut function[] function listeners for mouse leaving the object
---- @field OnKeyPress function[] function listeners for key press
---- @field OnTextInput function[] function listeners for text input
---- @field OnFocusUpdate function[] function listeners for focus change
---- @field OnHide function[] function listeners for object hiding
---- @field OnShow function[] function listeners for object showing
---- @field disableChildrenHitTest boolean Children are not clickable/draggable etc - their mouse events are not processed
---- @field inherited table Inherited class TODO: how to type this
 
+---@class Object
+---@field classname string The class name
+---@field visible boolean Whether object is visible
+---@field children table<number,Object> Array of visible children
+---@field children_hidden table<number,Object> Array of hidden children
+---@field childrenByName table<string,Object> Map of child name to child
+---@field preserveChildrenOrder boolean Whether to preserve child order
+---@field OnDispose function[] Disposal event listeners
+---@field OnClick function[] Click event listeners
+---@field OnDblClick function[] Double click event listeners
+---@field OnMouseDown function[] Mouse down event listeners
+---@field OnMouseUp function[] Mouse up event listeners
+---@field OnMouseMove function[] Mouse move event listeners
+---@field OnMouseWheel function[] Mouse wheel event listeners
+---@field OnMouseOver function[] Mouse over event listeners
+---@field OnMouseOut function[] Mouse out event listeners
+---@field OnKeyPress function[] Key press event listeners
+---@field OnTextInput function[] Text input event listeners
+---@field OnFocusUpdate function[] Focus update event listeners
+---@field OnHide function[] Hide event listeners
+---@field OnShow function[] Show event listeners
+---@field disableChildrenHitTest boolean Whether children receive mouse events
 Object = {
 	classname = "object",
 	--x         = 0,
@@ -90,8 +85,9 @@ end
 
 --//=============================================================================
 
---- Object constructor
---- @param obj Object? the object table
+---Creates a new Object instance
+---@param obj table Configuration object
+---@return Object object The created object
 function Object:New(obj)
 	obj = obj or {}
 
@@ -163,11 +159,9 @@ function Object:New(obj)
 	return hobj
 end
 
---- Disposes of the object.
---- Calling this releases unmanaged resources like display lists and disposes of the object.
---- Children are disposed too.
---- TODO: use scream, in case the user forgets.
---- @param _internal boolean?
+---Disposes of the object and its resources
+---@param _internal boolean Whether disposal is internal
+---@return nil
 function Object:Dispose(_internal)
 	if not self.disposed then
 		--// check if the control is still referenced (if so it would indicate a bug in chili's gc)
@@ -210,7 +204,6 @@ function Object:Clone()
 	return newinst
 end
 
----@param class table
 function Object:Inherit(class)
 	class.inherited = self
 
@@ -249,7 +242,7 @@ end
 --//=============================================================================
 
 --- Sets the parent object
---- @param obj Object? parent object
+-- @tparam Object obj parent object
 function Object:SetParent(obj)
 	obj = UnlinkSafe(obj)
 	local typ = type(obj)
@@ -265,8 +258,7 @@ function Object:SetParent(obj)
 end
 
 --- Adds the child object
---- @param obj Object child object to be added
---- @param dontUpdate boolean?
+-- @tparam Object obj child object to be added
 function Object:AddChild(obj, dontUpdate)
 	local objDirect = UnlinkSafe(obj)
 
@@ -299,7 +291,7 @@ function Object:AddChild(obj, dontUpdate)
 end
 
 --- Removes the child object
---- @param child Object child object to be removed
+-- @tparam Object child child object to be removed
 function Object:RemoveChild(child)
 	if not isindexable(child) then
 		return child
@@ -375,7 +367,7 @@ function Object:ClearChildren()
 end
 
 --- Specifies whether the object has any visible children
---- @return boolean
+-- @treturn bool
 function Object:IsEmpty()
 	return not self.children[1]
 end
@@ -383,7 +375,7 @@ end
 --//=============================================================================
 
 --- Hides a specific child
---- @param obj Object child to be hidden
+-- @tparam Object obj child to be hidden
 function Object:HideChild(obj)
 	--FIXME cause of performance reasons it would be usefull to use the direct object, but then we need to cache the link somewhere to avoid the auto calling of dispose
 	local objDirect = UnlinkSafe(obj)
@@ -420,7 +412,7 @@ function Object:HideChild(obj)
 end
 
 --- Makes a specific child visible
---- @param obj Object child to be made visible
+-- @tparam Object obj child to be made visible
 function Object:ShowChild(obj)
 	--FIXME cause of performance reasons it would be usefull to use the direct object, but then we need to cache the link somewhere to avoid the auto calling of dispose
 	local objDirect = UnlinkSafe(obj)
@@ -461,7 +453,7 @@ function Object:ShowChild(obj)
 end
 
 --- Sets the visibility of the object
---- @param visible boolean visibility status
+-- @bool visible visibility status
 function Object:SetVisibility(visible)
 	if visible then
 		self.parent:ShowChild(self)
@@ -497,8 +489,6 @@ end
 
 --//=============================================================================
 
----@param child Object
----@param layer number
 function Object:SetChildLayer(child, layer)
 	child = UnlinkSafe(child)
 	local children = self.children
@@ -516,7 +506,6 @@ function Object:SetChildLayer(child, layer)
 	self:Invalidate()
 end
 
----@param layer number
 function Object:SetLayer(layer)
 	if self.parent then
 		(self.parent):SetChildLayer(self, layer)
@@ -529,7 +518,6 @@ end
 
 --//=============================================================================
 
----@param classname string
 function Object:InheritsFrom(classname)
 	if self.classname == classname then
 		return true
@@ -543,8 +531,8 @@ end
 --//=============================================================================
 
 --- Returns a child by name
---- @param name string child name
---- @return Object? child
+-- @string name child name
+-- @treturn Object child
 function Object:GetChildByName(name)
 	local cn = self.children
 	for i = 1, #cn do
@@ -555,7 +543,7 @@ function Object:GetChildByName(name)
 
 	for c in pairs(self.children_hidden) do
 		if name == c.name then
-			return MakeWeakLink(c) --[[@as Object]]
+			return MakeWeakLink(c)
 		end
 	end
 end
@@ -564,8 +552,8 @@ end
 Object.GetChild = Object.GetChildByName
 
 --- Resursive search to find an object by its name
---- @param name string name of the object
---- @return Object?
+-- @string name name of the object
+-- @treturn Object
 function Object:GetObjectByName(name)
 	local r = self.childrenByName[name]
 	if r then
@@ -586,7 +574,7 @@ function Object:GetObjectByName(name)
 
 	for c in pairs(self.children_hidden) do
 		if name == c.name then
-			return MakeWeakLink(c) --[[@as Object]]
+			return MakeWeakLink(c)
 		else
 			local result = c:GetObjectByName(name)
 			if result then
@@ -596,10 +584,9 @@ function Object:GetObjectByName(name)
 	end
 end
 
---- Climbs the family tree and returns the first parent that satisfies a
---- predicate function or inherites the given class.
---- Returns nil if not found.
----@param predicate string|function
+--// Climbs the family tree and returns the first parent that satisfies a
+--// predicate function or inherites the given class.
+--// Returns nil if not found.
 function Object:FindParent(predicate)
 	if not self.parent then
 		return -- not parent with such class name found, return nil
@@ -613,11 +600,9 @@ function Object:FindParent(predicate)
 	end
 end
 
----@param object Object
----@param _already_unlinked boolean?
 function Object:IsDescendantOf(object, _already_unlinked)
 	if not _already_unlinked then
-		object = UnlinkSafe(object) --[[@as Object]]
+		object = UnlinkSafe(object)
 	end
 	if UnlinkSafe(self) == object then
 		return true
@@ -628,9 +613,6 @@ function Object:IsDescendantOf(object, _already_unlinked)
 	return false
 end
 
----@param object Object
----@param _level number?
----@param _already_unlinked boolean?
 function Object:IsAncestorOf(object, _level, _already_unlinked)
 	_level = _level or 1
 
@@ -660,9 +642,6 @@ end
 
 --//=============================================================================
 
----@param listeners function[]
----@param ... any
----@return boolean?
 function Object:CallListeners(listeners, ...)
 	for i = 1, #listeners do
 		local eventListener = listeners[i]
@@ -672,9 +651,6 @@ function Object:CallListeners(listeners, ...)
 	end
 end
 
----@param listeners function[]
----@param ... any
----@return boolean?
 function Object:CallListenersInverse(listeners, ...)
 	for i = #listeners, 1, -1 do
 		local eventListener = listeners[i]
@@ -684,9 +660,6 @@ function Object:CallListenersInverse(listeners, ...)
 	end
 end
 
----@param eventname string
----@param ... any
----@return any
 function Object:CallChildren(eventname, ...)
 	local children = self.children
 	for i = 1, #children do
@@ -700,9 +673,6 @@ function Object:CallChildren(eventname, ...)
 	end
 end
 
----@param eventname string
----@param ... any
----@return any
 function Object:CallChildrenInverse(eventname, ...)
 	local children = self.children
 	for i = #children, 1, -1 do
@@ -716,10 +686,6 @@ function Object:CallChildrenInverse(eventname, ...)
 	end
 end
 
----@param checkfunc function
----@param eventname string
----@param ... any
----@return any
 function Object:CallChildrenInverseCheckFunc(checkfunc, eventname, ...)
 	local children = self.children
 	for i = #children, 1, -1 do
@@ -737,11 +703,6 @@ local function InLocalRect(cx, cy, w, h)
 	return (cx >= 0) and (cy >= 0) and (cx <= w) and (cy <= h)
 end
 
----@param eventname string
----@param x number
----@param y number
----@param ... any
----@return any
 function Object:CallChildrenHT(eventname, x, y, ...)
 	if self.disableChildrenHitTest then
 		return nil
@@ -761,11 +722,6 @@ function Object:CallChildrenHT(eventname, x, y, ...)
 	end
 end
 
----@param eventname string
----@param x number
----@param y number
----@param ... any
----@return any
 function Object:CallChildrenHTWeak(eventname, x, y, ...)
 	if self.disableChildrenHitTest then
 		return nil
@@ -807,26 +763,21 @@ end
 
 --//=============================================================================
 
----@param x number
----@param y number
 function Object:LocalToParent(x, y)
 	return x + self.x, y + self.y
 end
 
----@param x number
----@param y number
 function Object:ParentToLocal(x, y)
 	return x - self.x, y - self.y
 end
 
----@param x number
----@param y number
+Object.ParentToClient = Object.ParentToLocal
+Object.ClientToParent = Object.LocalToParent
+
 function Object:LocalToClient(x, y)
 	return x, y
 end
 
----@param x number
----@param y number
 function Object:LocalToScreen(x, y)
 	if not self.parent then
 		return x, y
@@ -835,8 +786,6 @@ function Object:LocalToScreen(x, y)
 	return (self.parent):ClientToScreen(self:LocalToParent(x, y))
 end
 
----@param x number
----@param y number
 function Object:ClientToScreen(x, y)
 	if not self.parent then
 		return self:ClientToParent(x, y)
@@ -844,8 +793,6 @@ function Object:ClientToScreen(x, y)
 	return (self.parent):ClientToScreen(self:ClientToParent(x, y))
 end
 
----@param x number
----@param y number
 function Object:ScreenToLocal(x, y)
 	if not self.parent then
 		return self:ParentToLocal(x, y)
@@ -853,8 +800,6 @@ function Object:ScreenToLocal(x, y)
 	return self:ParentToLocal((self.parent):ScreenToClient(x, y))
 end
 
----@param x number
----@param y number
 function Object:ScreenToClient(x, y)
 	if not self.parent then
 		return self:ParentToClient(x, y)
@@ -862,9 +807,6 @@ function Object:ScreenToClient(x, y)
 	return self:ParentToClient((self.parent):ScreenToClient(x, y))
 end
 
----@param x number
----@param y number
----@param obj Object
 function Object:LocalToObject(x, y, obj)
 	if CompareLinks(self, obj) then
 		return x, y
@@ -878,15 +820,12 @@ end
 
 --//=============================================================================
 
----@param child Object
 function Object:_GetMaxChildConstraints(child)
 	return 0, 0, self.width, self.height
 end
 
 --//=============================================================================
 
----@param x number
----@param y number
 function Object:HitTest(x, y)
 	if not self.disableChildrenHitTest then
 		local children = self.children
@@ -907,14 +846,10 @@ function Object:HitTest(x, y)
 	return false
 end
 
----@param x number
----@param y number
----@param ... any
 function Object:IsAbove(x, y, ...)
 	return self:HitTest(x, y)
 end
 
----@param ... any
 function Object:MouseMove(...)
 	if self:CallListeners(self.OnMouseMove, ...) then
 		return self
@@ -923,7 +858,6 @@ function Object:MouseMove(...)
 	return self:CallChildrenHT("MouseMove", ...)
 end
 
----@param ... any
 function Object:MouseDown(...)
 	if self:CallListeners(self.OnMouseDown, ...) then
 		return self
@@ -932,7 +866,6 @@ function Object:MouseDown(...)
 	return self:CallChildrenHT("MouseDown", ...)
 end
 
----@param ... any
 function Object:MouseUp(...)
 	if self:CallListeners(self.OnMouseUp, ...) then
 		return self
@@ -941,7 +874,6 @@ function Object:MouseUp(...)
 	return self:CallChildrenHT("MouseUp", ...)
 end
 
----@param ... any
 function Object:MouseClick(...)
 	if self:CallListeners(self.OnClick, ...) then
 		return self
@@ -950,7 +882,6 @@ function Object:MouseClick(...)
 	return self:CallChildrenHT("MouseClick", ...)
 end
 
----@param ... any
 function Object:MouseDblClick(...)
 	if self:CallListeners(self.OnDblClick, ...) then
 		return self
@@ -959,7 +890,6 @@ function Object:MouseDblClick(...)
 	return self:CallChildrenHT("MouseDblClick", ...)
 end
 
----@param ... any
 function Object:MouseWheel(...)
 	if self:CallListeners(self.OnMouseWheel, ...) then
 		return self
@@ -968,21 +898,18 @@ function Object:MouseWheel(...)
 	return self:CallChildrenHTWeak("MouseWheel", ...)
 end
 
----@param ... any
 function Object:MouseOver(...)
 	if self:CallListeners(self.OnMouseOver, ...) then
 		return self
 	end
 end
 
----@param ... any
 function Object:MouseOut(...)
 	if self:CallListeners(self.OnMouseOut, ...) then
 		return self
 	end
 end
 
----@param ... any
 function Object:KeyPress(...)
 	if self:CallListeners(self.OnKeyPress, ...) then
 		return self
@@ -991,7 +918,6 @@ function Object:KeyPress(...)
 	return false
 end
 
----@param ... any
 function Object:TextInput(...)
 	if self:CallListeners(self.OnTextInput, ...) then
 		return self
@@ -1000,7 +926,6 @@ function Object:TextInput(...)
 	return false
 end
 
----@param ... any
 function Object:FocusUpdate(...)
 	if self:CallListeners(self.OnFocusUpdate, ...) then
 		return self

@@ -1,291 +1,63 @@
 --//=============================================================================
 
 --- EditBox module
---- A text input control that allows users to enter and edit text.
---- @class EditBox: Control
---- @field text string Current text content
---- @field hint string Hint text shown when empty
---- @field selectable boolean Text can be selected
---- @field multiline boolean Allow multiple lines
---- @field editable boolean Text can be edited
---- @field cursorColor Color Color of text cursor (default {0,0,1,0.7})
---- @field selectionColor Color Color of selected text (default {0,0,1,0.3})
---- @field OnTextInput function[] Text input event listeners
---- @field OnKeyPress function[] Key press event listeners
---- @field OnEnterPress function[] Enter key press listeners
---- @field defaultWidth number Default width of the control
---- @field defaultHeight number Default height of the control
---- @field padding number[] Padding around the text (default {3,3,3,3})
---- @field cursorPos number Current cursor position in the string
---- @field selStart number? Start position of selected text
---- @field selEnd number? End position of selected text
 
+--- EditBox fields.
+-- Inherits from Control.
+-- @see control.Control
+-- @table EditBox
+-- @tparam {r,g,b,a} cursorColor cursor color, (default {0,0,1,0.7})
+-- @tparam {r,g,b,a} selectionColor selection color, (default {0,1,1,0.3})
+-- @string[opt="left"] align alignment
+-- @string[opt="linecenter"] valign vertical alignment
+-- @string[opt=""] text text contained in the editbox
+-- @string[opt=""] hint hint to be displayed when there is no text and the control isn't focused
+-- @int[opt=1] cursor cursor position
+-- @bool passwordInput specifies whether the text should be treated as a password
 EditBox = Control:Inherit({
 	classname = "editbox",
-	text = "",
-	hint = "",
 
 	defaultWidth = 70,
 	defaultHeight = 20,
+
 	padding = { 3, 3, 3, 3 },
 
-	selectable = true,
-	editable = true,
-	multiline = false,
+	cursorColor = { 0, 0, 1, 0.7 },
+	selectionColor = { 0, 1, 1, 0.3 },
 
-	cursorPos = 1,
+	align = "left",
+	valign = "linecenter",
+
+	hintFont = table.merge({ color = { 1, 1, 1, 0.7 } }, Control.font),
+
+	text = "",
+	hint = "",
+	cursor = 1,
+	offset = 1,
 	selStart = nil,
 	selEnd = nil,
 
-	cursorColor = { 0, 0, 1, 0.7 },
-	selectionColor = { 0, 0, 1, 0.3 },
-
-	OnTextInput = {},
-	OnKeyPress = {},
-	OnEnterPress = {},
+	allowUnicode = true,
+	passwordInput = false,
 })
+if Script.IsEngineMinVersion == nil or not Script.IsEngineMinVersion(97) then
+	EditBox.allowUnicode = false
+end
 
 local this = EditBox
 local inherited = this.inherited
 
---- Creates a new EditBox instance
---- @param obj table Table of editbox properties
---- @return EditBox The newly created editbox
+--//=============================================================================
+
 function EditBox:New(obj)
 	obj = inherited.New(self, obj)
-	obj:UpdateLayout()
+	obj._interactedTime = Spring.GetTimer()
+	--// create font
+	obj.hintFont = Font:New(obj.hintFont)
+	obj.hintFont:SetParent(obj)
+	obj:SetText(obj.text)
+	obj:RequestUpdate()
 	return obj
-end
-
---- Sets the editbox text
---- @param newText string Text to set
-function EditBox:SetText(newText)
-	if self.text == newText then
-		return
-	end
-	self.text = newText or ""
-	self.cursor = utf8.len(self.text) + 1
-	self.selStart = nil
-	self.selEnd = nil
-	self:Invalidate()
-end
-
---- Gets the current text
---- @return string Current text
-function EditBox:GetText()
-	return self.text
-end
-
---- Handle text input events
---- @param char string Character being input
---- @param ... any Additional args
---- @return boolean True if handled
-function EditBox:TextInput(char, ...)
-	if not self.editable then
-		return false
-	end
-
-	local text = self.text
-	if self.selStart then
-		text = text:sub(1, self.selStart - 1) .. text:sub(self.selEnd)
-		self.cursor = self.selStart
-		self.selStart = nil
-		self.selEnd = nil
-	end
-
-	text = text:sub(1, self.cursor - 1) .. char .. text:sub(self.cursor)
-	self.text = text
-	self.cursor = self.cursor + 1
-
-	self:Invalidate()
-	return self
-end
-
---- Handle key press events
---- @param key number Key being pressed
---- @param mods table Modifier keys
---- @param isRepeat boolean Is key repeat
---- @param label string Key label
---- @param ... any Additional args
---- @return boolean True if handled
-function EditBox:KeyPress(key, mods, isRepeat, label, ...)
-	-- Handle key commands (copy, paste, etc)
-	if mods.ctrl then
-		if key == Spring.KEYSYMS.V then
-			-- Paste
-			local text = Spring.GetClipboard()
-			if text then
-				self:TextInput(text)
-			end
-			return self
-		elseif key == Spring.KEYSYMS.C then
-			-- Copy
-			if self.selStart then
-				Spring.SetClipboard(self.text:sub(self.selStart, self.selEnd - 1))
-			end
-			return self
-		elseif key == Spring.KEYSYMS.X then
-			-- Cut
-			if self.selStart then
-				Spring.SetClipboard(self.text:sub(self.selStart, self.selEnd - 1))
-				self:TextInput("")
-			end
-			return self
-		end
-	end
-
-	if key == Spring.KEYSYMS.LEFT then
-		if self.cursor > 1 then
-			self.cursor = self.cursor - 1
-			if not mods.shift then
-				self.selStart = nil
-				self.selEnd = nil
-			end
-			self:Invalidate()
-		end
-		return self
-	elseif key == Spring.KEYSYMS.RIGHT then
-		if self.cursor <= utf8.len(self.text) then
-			self.cursor = self.cursor + 1
-			if not mods.shift then
-				self.selStart = nil
-				self.selEnd = nil
-			end
-			self:Invalidate()
-		end
-		return self
-	elseif key == Spring.KEYSYMS.BACKSPACE then
-		if not self.editable then
-			return false
-		end
-
-		if self.selStart then
-			self:TextInput("")
-			return self
-		end
-
-		if self.cursor > 1 then
-			local text = self.text
-			self.text = text:sub(1, self.cursor - 2) .. text:sub(self.cursor)
-			self.cursor = self.cursor - 1
-			self:Invalidate()
-		end
-		return self
-	elseif key == Spring.KEYSYMS.DELETE then
-		if not self.editable then
-			return false
-		end
-
-		if self.selStart then
-			self:TextInput("")
-			return self
-		end
-
-		if self.cursor <= utf8.len(self.text) then
-			local text = self.text
-			self.text = text:sub(1, self.cursor - 1) .. text:sub(self.cursor + 1)
-			self:Invalidate()
-		end
-		return self
-	elseif key == Spring.KEYSYMS.RETURN or key == Spring.KEYSYMS.NUMPADENTER then
-		self:CallListeners(self.OnEnterPress, self.text)
-		return self
-	end
-
-	return inherited.KeyPress(self, key, mods, isRepeat, label, ...)
-end
-
---- Handle mouse down events
---- @param x number Mouse x position
---- @param y number Mouse y position
---- @param ... any Additional args
---- @return boolean True if handled
-function EditBox:MouseDown(x, y, ...)
-	if not self:CheckMouseOver(x, y) then
-		return false
-	end
-
-	local text = self.text
-	local cursorPos = 1
-
-	-- Find character position under mouse
-	local cx = x - self.padding[1]
-	for i = 1, utf8.len(text) do
-		local w = self.font:GetTextWidth(text:sub(1, i))
-		if w > cx then
-			cursorPos = i
-			break
-		end
-		cursorPos = i + 1
-	end
-
-	self.cursor = cursorPos
-	self.selStart = cursorPos
-	self.selEnd = cursorPos
-	self:Invalidate()
-
-	inherited.MouseDown(self, x, y, ...)
-	return self
-end
-
---- Handle mouse move events for text selection
---- @param x number Mouse x position
---- @param y number Mouse y position
---- @param dx number X movement delta
---- @param dy number Y movement delta
---- @param ... any Additional args
---- @return boolean True if handled
-function EditBox:MouseMove(x, y, dx, dy, ...)
-	if not self.selStart then
-		return false
-	end
-
-	local text = self.text
-	local cursorPos = 1
-
-	-- Find character position under mouse
-	local cx = x - self.padding[1]
-	for i = 1, utf8.len(text) do
-		local w = self.font:GetTextWidth(text:sub(1, i))
-		if w > cx then
-			cursorPos = i
-			break
-		end
-		cursorPos = i + 1
-	end
-
-	if cursorPos < self.selStart then
-		self.selEnd = self.selStart
-		self.selStart = cursorPos
-	else
-		self.selEnd = cursorPos
-	end
-
-	self.cursor = cursorPos
-	self:Invalidate()
-
-	inherited.MouseMove(self, x, y, dx, dy, ...)
-	return self
-end
-
---- Handle mouse up events
---- @param x number Mouse x position
---- @param y number Mouse y position
---- @param ... any Additional args
---- @return boolean True if handled
-function EditBox:MouseUp(x, y, ...)
-	if not self.selStart then
-		return false
-	end
-
-	-- Clear selection if no text selected
-	if self.selStart == self.selEnd then
-		self.selStart = nil
-		self.selEnd = nil
-	end
-
-	inherited.MouseUp(self, x, y, ...)
-	return self
 end
 
 function EditBox:Dispose(...)
@@ -295,6 +67,23 @@ end
 
 function EditBox:HitTest(x, y)
 	return self
+end
+
+--//=============================================================================
+
+--- Sets the EditBox text
+-- @string newtext text to be set
+function EditBox:SetText(newtext)
+	if self.text == newtext then
+		return
+	end
+	self.text = newtext
+	self.cursor = 1
+	self.offset = 1
+	self.selStart = nil
+	self.selEnd = nil
+	self:UpdateLayout()
+	self:Invalidate()
 end
 
 function EditBox:UpdateLayout()
@@ -336,6 +125,8 @@ function EditBox:UpdateLayout()
 	end
 end
 
+--//=============================================================================
+
 function EditBox:Update(...)
 	--FIXME add special UpdateFocus event?
 
@@ -351,8 +142,6 @@ function EditBox:Update(...)
 	end
 end
 
----@param x number
----@param y number
 function EditBox:_SetCursorByMousePos(x, y)
 	local clientX = self.clientArea[1]
 	if x - clientX < 0 then
@@ -377,12 +166,6 @@ function EditBox:_SetCursorByMousePos(x, y)
 	end
 end
 
---- Handles mouse down events.
---- Updates cursor position and selection based on click.
---- @param x number X-coordinate of click.
---- @param y number Y-coordinate of click.
---- @param ... any Additional arguments for the event.
---- @return EditBox Returns self if event was handled.
 function EditBox:MouseDown(x, y, ...)
 	local _, _, _, shift = Spring.GetModKeyState()
 	local cp = self.cursor
@@ -403,14 +186,6 @@ function EditBox:MouseDown(x, y, ...)
 	return self
 end
 
---- Handles mouse move events while dragging.
---- Updates text selection as mouse moves.
---- @param x number Current X-coordinate of mouse.
---- @param y number Current Y-coordinate of mouse.
---- @param dx number Change in X position.
---- @param dy number Change in Y position.
---- @param button number Mouse button being held.
---- @return EditBox Returns self if event was handled.
 function EditBox:MouseMove(x, y, dx, dy, button)
 	if button ~= 1 then
 		return inherited.MouseMove(self, x, y, dx, dy, button)
@@ -456,14 +231,6 @@ function EditBox:ClearSelected()
 	self:Invalidate()
 end
 
---- Handles key press events.
---- @param key number Key code of the pressed key.
---- @param mods table Modifier keys being held.
---- @param isRepeat boolean Whether this is a key repeat event.
---- @param label string Text label of the key.
---- @param unicode number Unicode value of the key.
---- @param ... any
---- @return boolean True if the key press was handled.
 function EditBox:KeyPress(key, mods, isRepeat, label, unicode, ...)
 	local cp = self.cursor
 	local txt = self.text
@@ -579,11 +346,6 @@ function EditBox:KeyPress(key, mods, isRepeat, label, unicode, ...)
 	return self
 end
 
---- Handles text input events.
---- Inserts or modifies text based on input.
---- @param utf8char string The character being input.
---- @param ... any
---- @return boolean True if the input was handled.
 function EditBox:TextInput(utf8char, ...)
 	local unicode = utf8char
 	if not self.allowUnicode then

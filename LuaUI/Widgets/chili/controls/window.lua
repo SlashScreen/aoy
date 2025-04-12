@@ -1,191 +1,70 @@
 --- Window module
---- A container control that provides window functionality like dragging, resizing and minimizing.
---- @class Window
---- @field draggable boolean Window can be dragged
---- @field resizable boolean Window can be resized
---- @field minimizable boolean Window can be minimized
---- @field minWidth number Minimum window width
---- @field minHeight number Minimum window height
---- @field titleBarHeight number Height of the title bar
---- @field titleBarColor Color Title bar color
---- @field caption string Window title text
---- @field minimized boolean Current minimized state
---- @field OnMove function[] Window move event listeners
---- @field OnResize function[] Window resize event listeners
---- @field OnMinimize function[] Window minimize event listeners
 
+---@class Window : Control
+---@field classname string The class name
+---@field draggable boolean Whether window can be dragged
+---@field resizable boolean Whether window can be resized
+---@field minWidth number Minimum width
+---@field minHeight number Minimum height 
+---@field defaultWidth number Default width
+---@field defaultHeight number Default height
 Window = Control:Inherit({
 	classname = "window",
-	draggable = true,
 	resizable = true,
-	minimizable = true,
+	draggable = true,
 
 	minWidth = 50,
 	minHeight = 50,
-
-	titleBarHeight = 20,
-	titleBarColor = { 0.3, 0.3, 0.3, 0.9 },
-
-	caption = "",
-	minimized = false,
-
-	OnMove = {},
-	OnResize = {},
-	OnMinimize = {},
+	defaultWidth = 400,
+	defaultHeight = 300,
 })
 
 local this = Window
 local inherited = this.inherited
 
---- Creates a new Window instance
---- @param obj table Table of window properties
---- @return Window w The newly created window
+--//=============================================================================
+--[[
+function Window:UpdateClientArea()
+  inherited.UpdateClientArea(self)
+
+  if (not WG['blur_api']) then return end
+
+  if (self.blurId) then
+    WG['blur_api'].RemoveBlurRect(self.blurId)
+  end
+
+  local screeny = select(2,gl.GetViewSizes()) - self.y
+
+  self.blurId = WG['blur_api'].InsertBlurRect(self.x,screeny,self.x+self.width,screeny-self.height)
+end
+--]]
+--//=============================================================================
+
+---Creates a new Window instance
+---@param obj table Configuration object
+---@return Window window The created window
 function Window:New(obj)
 	obj = inherited.New(self, obj)
-
-	-- Create title bar
-	if obj.caption and obj.caption ~= "" then
-		obj:AddChild(Label:New({
-			caption = obj.caption,
-			height = obj.titleBarHeight,
-			align = "center",
-			valign = "center",
-		}))
-	end
-
-	-- Create minimize button if needed
-	if obj.minimizable then
-		obj:AddChild(Button:New({
-			caption = "-",
-			right = 2,
-			y = 2,
-			width = 16,
-			height = 16,
-			OnClick = {
-				function()
-					obj:Minimize()
-				end,
-			},
-		}))
-	end
-
+	obj:BringToFront()
 	return obj
 end
 
---- Draws the window
+---Draws the window (overridden by skin/theme)
+---@return nil
 function Window:DrawControl()
-	-- Draw title bar
-	if self.caption and self.caption ~= "" then
-		gl.Color(self.titleBarColor)
-		gl.Rect(0, 0, self.width, self.titleBarHeight)
-	end
-
-	-- Draw resize handle
-	if self.resizable and not self.minimized then
-		gl.Color(1, 1, 1, 0.5)
-		gl.BeginEnd(GL.TRIANGLES, function()
-			gl.Vertex(self.width - 10, self.height)
-			gl.Vertex(self.width, self.height - 10)
-			gl.Vertex(self.width, self.height)
-		end)
-	end
+	--// gets overriden by the skin/theme
 end
 
---- Minimizes/restores the window
-function Window:Minimize()
-	self.minimized = not self.minimized
-
-	if self.minimized then
-		self._oldHeight = self.height
-		self:Resize(nil, self.titleBarHeight)
-	else
-		self:Resize(nil, self._oldHeight)
-	end
-
-	self:CallListeners(self.OnMinimize, self.minimized)
-end
-
---- Handles mouse down events
---- @param x number X coordinate
---- @param y number Y coordinate
---- @param button number Button pressed
---- @param ... any Additional args
---- @return boolean handled True if handled
-function Window:MouseDown(x, y, button, ...)
-	-- Check for dragging title bar
-	if button == 1 and self.draggable and y < self.titleBarHeight and y >= 0 then
-		self._dragging = true
-		self._dragStartX = x
-		self._dragStartY = y
-		return self
-	end
-
-	-- Check for resizing
-	if button == 1 and self.resizable and not self.minimized and x >= self.width - 10 and y >= self.height - 10 then
-		self._resizing = true
-		self._resizeStartX = x
-		self._resizeStartY = y
-		self._resizeStartW = self.width
-		self._resizeStartH = self.height
-		return self
-	end
-
-	return inherited.MouseDown(self, x, y, button, ...)
-end
-
---- Handles mouse move events
---- @param x number X coordinate
---- @param y number Y coordinate
---- @param dx number X movement
---- @param dy number Y movement
---- @param button number Button held
-function Window:MouseMove(x, y, dx, dy, button)
-	-- Handle dragging
-	if self._dragging then
-		local px = self.x + (x - self._dragStartX)
-		local py = self.y + (y - self._dragStartY)
-		self:SetPos(px, py)
-		self:CallListeners(self.OnMove, px, py)
-		return self
-	end
-
-	-- Handle resizing
-	if self._resizing then
-		local w = math.max(self.minWidth, self._resizeStartW + (x - self._resizeStartX))
-		local h = math.max(self.minHeight, self._resizeStartH + (y - self._resizeStartY))
-		self:Resize(w, h)
-		self:CallListeners(self.OnResize, w, h)
-		return self
-	end
-
-	return inherited.MouseMove(self, x, y, dx, dy, button)
-end
-
---- Handles mouse up events
---- @param x number X coordinate
---- @param y number Y coordinate
---- @param button number Button released
---- @param ... any Additional args
-function Window:MouseUp(x, y, button, ...)
-	if button == 1 then
-		self._dragging = false
-		self._resizing = false
-	end
-	return inherited.MouseUp(self, x, y, button, ...)
-end
-
---- Brings window to front
-function Window:BringToFront()
-	if self.parent then
-		self.parent:RemoveChild(self)
-		self.parent:AddChild(self)
-	end
+---Handles mouse down event
+---@param ... any Additional parameters
+---@return any result Result of parent handler
+function Window:MouseDown(...)
+	self:BringToFront()
+	return inherited.MouseDown(self, ...)
 end
 
 VFS.Include(CHILI_DIRNAME .. "headers/skinutils.lua", nil, VFS.RAW_FIRST)
 
---- Draw debug overlay for window tweaking
---- Shows resizable/draggable overlay in tweak mode
 function Window:TweakDraw()
 	gl.Color(0.6, 1, 0.6, 0.65)
 

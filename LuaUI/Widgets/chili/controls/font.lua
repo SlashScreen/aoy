@@ -1,26 +1,19 @@
 --//=============================================================================
 
 --- Font module
---- @class Font: Object
---- @field font string Font file path
---- @field size number Font size
---- @field outlineWidth number Outline width
---- @field outlineWeight number Outline weight
---- @field shadow boolean Shadow enabled
---- @field outline boolean Outline enabled
---- @field color Color Text color
---- @field outlineColor Color Outline color
---- @field autoOutlineColor boolean Auto outline color enabled
 
---- Class Methods
---- @section Methods
-
-local fontfile = LUAUI_DIRNAME .. "fonts/" .. Spring.GetConfigString("ui_font", "JosefinSans-SemiBold.ttf")
-local fontfile2 = LUAUI_DIRNAME .. "fonts/" .. Spring.GetConfigString("ui_font2", "JosefinSans-Bold.ttf")
-
+---@class Font : Object
+---@field classname string The class name
+---@field font string Font filename
+---@field size number Font size in pixels
+---@field outlineWidth number Width of outline
+---@field outlineWeight number Weight of outline
+---@field shadow boolean Whether shadow is enabled
+---@field outline boolean Whether outline is enabled
+---@field color number[] Font color {r,g,b,a}
+---@field outlineColor number[] Outline color {r,g,b,a}
+---@field autoOutlineColor boolean Whether to auto-generate outline color
 Font = Object:Inherit({
-	classname = "font",
-
 	font = fontfile,
 	size = 12,
 	outlineWidth = 3,
@@ -38,9 +31,9 @@ local inherited = this.inherited
 
 --//=============================================================================
 
---- Creates a new Font instance
---- @param obj table Configuration object
---- @return Font The new font instance
+---Creates a new Font instance
+---@param obj table Configuration object
+---@return Font font The created font
 function Font:New(obj)
 	obj = inherited.New(self, obj)
 
@@ -50,8 +43,6 @@ function Font:New(obj)
 	return obj
 end
 
---- Disposes of the font, cleaning up resources
---- @param ... any Additional parameters passed to inherited dispose
 function Font:Dispose(...)
 	if not self.disposed then
 		FontHandler.UnloadFont(self._font)
@@ -61,7 +52,6 @@ end
 
 --//=============================================================================
 
---- Reloads the font with current settings
 function Font:_LoadFont()
 	local oldfont = self._font
 	local uiScale = (WG and WG.uiScale or 1)
@@ -160,35 +150,35 @@ end
 
 --//=============================================================================
 
---- Gets the line height for the font
---- @param size number? Optional size override
---- @return number The line height in pixels
+---Gets the height of a line with this font
+---@param size? number Optional size override
+---@return number height Line height in pixels
 function Font:GetLineHeight(size)
 	return self._font.lineheight * (size or self.size)
 end
 
---- Gets the ascender height for the font
---- @param size number? Optional size override
---- @return number The ascender height in pixels
+---Gets the ascender height
+---@param size? number Optional size override
+---@return number height Ascender height in pixels
 function Font:GetAscenderHeight(size)
 	local font = self._font
 	return (font.lineheight + font.descender) * (size or self.size)
 end
 
---- Gets the width of text when rendered with this font
---- @param text string The text to measure
---- @param size number? Optional size override
---- @return number The text width in pixels
+---Gets the width of text with this font
+---@param text string Text to measure
+---@param size? number Optional size override
+---@return number width Width in pixels
 function Font:GetTextWidth(text, size)
 	return (self._font):GetTextWidth(text) * (size or self.size)
 end
 
---- Gets the height of text when rendered with this font
---- @param text string The text to measure
---- @param size number? Optional size override
---- @return number height The text height in pixels
---- @return number descender The descender height in pixels
---- @return number numlines The number of lines
+---Gets the height of text with this font
+---@param text string Text to measure
+---@param size? number Optional size override
+---@return number height Height in pixels
+---@return number descender Descender height
+---@return number numlines Number of lines
 function Font:GetTextHeight(text, size)
 	if not size then
 		size = self.size
@@ -197,12 +187,6 @@ function Font:GetTextHeight(text, size)
 	return h * size, descender * size, numlines
 end
 
---- Wraps text to fit within given dimensions
---- @param text string The text to wrap
---- @param width number Maximum width in pixels
---- @param height number Maximum height in pixels
---- @param size number? Optional size override
---- @return string The wrapped text
 function Font:WrapText(text, width, height, size)
 	if not size then
 		size = self.size
@@ -215,12 +199,6 @@ end
 
 --//=============================================================================
 
----@param x number
----@param y number
----@param width number
----@param height number
----@param align string
----@param valign string
 function Font:AdjustPosToAlignment(x, y, width, height, align, valign)
 	local extra = ""
 
@@ -264,8 +242,6 @@ function Font:AdjustPosToAlignment(x, y, width, height, align, valign)
 	return x, y, extra
 end
 
----@param align string
----@param valign string
 local function _GetExtra(align, valign)
 	local extra = ""
 
@@ -295,10 +271,6 @@ end
 
 --//=============================================================================
 
----@param text string
----@param x number
----@param y number
----@param extra string
 function Font:_DrawText(text, x, y, extra)
 	local font = self._font
 
@@ -318,11 +290,6 @@ function Font:_DrawText(text, x, y, extra)
 	gl.PopAttrib()
 end
 
----@param text string
----@param x number
----@param y number
----@param align string?
----@param valign string?
 function Font:Draw(text, x, y, align, valign)
 	if not text then
 		return
@@ -338,13 +305,6 @@ function Font:Draw(text, x, y, align, valign)
 	self:_DrawText(text, x, y, extra)
 end
 
----@param text string
----@param x number
----@param y number
----@param w number
----@param h number
----@param align string?
----@param valign string?
 function Font:DrawInBox(text, x, y, w, h, align, valign)
 	if not text then
 		return

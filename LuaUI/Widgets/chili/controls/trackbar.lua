@@ -1,33 +1,28 @@
 --//=============================================================================
 
 --- Trackbar module
---- A control that provides slider/range input functionality.
---- @class Trackbar: Control
---- @field min number Minimum value
---- @field max number Maximum value
---- @field value number Current value
---- @field step number Step size
---- @field orientation "horizontal" | "vertical" Bar orientation
---- @field color Color Bar color
---- @field backgroundColor Color Background color
---- @field showValue boolean Show numeric value
---- @field valueFormatString string Format string for displayed value. Default ("%.1f")
---- @field OnChange function[] Value change event listeners
 
+--- Trackbar fields.
+-- Inherits from Control.
+-- @see control.Control
+-- @table Trackbar
+-- @int[opt=0] min minimum value of the Trackbar
+-- @int[opt=100] max maximum value of the Trackbar
+-- @int[opt=50] value value of the Trackbar
+-- @int[opt=50] step step value
+-- @tparam {func1,fun2,...} OnChange function listeners for value change (default {})
 Trackbar = Control:Inherit({
 	classname = "trackbar",
+	value = 50,
 	min = 0,
 	max = 100,
-	value = 50,
-	step = 0.1,
+	step = 1,
+	useValueTooltip = nil,
 
-	orientation = "horizontal",
+	defaultWidth = 90,
+	defaultHeight = 20,
 
-	color = { 0.5, 1, 0.5, 0.8 },
-	backgroundColor = { 0.1, 0.1, 0.1, 0.8 },
-
-	showValue = true,
-	valueFormatString = "%.1f",
+	hitpadding = { 0, 0, 0, 0 },
 
 	OnChange = {},
 })
@@ -35,7 +30,8 @@ Trackbar = Control:Inherit({
 local this = Trackbar
 local inherited = this.inherited
 
----@param num number
+--//=============================================================================
+
 local function FormatNum(num)
 	if num == 0 then
 		return "0"
@@ -54,28 +50,21 @@ local function FormatNum(num)
 	end
 end
 
---- Creates a new Trackbar instance
---- @param obj table Table of trackbar properties
---- @return Trackbar trackbar The newly created trackbar
 function Trackbar:New(obj)
 	obj = inherited.New(self, obj)
 
-	-- Ensure value is within bounds
-	obj.value = math.min(obj.max, math.max(obj.min, obj.value))
-
-	-- Create value label if needed
-	if obj.showValue then
-		obj:AddChild(Label:New({
-			caption = string.format(obj.valueFormatString, obj.value),
-			right = 5,
-			y = 2,
-		}))
+	if ((not obj.tooltip) or (obj.tooltip == "")) and (obj.useValueTooltip ~= false) then
+		obj.useValueTooltip = true
 	end
+
+	obj:SetMinMax(obj.min, obj.max)
+	obj:SetValue(obj.value)
 
 	return obj
 end
 
----@param v number
+--//=============================================================================
+
 function Trackbar:_Clamp(v)
 	if self.min < self.max then
 		if v < self.min then
@@ -93,8 +82,8 @@ function Trackbar:_Clamp(v)
 	return v
 end
 
----@param x number?
----@param y number?
+--//=============================================================================
+
 function Trackbar:_GetPercent(x, y)
 	if x then
 		local pl, pt, pr, pb = unpack4(self.hitpadding)
@@ -114,128 +103,62 @@ function Trackbar:_GetPercent(x, y)
 	end
 end
 
+--//=============================================================================
+
 --- Sets the minimum and maximum value of the track bar
---- @param min number? minimum value
---- @param max number? maximum value (why is 1 the default?)
+-- @int[opt=0] min minimum value
+-- @int[opt=1] max maximum value (why is 1 the default?)
 function Trackbar:SetMinMax(min, max)
 	self.min = tonumber(min) or 0
 	self.max = tonumber(max) or 1
 	self:SetValue(self.value)
 end
 
---- Sets the current value
---- @param value number New value
---- @param skipEvent boolean? Don't trigger change event
-function Trackbar:SetValue(value, skipEvent)
-	-- Clamp to bounds and step
-	value = math.min(self.max, math.max(self.min, value))
-	if self.step > 0 then
-		value = math.floor((value - self.min) / self.step + 0.5) * self.step + self.min
-	end
-
-	if value == self.value then
+--- Sets the value of the track bar
+-- @int v value of the track abr
+function Trackbar:SetValue(v)
+	if type(v) ~= "number" then
+		Spring.Log("Chili", "error", "Wrong param to Trackbar:SetValue(number v)")
 		return
 	end
-
-	self.value = value
-
-	-- Update value label
-	if self.showValue then
-		self.children[1]:SetCaption(string.format(self.valueFormatString, value))
+	local r = v % self.step
+	if r > 0.5 * self.step then
+		v = v + self.step - r
+	else
+		v = v - r
 	end
-
-	if not skipEvent then
-		self:CallListeners(self.OnChange, value)
+	v = self:_Clamp(v)
+	local oldvalue = self.value
+	self.value = v
+	if self.useValueTooltip then
+		self.tooltip = "Current: " .. FormatNum(self.value)
 	end
-
+	self:CallListeners(self.OnChange, v, oldvalue)
 	self:Invalidate()
 end
 
---- Draws the trackbar
-function Trackbar:DrawControl()
-	-- Draw background
-	gl.Color(self.backgroundColor)
-	gl.Rect(0, 0, self.width, self.height)
+--//=============================================================================
 
-	-- Draw value bar
-	local rel = self:ValueToRelative(self.value)
-	gl.Color(self.color)
+function Trackbar:DrawControl() end
 
-	if self.orientation == "horizontal" then
-		gl.Rect(0, 0, self.width * rel, self.height)
-	else
-		gl.Rect(0, self.height * (1 - rel), self.width, self.height)
-	end
-end
+--//=============================================================================
 
---- Performs hit testing for the trackbar.
 function Trackbar:HitTest()
 	return self
 end
 
----@param x number
----@param y number
----@param ... any
-function Trackbar:MouseDown(x, y, ...)
-	if not self:HitTest(x, y) then
-		return false
-	end
-
-	self._dragging = true
-	self:UpdateValueFromMouse(x, y)
+function Trackbar:MouseDown(x, y)
+	local percent = self:_GetPercent(x, y)
+	self:SetValue(self.min + percent * (self.max - self.min))
 	return self
 end
 
----@param x number
----@param y number
----@param dx number
----@param dy number
----@param ... any
-function Trackbar:MouseMove(x, y, dx, dy, ...)
-	if not self._dragging then
-		return
+function Trackbar:MouseMove(x, y, dx, dy, button)
+	if button == 1 then
+		local percent = self:_GetPercent(x, y)
+		self:SetValue(self.min + percent * (self.max - self.min))
+		return self
 	end
-
-	self:UpdateValueFromMouse(x, y)
-	return self
 end
 
----@param x number
----@param y number
-function Trackbar:UpdateValueFromMouse(x, y)
-	local rel
-	if self.orientation == "horizontal" then
-		rel = math.min(1, math.max(0, x / self.width))
-	else
-		rel = 1 - math.min(1, math.max(0, y / self.height))
-	end
-
-	self:SetValue(self:RelativeToValue(rel))
-end
-
----@param x number
----@param y number
----@param ... any
-function Trackbar:MouseUp(x, y, ...)
-	if not self._dragging then
-		return
-	end
-
-	self._dragging = false
-	self:UpdateValueFromMouse(x, y)
-	return self
-end
-
---- Gets the relative position for a value
---- @param value number Value to convert
---- @return number Relative position (0-1)
-function Trackbar:ValueToRelative(value)
-	return (value - self.min) / (self.max - self.min)
-end
-
---- Gets the value for a relative position
---- @param rel number Relative position (0-1)
---- @return number Value at position
-function Trackbar:RelativeToValue(rel)
-	return self.min + rel * (self.max - self.min)
-end
+--//=============================================================================

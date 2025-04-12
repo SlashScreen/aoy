@@ -12,41 +12,31 @@
 --// don't create any controls themselves (instead they just align their children).
 
 --- LayoutPanel module
--- Base class for any auto-layout panel like grids, stack panels, tables, etc.
--- @module LayoutPanel
 
----@class LayoutPanel: Control
----@field itemMargin [number, number, number, number] Margin between cells
----@field itemPadding [number, number, number, number] Padding inside cells
+---@class LayoutPanel : Control
+---@field classname string The class name
+---@field itemMargin number[] Item margin {left,top,right,bottom}
+---@field itemPadding number[] Item padding {left,top,right,bottom}
 ---@field minItemWidth number Minimum item width
----@field minItemHeight number Minimum item height
 ---@field maxItemWidth number Maximum item width
+---@field minItemHeight number Minimum item height
 ---@field maxItemHeight number Maximum item height
----@field autosize boolean Automatically size to fit content
----@field rows number? Number of rows in grid layout
----@field columns number? Number of columns in grid layout
----@field orientation "horizontal" | "vertical" Orientation of the items
----@field autoArrangeH boolean Automatically arrange items horizontally FIXME rename
----@field autoArrangeV boolean Automatically arrange items vertically FIXME rename
----@field grid boolean Use grid layout FIXME not implemented yet
----@field resizeItems boolean Items are resized
----@field centerItems boolean Items are centered
----@field weightedResize boolean Use weighted resizing for items.
----takes weights into account when resizing items (instead of same size for all)
---- - e.g. "component1.weight = 1, component2.weight = 2" => component2 will be 2 times larger than component1
---- - if all components have same weight -> same layout as without weightedResize
---- - default value is 1 (nil interpreted as 1)
----@field selectable boolean Items can be selected
----@field multiSelect boolean Multiple items can be selected
----@field selectedItems boolean[] Table of selected item indices
----@field OnSelectItem function[] Function listeners to be called on item selection changed
----@field OnDrawItem function[] Function listeners to be called when an item is drawn FIXME
----@field OnDblClickItem function[] Function listeners to be called on double click
----@field private _lines number[] Internal - line start indices
----@field private _cells number[] Internal - cell dimensions
----@field private _cellPaddings number[] Internal - cell padding info
----@field private _inUpdateLayout boolean Internal - layout update flag
-
+---@field autosize boolean Whether panel auto-sizes
+---@field rows number|nil Number of rows
+---@field columns number|nil Number of columns
+---@field orientation "horizontal"|"vertical" Panel orientation
+---@field autoArrangeH boolean Auto-arrange horizontally
+---@field autoArrangeV boolean Auto-arrange vertically
+---@field grid boolean Use grid layout
+---@field resizeItems boolean Whether items can be resized
+---@field centerItems boolean Whether items are centered
+---@field weightedResize boolean Use weighted resize
+---@field selectable boolean Whether items can be selected
+---@field multiSelect boolean Whether multiple items can be selected
+---@field selectedItems table Selected item indices
+---@field OnSelectItem function[] Selection change listeners
+---@field OnDrawItem function[] Item draw listeners
+---@field OnDblClickItem function[] Double-click listeners
 LayoutPanel = Control:Inherit({
 	classname = "layoutpanel",
 
@@ -68,6 +58,11 @@ LayoutPanel = Control:Inherit({
 	resizeItems = false,
 	centerItems = true,
 
+	--[[ takes weights into account when resizing items (instead of same size for all)
+       - e.g. "component1.weight = 1, component2.weight = 2" => component2 will be 2 times larger than component1
+       - if all components have same weight -> same layout as without weightedResize
+       - default value is 1 (nil interpreted as 1)
+  ]]
 	weightedResize = false,
 
 	selectable = false,
@@ -88,9 +83,9 @@ local inherited = this.inherited
 
 --//=============================================================================
 
---- Create a new LayoutPanel.
---- @param obj table Object table to inherit from
---- @return LayoutPanel New LayoutPanel instance
+---Creates a new LayoutPanel instance
+---@param obj table Configuration object
+---@return LayoutPanel panel The created panel
 function LayoutPanel:New(obj)
 	obj = inherited.New(self, obj)
 	if obj.selectable then
@@ -101,8 +96,10 @@ end
 
 --//=============================================================================
 
---- Set the panel's orientation.
---- @param orientation "horizontal" | "vertical" New orientation
+--- Set the panel's orientation
+-- @string orientation new orientation
+---@param orientation "horizontal"|"vertical" New orientation
+---@return nil
 function LayoutPanel:SetOrientation(orientation)
 	self.orientation = orientation
 	inherited.UpdateClientArea(self)
@@ -114,15 +111,10 @@ local tsort = table.sort
 
 --//=============================================================================
 
----@param a any
----@param b any
 local function compareSizes(a, b)
 	return a[2] < b[2]
 end
 
----@param startCell number
----@param endCell number
----@param freeSpace number
 function LayoutPanel:_JustCenterItemsH(startCell, endCell, freeSpace)
 	local _cells = self._cells
 	local perItemAlloc = freeSpace / ((endCell - startCell) + 1)
@@ -141,9 +133,6 @@ function LayoutPanel:_JustCenterItemsH(startCell, endCell, freeSpace)
 	end
 end
 
----@param startCell number
----@param endCell number
----@param freeSpace number
 function LayoutPanel:_JustCenterItemsV(startCell, endCell, freeSpace)
 	local _cells = self._cells
 	local perItemAlloc = freeSpace / ((endCell - startCell) + 1)
@@ -162,9 +151,6 @@ function LayoutPanel:_JustCenterItemsV(startCell, endCell, freeSpace)
 	end
 end
 
----@param startCell number
----@param endCell number
----@param lineHeight number
 function LayoutPanel:_EnlargeToLineHeight(startCell, endCell, lineHeight)
 	local _cells = self._cells
 	local _cellPaddings = self._cellPaddings
@@ -180,9 +166,6 @@ function LayoutPanel:_EnlargeToLineHeight(startCell, endCell, lineHeight)
 	end
 end
 
----@param startCell number
----@param endCell number
----@param freeSpace number
 function LayoutPanel:_AutoArrangeAbscissa(startCell, endCell, freeSpace)
 	if startCell > endCell then
 		return
@@ -271,7 +254,6 @@ function LayoutPanel:_AutoArrangeAbscissa(startCell, endCell, freeSpace)
 	end
 end
 
----@param freeSpace number
 function LayoutPanel:_AutoArrangeOrdinate(freeSpace)
 	if not self.autoArrangeV then
 		if self.centerItems then
@@ -358,11 +340,6 @@ end
 
 --//=============================================================================
 
---- Get maximum weight values for weighted resizing.
---- @return table Maximum weights for x direction
---- @return table Maximum weights for y direction
---- @return number Total weight in x direction
---- @return number Total weight in y direction
 function LayoutPanel:GetMaxWeight()
 	--// calculate max weights for each column and row
 	local mweightx = {}
@@ -407,12 +384,6 @@ function LayoutPanel:GetMaxWeight()
 	return mweightx, mweighty, weightx, weighty
 end
 
---- Get maximum child constraints.
---- @param child Control Child control to get constraints for
---- @return number Left position
---- @return number Top position
---- @return number Maximum width
---- @return number Maximum height
 function LayoutPanel:_GetMaxChildConstraints(child)
 	local children = self.children
 
@@ -436,9 +407,6 @@ end
 
 --//=============================================================================
 
---- Get minimum required extents.
---- @return number Required width
---- @return number Required height
 function LayoutPanel:GetMinimumExtents()
 	--[[
   local old = self.autosize
@@ -465,7 +433,6 @@ end
 --//=============================================================================
 --// Note: there are two different layput functions depending on resizeItems
 
---- Layout children with resizing.
 function LayoutPanel:_LayoutChildrenResizeItems()
 	local cn = self.children
 	local cn_count = #cn
@@ -557,7 +524,6 @@ function LayoutPanel:_LayoutChildrenResizeItems()
 	end
 end
 
---- Layout children without resizing.
 function LayoutPanel:_LayoutChildren()
 	local cn = self.children
 	local cn_count = #cn
@@ -740,8 +706,6 @@ end
 
 --//=============================================================================
 
---- Update the layout.
---- @return boolean True if layout was updated
 function LayoutPanel:UpdateLayout()
 	if not self.children[1] then
 		--FIXME redundant?
@@ -776,19 +740,14 @@ end
 
 --//=============================================================================
 
---- Draw the panel background.
 function LayoutPanel:DrawBackground() end
 
---- Draw background for specific item.
---- @param index number Item index to draw background for
 function LayoutPanel:DrawItemBkGnd(index) end
 
---- Draw the panel.
 function LayoutPanel:DrawControl()
 	self:DrawBackground(self)
 end
 
---- Draw all child controls.
 function LayoutPanel:DrawChildren()
 	local cn = self.children
 	if not cn[1] then
@@ -812,7 +771,6 @@ function LayoutPanel:DrawChildren()
 	self:_DrawChildrenInClientArea("Draw")
 end
 
---- Draw children specifically for list view.
 function LayoutPanel:DrawChildrenForList()
 	local cn = self.children
 	if not cn[1] then
@@ -847,10 +805,6 @@ end
 
 --//=============================================================================
 
---- Get item index at coordinates.
---- @param cx number Client x coordinate
---- @param cy number Client y coordinate
---- @return number Item index or -1 if not found
 function LayoutPanel:GetItemIndexAt(cx, cy)
 	local cells = self._cells
 	local itemPadding = self.itemPadding
@@ -864,12 +818,6 @@ function LayoutPanel:GetItemIndexAt(cx, cy)
 	return -1
 end
 
---- Get item position and dimensions.
---- @param itemIdx number Index of item
---- @return number X position
---- @return number Y position
---- @return number Width
---- @return number Height
 function LayoutPanel:GetItemXY(itemIdx)
 	local cell = self._cells[itemIdx]
 	if cell then
@@ -879,10 +827,6 @@ end
 
 --//=============================================================================
 
---- Select multiple items in rectangular area.
---- @param item1 number First item index
---- @param item2 number Second item index
---- @param append boolean Whether to append to current selection
 function LayoutPanel:MultiRectSelect(item1, item2, append)
 	--// note: this functions does NOT update self._lastSelected!
 
@@ -931,7 +875,7 @@ function LayoutPanel:MultiRectSelect(item1, item2, append)
 end
 
 --- Toggle item selection
---- @param itemIdx number id of the item for which the selection will be toggled
+-- @int itemIdx id of the item for which the selection will be toggled
 function LayoutPanel:ToggleItem(itemIdx)
 	local newstate = not self.selectedItems[itemIdx]
 	self.selectedItems[itemIdx] = newstate
@@ -941,8 +885,8 @@ function LayoutPanel:ToggleItem(itemIdx)
 end
 
 --- Select the item
---- @param itemIdx number id of the item to be selected
---- @param append boolean? whether the old selection should be kept
+-- @int itemIdx id of the item to be selected
+-- @bool append whether the old selection should be kept
 function LayoutPanel:SelectItem(itemIdx, append)
 	if self.selectedItems[itemIdx] then
 		return
@@ -965,7 +909,7 @@ function LayoutPanel:SelectItem(itemIdx, append)
 end
 
 --- Deselect item
---- @param itemIdx number id of the item to deselect
+-- @int itemIdx id of the item to deselect
 function LayoutPanel:DeselectItem(itemIdx)
 	if not self.selectedItems[itemIdx] then
 		return
@@ -993,12 +937,6 @@ end
 
 --//=============================================================================
 
---- Handle mouse down event.
---- @param x number Mouse x position
---- @param y number Mouse y position
---- @param button number Mouse button pressed
---- @param mods table Keyboard modifiers
---- @return Control Self if handled
 function LayoutPanel:MouseDown(x, y, button, mods)
 	local clickedChild = inherited.MouseDown(self, x, y, button, mods)
 	if clickedChild then
@@ -1037,12 +975,6 @@ function LayoutPanel:MouseDown(x, y, button, mods)
 	end
 end
 
---- Handle double click event.
---- @param x number Mouse x position
---- @param y number Mouse y position
---- @param button number Mouse button pressed
---- @param mods table Keyboard modifiers
---- @return Control Self if handled
 function LayoutPanel:MouseDblClick(x, y, button, mods)
 	local clickedChild = inherited.MouseDown(self, x, y, button, mods)
 	if clickedChild then

@@ -1,10 +1,9 @@
 --//=============================================================================
 
---- TabBarItem is a button that can be used in a TabBar.
---- @class TabBarItem: Button
---- @field caption string Tab name
---- @field height string Tab height
-
+---@class TabBarItem : Button
+---@field classname string The class name
+---@field caption string Item caption
+---@field height string Item height
 TabBarItem = Button:Inherit({
 	classname = "tabbaritem",
 	caption = "tab",
@@ -16,7 +15,6 @@ local inherited = this.inherited
 
 --//=============================================================================
 
---- @param caption string
 function TabBarItem:SetCaption(caption)
 	--FIXME inform parent
 	if self.caption == caption then
@@ -28,7 +26,6 @@ end
 
 --//=============================================================================
 
---- @param ... any
 function TabBarItem:MouseDown(...)
 	if not self.parent then
 		return

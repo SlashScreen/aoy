@@ -1,43 +1,72 @@
 --//=============================================================================
 
 --- Image module
---- A control for displaying images and textures with various sizing and rendering options.
----@class Image: Control
----@field file string Path to image file
----@field keepAspect boolean Maintain aspect ratio
----@field autosize boolean Size to match image dimensions
----@field imageLoadType "stretch" | "file" | "icon" Loading mode
----@field color Color Tint color (default {1,1,1,1})
----@field uvCoords {left: number, topY: number, right: number, bottom: number}? UV coordinates for texture mapping
----@field texRect {left: number, topY: number, right: number, bottom: number}? Source rectangle in texture
----@field flipY boolean Flip texture vertically
----@field tile boolean Tile the texture
----@field defaultWidth number Default width (default 64)
----@field defaultHeight number Default height (default 64)
 
-Image = Control:Inherit({
+--- Image fields.
+-- Inherits from Control.
+-- @see button.Button
+-- @table Image
+-- @tparam {r,g,b,a} color color, (default {1,1,1,1})
+-- @string[opt=nil] file path
+-- @bool[opt=true] keepAspect aspect should be kept
+-- @tparam {func1,func2} OnClick function listeners to be invoked on click (default {})
+---@class Image : Button
+---@field classname string The class name
+---@field defaultWidth number Default width (64)
+---@field defaultHeight number Default height (64)
+---@field padding number[] Padding {left,top,right,bottom}
+---@field color table Color Color tint {r,g,b,a}
+---@field file string? Primary image file path
+---@field file2 string? Secondary image file path
+---@field flip boolean Whether to flip primary image vertically
+---@field flip2 boolean Whether to flip secondary image vertically
+---@field keepAspect boolean Whether to maintain aspect ratio
+---@field useRTT boolean Whether to use render-to-texture
+---@field OnClick function[] Click event listeners
+---@field width number Control width
+---@field height number Control height
+Image = Button:Inherit({
 	classname = "image",
-	file = "",
-	keepAspect = false,
-	autosize = false,
-
-	imageLoadType = "stretch", -- stretch, file, icon
-
-	color = { 1, 1, 1, 1 },
-
-	uvCoords = nil, -- {left, top, right, bottom}
-	texRect = nil, -- {left, top, right, bottom}
-
-	flipY = false,
-	tile = false,
 
 	defaultWidth = 64,
 	defaultHeight = 64,
+	padding = { 0, 0, 0, 0 },
+	color = { 1, 1, 1, 1 },
+
+	file = nil,
+	file2 = nil,
+
+	flip = true,
+	flip2 = true,
+
+	keepAspect = true,
+
+	useRTT = false,
+
+	OnClick = {},
 })
 
 local this = Image
 local inherited = this.inherited
 
+---Creates a new Image instance
+---@param obj table Configuration object
+---@return Image image The created image
+function Image:New(obj)
+	return inherited.New(self, obj)
+end
+
+--//=============================================================================
+
+---Draws texture maintaining aspect ratio
+---@param x number Left position
+---@param y number Top position
+---@param w number Width
+---@param h number Height
+---@param tw number Texture width
+---@param th number Texture height
+---@param flipy boolean Whether to flip vertically
+---@return nil
 local function _DrawTextureAspect(x, y, w, h, tw, th, flipy)
 	local twa = w / tw
 	local tha = h / th
@@ -61,183 +90,44 @@ local function _DrawTextureAspect(x, y, w, h, tw, th, flipy)
 	gl.TexRect(x, y, right, bottom, false, flipy)
 end
 
---- Creates a new Image instance
---- @param obj table Table of image properties
---- @return Image The newly created image
-function Image:New(obj)
-	if obj.file and not obj.width and not obj.height then
-		obj.autosize = true
-	end
-
-	obj = inherited.New(self, obj)
-
-	obj:LoadImage(obj.file)
-	obj:RequestUpdate()
-
-	return obj
-end
-
---- Updates the client area and image dimensions.
---- @param dontUpdateChildren boolean? If true, child controls won't be updated.
-function Image:UpdateClientArea(dontUpdateChildren)
-	inherited.UpdateClientArea(self, dontUpdateChildren)
-	if self.image then
-		local w = self.clientArea[3]
-		local h = self.clientArea[4]
-
-		if self.keepAspect then
-			local aspect = self.imageWidth / self.imageHeight
-			if w < h * aspect then
-				h = w / aspect
-			else
-				w = h * aspect
-			end
-		end
-
-		self._imageWidth = w
-		self._imageHeight = h
-	end
-end
-
---- Loads an image file
---- @param file string Path to image file
-function Image:LoadImage(file)
-	if not file then
-		return
-	end
-
-	if self.imageLoadType == "icon" then
-		self.file = file
-		self.width = self.width or self.defaultWidth
-		self.height = self.height or self.defaultHeight
-		return
-	end
-
-	local fileExists = VFS.FileExists(file)
-	if not fileExists then
-		Spring.Log("Chili", "error", "Image file not found: " .. tostring(file))
-		return
-	end
-
-	self.file = file
-	local texInfo = gl.TextureInfo(file) or { xsize = 1, ysize = 1 }
-
-	if self.autosize then
-		self:Resize(texInfo.xsize, texInfo.ysize)
-	end
-end
-
---- Updates image layout
-function Image:UpdateLayout()
-	local texInfo = gl.TextureInfo(self.file)
-	if not texInfo then
-		return
-	end
-
-	if self.autosize then
-		self:Resize(texInfo.xsize, texInfo.ysize)
-	elseif self.keepAspect then
-		local w = self.width
-		local h = self.height
-
-		local aspect = texInfo.xsize / texInfo.ysize
-		if w / h > aspect then
-			w = h * aspect
-		else
-			h = w / aspect
-		end
-
-		self:Resize(w, h)
-	end
-end
-
---- Draws the image
+---Draws the image control
+---@return nil
 function Image:DrawControl()
-	if not self.file or self.file == "" then
+	if not (self.file or self.file2) then
 		return
 	end
-
 	gl.Color(self.color)
 
-	if self.imageLoadType == "icon" then
-		-- Draw icon
-		gl.PushMatrix()
-		gl.Scale(self.width / 96, self.height / 96, 1)
-		gl.Texture(":" .. self.file)
-		gl.TexRect(0, 0, 96, 96)
-		gl.Texture(false)
-		gl.PopMatrix()
-		return
-	end
-
-	-- Setup texture coordinates
-	local uv = self.uvCoords
-	local tex = self.texRect
-
-	if tex then
-		local texInfo = gl.TextureInfo(self.file)
-		if texInfo then
+	if self.keepAspect then
+		if self.file2 then
+			TextureHandler.LoadTexture(0, self.file2, self)
+			local texInfo = gl.TextureInfo(self.file2) or { xsize = 1, ysize = 1 }
 			local tw, th = texInfo.xsize, texInfo.ysize
-
-			uv = {
-				tex[1] / tw,
-				tex[2] / th,
-				tex[3] / tw,
-				tex[4] / th,
-			}
+			_DrawTextureAspect(0, 0, self.width, self.height, tw, th, self.flip2)
 		end
-	end
-
-	-- Draw texture
-	gl.Texture(self.file)
-
-	if self.tile then
-		local w, h = self.width, self.height
-		local tw, th = gl.TextureInfo(self.file)
-		if tw and th then
-			gl.BeginEnd(GL.QUADS, function()
-				for x = 0, w, tw do
-					for y = 0, h, th do
-						gl.MultiTexCoord(0, 0, 1)
-						gl.Vertex(x, y)
-						gl.MultiTexCoord(0, 1, 1)
-						gl.Vertex(math.min(x + tw, w), y)
-						gl.MultiTexCoord(0, 1, 0)
-						gl.Vertex(math.min(x + tw, w), math.min(y + th, h))
-						gl.MultiTexCoord(0, 0, 0)
-						gl.Vertex(x, math.min(y + th, h))
-					end
-				end
-			end)
+		if self.file then
+			TextureHandler.LoadTexture(0, self.file, self)
+			local texInfo = gl.TextureInfo(self.file) or { xsize = 1, ysize = 1 }
+			local tw, th = texInfo.xsize, texInfo.ysize
+			_DrawTextureAspect(0, 0, self.width, self.height, tw, th, self.flip)
 		end
 	else
-		if uv then
-			if self.flipY then
-				gl.TexRect(0, 0, self.width, self.height, uv[1], uv[4], uv[3], uv[2])
-			else
-				gl.TexRect(0, 0, self.width, self.height, uv[1], uv[2], uv[3], uv[4])
-			end
-		else
-			if self.flipY then
-				gl.TexRect(0, 0, self.width, self.height, 0, 1, 1, 0)
-			else
-				gl.TexRect(0, 0, self.width, self.height)
-			end
+		if self.file2 then
+			TextureHandler.LoadTexture(0, self.file2, self)
+			gl.TexRect(0, 0, self.width, self.height, false, self.flip2)
+		end
+		if self.file then
+			TextureHandler.LoadTexture(0, self.file, self)
+			gl.TexRect(0, 0, self.width, self.height, false, self.flip)
 		end
 	end
-
-	gl.Texture(false)
+	gl.Texture(0, false)
 end
 
---- Disposes of the image control
-function Image:Dispose(...)
-	if self._tex_loaded then
-		gl.DeleteTexture(self.file)
-	end
-	inherited.Dispose(self, ...)
-end
+--//=============================================================================
 
----@return boolean?
+---Check if image is interactive
+---@return boolean|nil isActive Whether image has click handlers
 function Image:IsActive()
 	local onclick = self.OnClick
 	if onclick and onclick[1] then
@@ -245,26 +135,32 @@ function Image:IsActive()
 	end
 end
 
----@param x any?
----@param y any?
-function Image:HitTest(x, y)
+---Hit test for the image
+---@return Image|boolean self Returns self if hit test succeeds
+function Image:HitTest()
 	--FIXME check if there are any eventhandlers linked (OnClick,OnMouseUp,...)
 	return self:IsActive() and self
 end
 
----@param ... any
+---Handles mouse down event
+---@param ... any Additional arguments
+---@return Image|Object|boolean self Returns self if handled
 function Image:MouseDown(...)
 	--// we don't use `this` here because it would call the eventhandler of the button class,
 	--// which always returns true, but we just want to do so if a calllistener handled the event
 	return Control.MouseDown(self, ...) or self:IsActive() and self
 end
 
----@param ... any
+---Handles mouse up event
+---@param ... any Additional arguments
+---@return Image|Object|boolean self Returns self if handled
 function Image:MouseUp(...)
 	return Control.MouseUp(self, ...) or self:IsActive() and self
 end
 
----@param ... any
+---Handles mouse click event
+---@param ... any Additional arguments
+---@return Image|Object|boolean self Returns self if handled
 function Image:MouseClick(...)
 	return Control.MouseClick(self, ...) or self:IsActive() and self
 end

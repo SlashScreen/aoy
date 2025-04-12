@@ -1,38 +1,31 @@
 --//=============================================================================
 
 --- Control module
--- This module defines a Control, which is a base UI element that provides common functionality for layout, rendering, and interaction.
----@class Control: Object
----@field padding number[] Padding values for the control's content area.
----@field borderThickness number Thickness of the control's border in pixels.
----@field borderColor number[] Primary border color in RGBA format.
----@field borderColor2 number[] Secondary border color in RGBA format.
----@field backgroundColor number[] Background color of the control in RGBA format.
----@field focusColor number[] Color used to indicate focus in RGBA format.
----@field autosize boolean Whether the control automatically adjusts its size based on its content.
----@field savespace boolean If true, the control will shrink to its minimum size.
----@field resizeGripSize number[] Size of the resize grip.
----@field dragGripSize number[] Size of the drag grip.
----@field dragUseGrip boolean Whether to use the grip for dragging.
----@field draggable boolean Whether the control can be dragged.
----@field resizable boolean Whether the control can be resized.
----@field tweakDragUseGrip boolean Whether to use the grip for dragging in tweak mode.
----@field tweakDraggable boolean Whether the control can be dragged in tweak mode.
----@field tweakResizable boolean Whether the control can be resized in tweak mode.
----@field minWidth number Minimum width of the control.
----@field minHeight number Minimum height of the control.
----@field maxWidth number Maximum width of the control.
----@field maxHeight number Maximum height of the control.
----@field fixedRatio boolean Whether to maintain a fixed aspect ratio when resizing.
----@field tooltip string? Tooltip text for the control.
----@field font table The font used for text rendering.
----@field state table The current state of the control (focused, hovered, checked, selected, pressed, enabled).
----@field skin table The skin applied to the control.
----@field skinName string? The name of the skin applied to the control.
----@field drawcontrolv2 boolean? Whether to use the new drawing method. Experimental.
----@field useRTT boolean Whether to use render-to-texture for rendering. Experimental.
----@field useDLists boolean Whether to use display lists for rendering. Experimental. FIXME broken in combination with RTT (wrong blending)
----@field OnResize function[] Listeners triggered when the control is resized.
+
+---@class Control : Object
+---@field classname string The class name
+---@field padding number[] Table of padding {left,top,right,bottom}
+---@field borderThickness number Border thickness in pixels
+---@field borderColor number[] Border color {r,g,b,a}
+---@field borderColor2 number[] Secondary border color {r,g,b,a}
+---@field backgroundColor number[] Background color {r,g,b,a}
+---@field focusColor number[] Focus color {r,g,b,a}
+---@field autosize boolean Whether size is determined automatically
+---@field savespace boolean If true with autosize, shrinks control to minimum needed space
+---@field resizeGripSize number[] Size of resize grip {width,height}
+---@field dragGripSize number[] Size of drag grip {width,height}
+---@field dragUseGrip boolean Whether to use drag grip
+---@field draggable boolean Whether control can be dragged
+---@field resizable boolean Whether control can be resized
+---@field minWidth number Minimum width
+---@field minHeight number Minimum height
+---@field maxWidth number Maximum width
+---@field maxHeight number Maximum height
+---@field fixedRatio boolean Whether width/height ratio is fixed
+---@field tooltip string? Tooltip text
+---@field font table Font configuration
+---@field state table Control state (focused,hovered,etc)
+---@field OnResize function[] Resize event listeners
 
 local fontfile = LUAUI_DIRNAME .. "fonts/" .. Spring.GetConfigString("ui_font", "JosefinSans-SemiBold.ttf")
 local fontfile2 = LUAUI_DIRNAME .. "fonts/" .. Spring.GetConfigString("ui_font2", "JosefinSans-Bold.ttf")
@@ -104,9 +97,8 @@ local inherited = this.inherited
 --//=============================================================================
 
 --- Creates a new Control instance.
---- Initializes the control, applies themes and skins, and sets up its children.
---- @param obj table Table containing properties to initialize the control.
---- @return Control The newly created control instance.
+---@param obj table Configuration object.
+---@return Control The created control instance.
 function Control:New(obj)
 	--// backward compability
 	BackwardCompa(obj)
@@ -163,8 +155,7 @@ function Control:New(obj)
 	return obj
 end
 
---- Removes the control and cleans up resources.
---- Deletes associated display lists, textures, and frame buffer objects.
+--- Removes the control.
 function Control:Dispose(...)
 	gl.DeleteList(self._all_dlist)
 	self._all_dlist = nil
@@ -198,8 +189,7 @@ end
 --//=============================================================================
 
 --- Sets the control's parent object.
---- Updates the control's alignment and layout based on the new parent.
---- @param obj Object The new parent object.
+---@param obj Object The parent object to set.
 function Control:SetParent(obj)
 	inherited.SetParent(self, obj)
 	if obj then
@@ -208,9 +198,8 @@ function Control:SetParent(obj)
 end
 
 --- Adds a child object to the control.
---- Updates the layout of the control to accommodate the new child.
---- @param obj Object The child object to add.
---- @param dontUpdate boolean? If true, the layout will not be updated immediately.
+---@param obj Object The child object to add.
+---@param dontUpdate boolean? If true, won't trigger a RequestRealign().
 function Control:AddChild(obj, dontUpdate)
 	inherited.AddChild(self, obj)
 	if not dontUpdate then
@@ -219,9 +208,8 @@ function Control:AddChild(obj, dontUpdate)
 end
 
 --- Removes a child object from the control.
---- Updates the layout of the control after removing the child.
---- @param obj Object The child object to remove.
---- @return boolean True if the child was successfully removed, false otherwise.
+---@param obj Object The child object to remove.
+---@return boolean found True if the child was found and removed, false otherwise.
 function Control:RemoveChild(obj)
 	local found = inherited.RemoveChild(self, obj)
 	if found then
@@ -230,18 +218,17 @@ function Control:RemoveChild(obj)
 	return found
 end
 
---//=============================================================================
-
---- Gets the maximum constraints for a child control.
---- @param child Control The child control to get constraints for.
---- @return number,number,number,number Returns minimum x, minimum y, maximum width, maximum height.
+--- Gets the maximum constraints for a child object.
+---@param child Object The child object to get constraints for.
+---@return number x The x-coordinate constraint.
+---@return number y The y-coordinate constraint.
+---@return number width The width constraint.
+---@return number height The height constraint.
 function Control:_GetMaxChildConstraints(child)
 	return 0, 0, self.clientWidth, self.clientHeight
 end
 
---- Detects and processes relative bounds for the control.
---- Processes coordinates and dimensions that are specified relative to the parent.
---- Sets up internal state for handling relative positioning.
+--- Detects and sets relative bounds for the control.
 function Control:DetectRelativeBounds()
 	--// we need min 2 x-dim coords to define a rect!
 	local numconstraints = 0
@@ -320,10 +307,6 @@ function Control:DetectRelativeBounds()
 	--self.bottom = (type(self.bottom)=='number')and(self.bottom>0)and(self.bottom) or 0
 end
 
---- Gets the relative box coordinates for the control.
---- Calculates the control's position and size relative to its parent.
---- @param savespace boolean? If true, uses minimum dimensions instead of actual dimensions.
---- @return table Returns {x, y, width, height} with calculated values.
 function Control:GetRelativeBox(savespace)
 	local t = { self.x, self.y, self.width, self.height }
 	if savespace then
@@ -381,9 +364,10 @@ function Control:GetRelativeBox(savespace)
 	return { left, top, width, height }
 end
 
---- Updates the control's client area.
---- Recalculates the dimensions of the content area based on padding and size.
---- @param dontRedraw boolean? If true, the control will not be redrawn immediately.
+--//=============================================================================
+
+--- Updates the client area of the control.
+---@param dontRedraw boolean? If true, skips redrawing the control.
 function Control:UpdateClientArea(dontRedraw)
 	local padding = self.padding
 
@@ -413,16 +397,14 @@ function Control:UpdateClientArea(dontRedraw)
 	self:CallListeners(self.OnResize) --FIXME more arguments and filter unchanged resizes
 end
 
---- Aligns the control based on its relative bounds.
---- Updates the control's position and size to match its constraints.
+--- Aligns the control based on its constraints.
 function Control:AlignControl()
 	local newBox = self:GetRelativeBox()
 	self:_UpdateConstraints(newBox[1], newBox[2], newBox[3], newBox[4])
 end
 
 --- Requests a realignment of the control.
---- Marks the control for realignment during the next update cycle.
---- @param savespace boolean? If true, the control will shrink to its minimum size.
+---@param savespace boolean? If true, minimizes the control's size.
 function Control:RequestRealign(savespace)
 	if not self._inRealign then
 		self._realignRequested = true
@@ -431,12 +413,12 @@ function Control:RequestRealign(savespace)
 	end
 end
 
----@param savespace any?
+--- Disables realignment for the control.
 function Control:DisableRealign()
 	self._realignDisabled = (self._realignDisabled or 0) + 1
 end
 
----@param savespace any?
+--- Enables realignment for the control.
 function Control:EnableRealign()
 	self._realignDisabled = ((self._realignDisabled or 0) > 1 and self._realignDisabled - 1) or nil
 	if self._realignRequested then
@@ -445,7 +427,8 @@ function Control:EnableRealign()
 	end
 end
 
----@param savespace any?
+--- Realigns the control and its children.
+---@param savespace boolean? If true, minimizes the control's size.
 function Control:Realign(savespace)
 	if not self._realignDisabled then
 		if not self._inRealign then
@@ -465,6 +448,8 @@ function Control:Realign(savespace)
 	end
 end
 
+--- Updates the layout of the control.
+---@return boolean True if the layout was updated, false otherwise.
 function Control:UpdateLayout()
 	if self.autosize then
 		self:RealignChildren(true)
@@ -501,166 +486,21 @@ function Control:UpdateLayout()
 	end
 end
 
----@param savespace any?
+--- Realigns the children of the control.
+---@param savespace boolean? If true, minimizes the children's size.
 function Control:RealignChildren(savespace)
 	self:CallChildren("Realign", savespace)
 end
 
---- Gets the minimum extents needed for the control.
---- Calculates the minimum space needed for this control and its children.
---- @return number,number Returns the maximum right and bottom coordinates needed.
-function Control:GetMinimumExtents()
-	local maxRight, maxBottom = 0, 0
-	if self.autosize then
-		--// FIXME handle me correctly!!! (:= do the parent offset)
-		maxRight, maxBottom = self:GetChildrenMinimumExtents()
-	end
+--//=============================================================================
 
-	if not self._isRelative then
-		local right = self.x + self.width
-		local bottom = self.y + self.height
-
-		maxRight = math.max(maxRight, right)
-		maxBottom = math.max(maxBottom, bottom)
-	else
-		local cgb = self._givenBounds
-		local crb = self._relativeBounds
-
-		local left, width, right = 0, 0, 0
-		if not crb.width then
-			if self.autosize then
-				width = self.width or 0
-			else
-				width = cgb.width or 0
-			end
-		end
-		if not crb.left then
-			left = cgb.left or 0
-		end
-		if not IsRelativeCoord(crb.right) then
-			right = crb.right or 0
-		end
-		local totalWidth = left + width + right
-
-		local top, height, bottom = 0, 0, 0
-		if not crb.height then
-			height = cgb.height or 0
-		end
-		if not crb.top then
-			top = cgb.top or 0
-		end
-		if not IsRelativeCoord(crb.bottom) then
-			bottomt = crb.bottom or 0
-		end
-		local totalHeight = top + height + bottom
-
-		--[[
-    if (crb.width) then width = cgb.width or 0 end
-    if (crb.left)  then left  = cgb.left or 0 end
-    if (IsRelativeCoord(cgb.right)) then right = cgb.right or 0 end
-
-    ...
---]]
-
-		totalWidth = math.max(totalWidth, self.minWidth)
-		totalHeight = math.max(totalHeight, self.minHeight)
-
-		totalWidth = math.min(totalWidth, self.maxWidth)
-		totalHeight = math.min(totalHeight, self.maxHeight)
-
-		maxRight = math.max(maxRight, totalWidth)
-		maxBottom = math.max(maxBottom, totalHeight)
-	end
-
-	return maxRight, maxBottom
-end
-
---- Gets the minimum extents needed for all children.
---- Calculates the minimum space needed to contain all child controls.
---- @return number,number Returns the minimum width and height needed.
-function Control:GetChildrenMinimumExtents()
-	local minWidth = 0
-	local minHeight = 0
-
-	local cn = self.children
-	for i = 1, #cn do
-		local c = cn[i]
-		if c.GetMinimumExtents then
-			local width, height = c:GetMinimumExtents()
-			minWidth = math.max(minWidth, width)
-			minHeight = math.max(minHeight, height)
-		end
-	end
-
-	if minWidth + minHeight > 0 then
-		local padding = self.padding
-		minWidth = minWidth + padding[1] + padding[3]
-		minHeight = minHeight + padding[2] + padding[4]
-	end
-
-	return minWidth, minHeight
-end
-
---- Gets the current extents of the control.
---- Calculates the actual space currently occupied by this control and its children.
---- @return number,number,number,number Returns minLeft, minTop, maxRight, maxBottom coordinates.
-function Control:GetCurrentExtents()
-	local minLeft, minTop, maxRight, maxBottom = self:GetChildrenCurrentExtents()
-
-	local left = self.x
-	local top = self.y
-	local right = self.x + self.width
-	local bottom = self.y + self.height
-
-	if left < minLeft then
-		minLeft = left
-	end
-	if top < minTop then
-		minTop = top
-	end
-
-	if right > maxRight then
-		maxRight = right
-	end
-	if bottom > maxBottom then
-		maxBottom = bottom
-	end
-
-	return minLeft, minTop, maxRight, maxBottom
-end
-
---- Gets the current extents of all children.
---- Calculates the actual space currently occupied by child controls.
---- @return number,number,number,number Returns minLeft, minTop, maxRight, maxBottom coordinates.
-function Control:GetChildrenCurrentExtents()
-	local minLeft = 0
-	local minTop = 0
-	local maxRight = 0
-	local maxBottom = 0
-
-	local cn = self.children
-	for i = 1, #cn do
-		local c = cn[i]
-		if c.GetCurrentExtents then
-			local left, top, right, bottom = c:GetCurrentExtents()
-			minLeft = math.min(minLeft, left)
-			minTop = math.min(minTop, top)
-			maxRight = math.max(maxRight, right)
-			maxBottom = math.max(maxBottom, bottom)
-		end
-	end
-
-	return minLeft, minTop, maxRight, maxBottom
-end
-
---- Sets the control's position and size.
---- Updates the control's bounds and optionally adjusts its client area.
---- @param x number? X-coordinate of the control.
---- @param y number? Y-coordinate of the control.
---- @param w number? Width of the control.
---- @param h number? Height of the control.
---- @param clientArea boolean? If true, the dimensions include the client area.
---- @param dontUpdateRelative boolean? If true, relative constraints will not be updated.
+--- Sets the control's position
+-- @int x x-coordinate
+-- @int y y-coordinate
+-- @int w width
+-- @int h height
+-- @param clientArea TODO
+-- @bool dontUpdateRelative TODO
 function Control:SetPos(x, y, w, h, clientArea, dontUpdateRelative)
 	local changed = false
 	local redraw = false
@@ -742,12 +582,12 @@ function Control:SetPos(x, y, w, h, clientArea, dontUpdateRelative)
 end
 
 --- Sets the control's relative position
---- @param x number? x-coordinate
---- @param y number? y-coordinate
---- @param w number? width
---- @param h number? height
---- @param clientArea boolean? TODO
---- @param dontUpdateRelative boolean? TODO
+-- @int x x-coordinate
+-- @int y y-coordinate
+-- @int w width
+-- @int h height
+-- @param clientArea TODO
+-- @bool dontUpdateRelative TODO
 function Control:SetPosRelative(x, y, w, h, clientArea, dontUpdateRelative)
 	local changed = false
 	local redraw = false
@@ -833,27 +673,158 @@ function Control:SetPosRelative(x, y, w, h, clientArea, dontUpdateRelative)
 end
 
 --- Resize the control
---- @param w number? width
---- @param h number? height
---- @param clientArea boolean? TODO
---- @param dontUpdateRelative boolean? TODO
+-- @int w width
+-- @int h height
+-- @param clientArea TODO
+-- @bool dontUpdateRelative TODO
 function Control:Resize(w, h, clientArea, dontUpdateRelative)
 	self:SetPosRelative(nil, nil, w, h, clientArea, dontUpdateRelative)
 end
 
---- Updates internal constraints based on new position and size.
---- Internal method used to update the control's position and size constraints.
---- @param x number New X-coordinate.
---- @param y number New Y-coordinate.
---- @param w number New width.
---- @param h number New height.
 function Control:_UpdateConstraints(x, y, w, h)
 	--// internal used
 	self:SetPos(x, y, w, h, false, true)
 end
 
----@param x any?
----@param y any?
+--//=============================================================================
+
+function Control:GetMinimumExtents()
+	local maxRight, maxBottom = 0, 0
+	if self.autosize then
+		--// FIXME handle me correctly!!! (:= do the parent offset)
+		maxRight, maxBottom = self:GetChildrenMinimumExtents()
+	end
+
+	if not self._isRelative then
+		local right = self.x + self.width
+		local bottom = self.y + self.height
+
+		maxRight = math.max(maxRight, right)
+		maxBottom = math.max(maxBottom, bottom)
+	else
+		local cgb = self._givenBounds
+		local crb = self._relativeBounds
+
+		local left, width, right = 0, 0, 0
+		if not crb.width then
+			if self.autosize then
+				width = self.width or 0
+			else
+				width = cgb.width or 0
+			end
+		end
+		if not crb.left then
+			left = cgb.left or 0
+		end
+		if not IsRelativeCoord(crb.right) then
+			right = crb.right or 0
+		end
+		local totalWidth = left + width + right
+
+		local top, height, bottom = 0, 0, 0
+		if not crb.height then
+			height = cgb.height or 0
+		end
+		if not crb.top then
+			top = cgb.top or 0
+		end
+		if not IsRelativeCoord(crb.bottom) then
+			bottomt = crb.bottom or 0
+		end
+		local totalHeight = top + height + bottom
+
+		--[[
+    if (crb.width) then width = cgb.width or 0 end
+    if (crb.left)  then left  = cgb.left or 0 end
+    if (IsRelativeCoord(cgb.right)) then right = cgb.right or 0 end
+
+    ...
+--]]
+
+		totalWidth = math.max(totalWidth, self.minWidth)
+		totalHeight = math.max(totalHeight, self.minHeight)
+
+		totalWidth = math.min(totalWidth, self.maxWidth)
+		totalHeight = math.min(totalHeight, self.maxHeight)
+
+		maxRight = math.max(maxRight, totalWidth)
+		maxBottom = math.max(maxBottom, totalHeight)
+	end
+
+	return maxRight, maxBottom
+end
+
+function Control:GetChildrenMinimumExtents()
+	local minWidth = 0
+	local minHeight = 0
+
+	local cn = self.children
+	for i = 1, #cn do
+		local c = cn[i]
+		if c.GetMinimumExtents then
+			local width, height = c:GetMinimumExtents()
+			minWidth = math.max(minWidth, width)
+			minHeight = math.max(minHeight, height)
+		end
+	end
+
+	if minWidth + minHeight > 0 then
+		local padding = self.padding
+		minWidth = minWidth + padding[1] + padding[3]
+		minHeight = minHeight + padding[2] + padding[4]
+	end
+
+	return minWidth, minHeight
+end
+
+function Control:GetCurrentExtents()
+	local minLeft, minTop, maxRight, maxBottom = self:GetChildrenCurrentExtents()
+
+	local left = self.x
+	local top = self.y
+	local right = self.x + self.width
+	local bottom = self.y + self.height
+
+	if left < minLeft then
+		minLeft = left
+	end
+	if top < minTop then
+		minTop = top
+	end
+
+	if right > maxRight then
+		maxRight = right
+	end
+	if bottom > maxBottom then
+		maxBottom = bottom
+	end
+
+	return minLeft, minTop, maxRight, maxBottom
+end
+
+function Control:GetChildrenCurrentExtents()
+	local minLeft = 0
+	local minTop = 0
+	local maxRight = 0
+	local maxBottom = 0
+
+	local cn = self.children
+	for i = 1, #cn do
+		local c = cn[i]
+		if c.GetCurrentExtents then
+			local left, top, right, bottom = c:GetCurrentExtents()
+			minLeft = math.min(minLeft, left)
+			minTop = math.min(minTop, top)
+			maxRight = math.max(maxRight, right)
+			maxBottom = math.max(maxBottom, bottom)
+		end
+	end
+
+	return minLeft, minTop, maxRight, maxBottom
+end
+
+--//=============================================================================
+
 function Control:StartResizing(x, y)
 	--//FIXME the x,y aren't needed check how drag is handled!
 	self.resizing = {
@@ -863,64 +834,40 @@ function Control:StartResizing(x, y)
 	}
 end
 
----@param x any?
----@param y any?
 function Control:StopResizing(x, y)
 	self.resizing = false
 end
 
----@param x any?
----@param y any?
 function Control:StartDragging(x, y)
 	self.dragging = true
 end
 
----@param x any?
----@param y any?
 function Control:StopDragging(x, y)
 	self.dragging = false
 end
 
---- Converts local coordinates to client area coordinates.
---- @param x number X-coordinate in local space.
---- @param y number Y-coordinate in local space.
---- @return number,number Returns coordinates relative to client area.
+--//=============================================================================
+
 function Control:LocalToClient(x, y)
 	local ca = self.clientArea
 	return x - ca[1], y - ca[2]
 end
 
---- Converts client area coordinates to local coordinates.
---- @param x number X-coordinate in client area.
---- @param y number Y-coordinate in client area.
---- @return number,number Returns coordinates relative to control.
 function Control:ClientToLocal(x, y)
 	local ca = self.clientArea
 	return x + ca[1], y + ca[2]
 end
 
---- Converts parent coordinates to client area coordinates.
---- @param x number X-coordinate in parent space.
---- @param y number Y-coordinate in parent space.
---- @return number,number Returns coordinates relative to client area.
 function Control:ParentToClient(x, y)
 	local ca = self.clientArea
 	return x - self.x - ca[1], y - self.y - ca[2]
 end
 
---- Converts client area coordinates to parent coordinates.
---- @param x number X-coordinate in client area.
---- @param y number Y-coordinate in client area.
---- @return number,number Returns coordinates relative to parent.
 function Control:ClientToParent(x, y)
 	local ca = self.clientArea
 	return x + self.x + ca[1], y + self.y + ca[2]
 end
 
---- Checks if coordinates are within the client area.
---- @param x number X-coordinate to check.
---- @param y number Y-coordinate to check.
---- @return boolean Returns true if the point is in the client area.
 function Control:InClientArea(x, y)
 	local clientArea = self.clientArea
 	return x >= clientArea[1]
@@ -929,8 +876,9 @@ function Control:InClientArea(x, y)
 		and y <= clientArea[2] + clientArea[4]
 end
 
+--//=============================================================================
+
 --- Requests a redraw of the control.
---- Marks the control for redrawing during the next update cycle.
 function Control:Invalidate()
 	self._needRedraw = true
 	self._needRedrawSelf = nil
@@ -943,6 +891,8 @@ function Control:InvalidateSelf()
 	self._needRedrawSelf = true
 	self:RequestUpdate()
 end
+
+--//=============================================================================
 
 function Control:InstantUpdate()
 	if self:IsInView() then
@@ -979,6 +929,8 @@ function Control:Update()
 		end
 	end
 end
+
+--//=============================================================================
 
 function Control:_CheckIfRTTisAppreciated()
 	if (self.width <= 0) or (self.height <= 0) then
@@ -1084,12 +1036,6 @@ function Control:_UpdateAllDList()
 	end
 end
 
---- Sets up render-to-texture for the control.
---- Internal method to configure RTT rendering state.
---- @param fnc function The function to call for rendering.
---- @param self_ Control The control instance.
---- @param drawInContentRect boolean Whether to draw in content rect space.
---- @param ... any Additional arguments for the render function.
 function Control:_SetupRTT(fnc, self_, drawInContentRect, ...)
 	gl.Clear(GL.COLOR_BUFFER_BIT, 0, 0, 0, 1)
 	gl.Clear(GL.STENCIL_BUFFER_BIT, 0)
@@ -1111,7 +1057,7 @@ function Control:_SetupRTT(fnc, self_, drawInContentRect, ...)
 	gl.AlphaTest(false)
 	gl.StencilTest(true)
 	gl.StencilFunc(GL.EQUAL, 0, 0xFF)
-	gl.StencilOp(GL.KEEP, GL.KEEP, GL.KEEP)
+	gl.StencilOp(GL_KEEP, GL_KEEP, GL_KEEP)
 
 	gl.BlendFuncSeparate(GL.SRC_ALPHA, GL.ONE_MINUS_SRC_ALPHA, GL.ZERO, GL.ONE_MINUS_SRC_ALPHA)
 	fnc(self_, ...)
@@ -1141,12 +1087,6 @@ local staticDepthStencilTarget = {
 	format = GL_DEPTH24_STENCIL8,
 }
 
---- Creates a texture from the control's view.
---- @param suffix_name string Suffix for the texture name.
---- @param width number Width of the texture.
---- @param height number Height of the texture.
---- @param fnc function Function to render the content.
---- @param ... any Additional arguments for the render function.
 function Control:CreateViewTexture(suffix_name, width, height, fnc, ...)
 	if not gl.CreateFBO or not gl.BlendFuncSeparate then
 		self._cantUseRTT = true
@@ -1204,9 +1144,8 @@ function Control:CreateViewTexture(suffix_name, width, height, fnc, ...)
 	self[fboName] = fbo
 end
 
---- Draws content within the client area.
--- @param fnc function The function to call for drawing.
--- @param ... any Additional arguments for the draw function.
+--//=============================================================================
+
 function Control:_DrawInClientArea(fnc, ...)
 	local clientX, clientY, clientWidth, clientHeight = unpack4(self.clientArea)
 
@@ -1224,8 +1163,6 @@ function Control:_DrawInClientArea(fnc, ...)
 	gl.PopMatrix()
 end
 
---- Checks if the control is currently visible in the view.
---- @return boolean Returns true if the control is in view.
 function Control:IsInView()
 	if UnlinkSafe(self.parent) then
 		return self.parent:IsRectInView(self.x, self.y, self.width, self.height)
@@ -1233,19 +1170,10 @@ function Control:IsInView()
 	return false
 end
 
---- Checks if a child control is visible in the view.
---- @param child Control The child control to check.
---- @return boolean Returns true if the child is in view.
 function Control:IsChildInView(child)
 	return self:IsRectInView(child.x, child.y, child.width, child.height)
 end
 
---- Checks if a rectangle is visible in the view.
---- @param x number X-coordinate of the rectangle.
---- @param y number Y-coordinate of the rectangle.
---- @param w number Width of the rectangle.
---- @param h number Height of the rectangle.
---- @return boolean Returns true if the rectangle is in view.
 function Control:IsRectInView(x, y, w, h)
 	if not self.parent then
 		return false
@@ -1263,20 +1191,17 @@ function Control:IsRectInView(x, y, w, h)
 	return (self.parent):IsRectInView(px, py, w, h)
 end
 
---- Draws children within the client area with view checking.
---- @param event any? The drawing event to pass to children.
 function Control:_DrawChildrenInClientArea(event)
 	self:_DrawInClientArea(self.CallChildrenInverseCheckFunc, self, self.IsChildInView, event or "Draw")
 end
 
---- Draws children within the client area without view checking.
---- @param event any? The drawing event to pass to children.
 function Control:_DrawChildrenInClientAreaWithoutViewCheck(event)
 	self:_DrawInClientArea(self.CallChildrenInverse, self, event or "Draw")
 end
 
---- Draws the control's background.
---- This method is intended to be overridden by themes or skins.
+--//=============================================================================
+
+--//FIXME move resize and drag to Window class!!!!
 function Control:DrawBackground()
 	--// gets overriden by the skin/theme
 end
@@ -1289,14 +1214,10 @@ function Control:DrawResizeGrip()
 	--// gets overriden by the skin/theme
 end
 
---- Draws the control's border.
---- This method is intended to be overridden by themes or skins.
 function Control:DrawBorder()
 	--// gets overriden by the skin/theme ??????
 end
 
---- Draws UI grips for dragging and resizing.
---- Renders visual indicators for drag and resize handles when appropriate.
 function Control:DrawGrips() -- FIXME this thing is a hack, fix it - todo ideally make grips appear only when mouse hovering over it
 	local drawResizeGrip = self.resizable
 	local drawDragGrip = self.draggable and self.dragUseGrip
@@ -1388,8 +1309,6 @@ function Control:DrawForList()
 	gl.PopMatrix()
 end
 
---- Draws the control.
---- Renders the control's background, border, and children.
 function Control:Draw()
 	self._redrawCounter = (self._redrawCounter or 0) + 1
 	if not self._in_update and not self._usingRTT and self:_CheckIfRTTisAppreciated() then
@@ -1444,8 +1363,6 @@ function Control:Draw()
 	gl.PopMatrix()
 end
 
---- Handles tweak mode drawing.
---- Special drawing mode for UI editing/tweaking.
 function Control:TweakDraw()
 	if next(self.children) then
 		self:_DrawChildrenInClientArea("TweakDraw")
@@ -1464,12 +1381,12 @@ function Control:DrawChildrenForList()
 	end
 end
 
+--//=============================================================================
+
 local function InLocalRect(cx, cy, w, h)
 	return (cx >= 0) and (cy >= 0) and (cx <= w) and (cy <= h)
 end
 
----@param x any?
----@param y any?
 function Control:HitTest(x, y)
 	if not self.disableChildrenHitTest then
 		if self:InClientArea(x, y) then
@@ -1512,12 +1429,6 @@ function Control:HitTest(x, y)
 	return false
 end
 
---- Handles mouse down events.
---- Processes interactions with the control and its children.
---- @param x number X-coordinate of the mouse event.
---- @param y number Y-coordinate of the mouse event.
---- @param ... any Additional arguments for the event.
---- @return Object The object that handled the event, or nil if unhandled.
 function Control:MouseDown(x, y, ...)
 	if self.NCMouseDown then
 		local result = self:NCMouseDown(x, y)
@@ -1544,14 +1455,6 @@ function Control:MouseDown(x, y, ...)
 	end
 end
 
---- Handles mouse move events.
---- Updates the control's position or size if it is being dragged or resized.
---- @param x number Current X-coordinate of the mouse.
---- @param y number Current Y-coordinate of the mouse.
---- @param dx number Change in X-coordinate since the last event.
---- @param dy number Change in Y-coordinate since the last event.
---- @param ... any Additional arguments for the event.
---- @return Object The object that handled the event, or nil if unhandled.
 function Control:MouseMove(x, y, dx, dy, ...)
 	if self.dragging then
 		self:SetPos(self.x + dx, self.y + dy)
@@ -1602,12 +1505,6 @@ function Control:MouseMove(x, y, dx, dy, ...)
 	return inherited.MouseMove(self, cx, cy, dx, dy, ...)
 end
 
---- Handles mouse up events.
---- Finalizes dragging or resizing operations.
---- @param x number X-coordinate of the mouse event.
---- @param y number Y-coordinate of the mouse event.
---- @param ... any Additional arguments for the event.
---- @return Object The object that handled the event, or nil if unhandled.
 function Control:MouseUp(x, y, ...)
 	self.resizing = nil
 	self.dragging = nil
@@ -1615,68 +1512,43 @@ function Control:MouseUp(x, y, ...)
 	return inherited.MouseUp(self, cx, cy, ...)
 end
 
---- Handles mouse click events.
---- @param x number X-coordinate of the mouse event.
---- @param y number Y-coordinate of the mouse event.
---- @param ... any Additional arguments for the event.
---- @return Object The object that handled the event, or nil if unhandled.
 function Control:MouseClick(x, y, ...)
 	local cx, cy = self:LocalToClient(x, y)
 	return inherited.MouseClick(self, cx, cy, ...)
 end
 
---- Handles mouse double-click events.
---- @param x number X-coordinate of the mouse event.
---- @param y number Y-coordinate of the mouse event.
---- @param ... any Additional arguments for the event.
---- @return Object The object that handled the event, or nil if unhandled.
 function Control:MouseDblClick(x, y, ...)
 	local cx, cy = self:LocalToClient(x, y)
 	return inherited.MouseDblClick(self, cx, cy, ...)
 end
 
---- Handles mouse wheel events.
---- @param x number X-coordinate of the mouse event.
---- @param y number Y-coordinate of the mouse event.
---- @param ... any Additional arguments for the event.
---- @return Object The object that handled the event, or nil if unhandled.
 function Control:MouseWheel(x, y, ...)
 	local cx, cy = self:LocalToClient(x, y)
 	return inherited.MouseWheel(self, cx, cy, ...)
 end
 
 --[[
-
 function Control:KeyPress(...)
   return inherited.KeyPress(self, ...)
 end
 
+
 function Control:TextInput(...)
   return inherited.TextInput(self, ...)
 end
-
 --]]
 
---- Updates focus state of the control.
---- @param ... any Additional arguments for focus update.
---- @return any Return value from inherited focus update.
 function Control:FocusUpdate(...)
 	self:InvalidateSelf()
 	return inherited.FocusUpdate(self, ...)
 end
 
---- Handles mouse over events.
---- Updates hover state and triggers visual update.
---- @param ... any Additional arguments for the event.
 function Control:MouseOver(...)
 	inherited.MouseOver(self, ...)
 	self.state.hovered = true
 	self:InvalidateSelf()
 end
 
---- Handles mouse out events.
---- Updates hover state and triggers visual update.
---- @param ... any Additional arguments for the event.
 function Control:MouseOut(...)
 	inherited.MouseOut(self, ...)
 	self.state.hovered = false

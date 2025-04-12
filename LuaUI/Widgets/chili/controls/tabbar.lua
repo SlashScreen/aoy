@@ -1,20 +1,19 @@
 --//=============================================================================
 
---- TabBar
---- A TabBar is a horizontal or vertical bar of tabs. Each tab can be selected, and the selected tab can be used to display different content.
---- @class TabBar: LayoutPanel
---- @field orientation string Orientation of the tab bar ("horizontal" or "vertical")
---- @field resizeItems boolean Resize items to fill width/height
---- @field centerItems boolean Center items in cross direction
---- @field padding [number, number, number, number] Padding between items
---- @field itemPadding [number, number, number, number] Padding around items
---- @field itemMargin [number, number, number, number] Margin around items
---- @field minItemWidth number Minimum item width
---- @field minItemHeight number Minimum item height
---- @field tabs string[] List of tab names
---- @field selected string? Selected tab name
---- @field OnChange function[] Tab change event listeners
-
+---@class TabBar : LayoutPanel
+---@field classname string The class name
+---@field orientation "horizontal" Orientation of tabs
+---@field resizeItems boolean Whether items resize
+---@field centerItems boolean Whether items are centered
+---@field padding number[] Padding {left,top,right,bottom}
+---@field itemPadding number[] Item padding {left,top,right,bottom}
+---@field itemMargin number[] Item margin {left,top,right,bottom}
+---@field minItemWidth number Minimum item width
+---@field minItemHeight number Minimum item height
+---@field tabs table<number,string> Tab captions
+---@field selected string|nil Selected tab name
+---@field selected_obj TabBarItem|nil Selected tab object
+---@field OnChange function[] Selection change listeners
 TabBar = LayoutPanel:Inherit({
 	classname = "tabbar",
 	orientation = "horizontal",
@@ -35,7 +34,9 @@ local inherited = this.inherited
 
 --//=============================================================================
 
----@param obj table
+---Creates a new TabBar instance
+---@param obj table Configuration object
+---@return TabBar bar The created tab bar
 function TabBar:New(obj)
 	obj = inherited.New(self, obj)
 	if obj.tabs then
@@ -61,14 +62,18 @@ end
 
 --//=============================================================================
 
----@param orientation string
+---Sets the orientation of the tab bar
+---@param orientation "horizontal"|"vertical" New orientation
+---@return nil
 function TabBar:SetOrientation(orientation)
 	inherited.SetOrientation(self, orientation)
 end
 
 --//=============================================================================
 
----@param tabname string?
+---Selects a tab by name
+---@param tabname string Name of tab to select
+---@return boolean selected Whether tab was found and selected
 function TabBar:Select(tabname)
 	for i = 1, #self.children do
 		local c = self.children[i]

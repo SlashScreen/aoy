@@ -1,122 +1,92 @@
 --//=============================================================================
 
 --- ScrollPanel module
---- A container control that provides scrolling functionality for content that exceeds its bounds.
---- @class ScrollPanel: Control
---- @field horizontal boolean Enable horizontal scrolling (default true)
---- @field vertical boolean Enable vertical scrolling (default true)
---- @field smoothScroll boolean Use smooth scrolling (default true)
---- @field smoothScrollSpeed number Scroll animation speed (default 1)
---- @field scrollbarSize number Width of scrollbars (default 12)
---- @field scrollbarScale number Scale of scrollbar relative to content (default 50)
---- @field scrollPosX number Current horizontal scroll position (default 0)
---- @field scrollPosY number Current vertical scroll position (default 0)
---- @field backgroundColor Color Background color (default {0,0,0,0.5})
---- @field borderColor Color Border color (default {0.3,0.3,0.3,1})
---- @field ignoreMouseWheel boolean Ignore mouse wheel input (default true)
---- @field OnScroll function[] Scroll event listeners
 
+---@class ScrollPanel : Control
+---@field classname string The class name
+---@field backgroundColor number[] Background color {r,g,b,a}
+---@field scrollbarSize number Size of scrollbars
+---@field scrollPosX number Horizontal scroll position
+---@field scrollPosY number Vertical scroll position
+---@field smoothScroll boolean Whether scrolling is smooth
+---@field smoothScrollTime number Duration of smooth scrolling
+---@field verticalScrollbar boolean Whether vertical scrollbar is shown
+---@field horizontalScrollbar boolean Whether horizontal scrollbar is shown
+---@field ignoreMouseWheel boolean Whether to ignore mouse wheel events
+---@field contentArea table Content area {left,top,right,bottom}
+---@field clientArea table Client area {left,top,right,bottom}
+---@field OnScroll function[] Scroll event listeners
 ScrollPanel = Control:Inherit({
 	classname = "scrollpanel",
-	horizontal = true,
-	vertical = true,
-
-	smoothScroll = true,
-	smoothScrollSpeed = 1,
-
+	padding = { 0, 0, 0, 0 },
+	backgroundColor = { 0, 0, 0, 0 },
 	scrollbarSize = 12,
-	scrollbarScale = 50,
-
 	scrollPosX = 0,
 	scrollPosY = 0,
-
-	backgroundColor = { 0, 0, 0, 0.5 },
-	borderColor = { 0.3, 0.3, 0.3, 1 },
-
-	ignoreMouseWheel = true,
-
-	OnScroll = {},
+	verticalScrollbar = true,
+	horizontalScrollbar = true,
+	verticalSmartScroll = false,
+	smoothScroll = true,
+	smoothScrollTime = 0.7,
+	ignoreMouseWheel = false,
 })
 
 local this = ScrollPanel
 local inherited = this.inherited
 
---- Creates a new ScrollPanel instance
---- @param obj table Table of scrollpanel properties
---- @return ScrollPanel The newly created scrollpanel
-function ScrollPanel:New(obj)
-	obj = inherited.New(self, obj)
+--//=============================================================================
 
-	-- Create scrollbars
-	if obj.horizontal then
-		obj._hScrollbar = ScrollButton:New({
-			x = 0,
-			bottom = 0,
-			height = obj.scrollbarSize,
-			right = obj.vertical and obj.scrollbarSize or 0,
-			axis = "horizontal",
-			parent = obj,
-			OnScroll = {
-				function(_, pos)
-					obj:SetScrollPos(pos, nil)
-				end,
-			},
-		})
-	end
-
-	if obj.vertical then
-		obj._vScrollbar = ScrollButton:New({
-			right = 0,
-			y = 0,
-			width = obj.scrollbarSize,
-			bottom = obj.horizontal and obj.scrollbarSize or 0,
-			axis = "vertical",
-			parent = obj,
-			OnScroll = {
-				function(_, pos)
-					obj:SetScrollPos(nil, pos)
-				end,
-			},
-		})
-	end
-
-	return obj
-end
-
----@param x number
 local function smoothstep(x)
 	return x * x * (3 - 2 * x)
 end
 
+--//=============================================================================
+
 --- Sets the scroll position
---- @param x number? Horizontal position (0-1) or nil
---- @param y number? Vertical position (0-1) or nil
-function ScrollPanel:SetScrollPos(x, y)
-	local contentWidth = self:GetContentWidth()
-	local contentHeight = self:GetContentHeight()
+---@param x integer Horizontal position
+---@param y integer Vertical position
+---@param inview boolean Whether to scroll smoothly
+---@param smoothscroll boolean Whether to scroll smoothly
+---@return nil
+function ScrollPanel:SetScrollPos(x, y, inview, smoothscroll)
+	local dosmooth = self.smoothScroll and (smoothscroll or (smoothscroll == nil))
+	if dosmooth then
+		self._oldScrollPosX = self.scrollPosX
+		self._oldScrollPosY = self.scrollPosY
+	end
 
-	-- Update horizontal scroll
 	if x then
-		x = math.max(0, math.min(1, x))
-		if self.scrollPosX ~= x then
-			self.scrollPosX = x
-			self:RequestRealign()
+		if inview then
+			x = x - self.clientArea[3] * 0.5
+		end
+		self.scrollPosX = x
+		if self.contentArea then
+			self.scrollPosX = clamp(0, self.contentArea[3] - self.clientArea[3], self.scrollPosX)
 		end
 	end
-
-	-- Update vertical scroll
 	if y then
-		y = math.max(0, math.min(1, y))
-		if self.scrollPosY ~= y then
-			self.scrollPosY = y
-			self:RequestRealign()
+		if inview then
+			y = y - self.clientArea[4] * 0.5
+		end
+		self.scrollPosY = y
+		if self.contentArea then
+			self.scrollPosY = clamp(0, self.contentArea[4] - self.clientArea[4], self.scrollPosY)
 		end
 	end
 
-	self:CallListeners(self.OnScroll, self.scrollPosX, self.scrollPosY)
+	if dosmooth then
+		if (self._oldScrollPosX ~= self.scrollPosX) or (self._oldScrollPosY ~= self.scrollPosY) then
+			self._smoothScrollEnd = Spring.GetTimer()
+			self._newScrollPosX = self.scrollPosX
+			self._newScrollPosY = self.scrollPosY
+			self.scrollPosX = self._oldScrollPosX
+			self.scrollPosY = self._oldScrollPosY
+		end
+	end
+
+	self:InvalidateSelf()
 end
 
----@param ... any
 function ScrollPanel:Update(...)
 	local trans = 1
 	if self.smoothScroll and self._smoothScrollEnd then
@@ -140,85 +110,29 @@ function ScrollPanel:Update(...)
 	inherited.Update(self, ...)
 end
 
----@return number
-function ScrollPanel:GetContentWidth()
-	local width = 0
-	for i = 1, #self.children do
-		local c = self.children[i]
-		if c ~= self._hScrollbar and c ~= self._vScrollbar then
-			width = math.max(width, c.x + c.width)
-		end
-	end
-	return width
-end
+--//=============================================================================
 
----@return number
-function ScrollPanel:GetContentHeight()
-	local height = 0
-	for i = 1, #self.children do
-		local c = self.children[i]
-		if c ~= self._hScrollbar and c ~= self._vScrollbar then
-			height = math.max(height, c.y + c.height)
-		end
-	end
-	return height
-end
-
-function ScrollPanel:UpdateScrollbars()
-	local contentWidth = self:GetContentWidth()
-	local contentHeight = self:GetContentHeight()
-
-	if self._hScrollbar then
-		self._hScrollbar:SetContentSize(contentWidth, self.clientWidth)
-	end
-
-	if self._vScrollbar then
-		self._vScrollbar:SetContentSize(contentHeight, self.clientHeight)
-	end
-end
-
-function ScrollPanel:UpdateClientArea()
-	inherited.UpdateClientArea(self)
-
-	-- Adjust client area for scrollbars
-	if self._vScrollbar and self._vScrollbar.visible then
-		self.clientArea[3] = self.clientArea[3] - self.scrollbarSize
-	end
-
-	if self._hScrollbar and self._hScrollbar.visible then
-		self.clientArea[4] = self.clientArea[4] - self.scrollbarSize
-	end
-
-	self:UpdateScrollbars()
-end
-
----@param x number
----@param y number
 function ScrollPanel:LocalToClient(x, y)
 	local ca = self.clientArea
 	return x - ca[1] + self.scrollPosX, y - ca[2] + self.scrollPosY
 end
 
----@param x number
----@param y number
 function ScrollPanel:ClientToLocal(x, y)
 	local ca = self.clientArea
 	return x + ca[1] - self.scrollPosX, y + ca[2] - self.scrollPosY
 end
 
----@param x number
----@param y number
 function ScrollPanel:ParentToClient(x, y)
 	local ca = self.clientArea
 	return x - self.x - ca[1] + self.scrollPosX, y - self.y - ca[2] + self.scrollPosY
 end
 
----@param x number
----@param y number
 function ScrollPanel:ClientToParent(x, y)
 	local ca = self.clientArea
 	return x + self.x + ca[1] - self.scrollPosX, y + self.y + ca[2] - self.scrollPosY
 end
+
+--//=============================================================================
 
 function ScrollPanel:GetCurrentExtents()
 	local left = self.x
@@ -242,6 +156,8 @@ function ScrollPanel:GetCurrentExtents()
 
 	return minLeft, minTop, maxRight, maxBottom
 end
+
+--//=============================================================================
 
 function ScrollPanel:_DetermineContentArea()
 	local minLeft, minTop, maxRight, maxBottom = self:GetChildrenCurrentExtents()
@@ -296,6 +212,10 @@ function ScrollPanel:_DetermineContentArea()
 	end
 end
 
+--//=============================================================================
+
+---Updates scroll bounds based on content
+---@return nil
 function ScrollPanel:UpdateLayout()
 	--self:_DetermineContentArea()
 	self:RealignChildren()
@@ -320,10 +240,8 @@ function ScrollPanel:UpdateLayout()
 	return true
 end
 
----@param x number
----@param y number
----@param w number
----@param h number
+--//=============================================================================
+
 function ScrollPanel:IsRectInView(x, y, w, h)
 	if not self.parent then
 		return false
@@ -349,12 +267,12 @@ function ScrollPanel:IsRectInView(x, y, w, h)
 	return (self.parent):IsRectInView(px, py, w, h)
 end
 
+--//=============================================================================
+
 function ScrollPanel:DrawControl()
 	--// gets overriden by the skin/theme
 end
 
----@param fnc function
----@param ... any
 function ScrollPanel:_DrawInClientArea(fnc, ...)
 	local clientX, clientY, clientWidth, clientHeight = unpack4(self.clientArea)
 
@@ -372,9 +290,8 @@ function ScrollPanel:_DrawInClientArea(fnc, ...)
 	gl.PopMatrix()
 end
 
----@param x number
----@param y number
----@return boolean
+--//=============================================================================
+
 function ScrollPanel:IsAboveHScrollbars(x, y)
 	if not self._hscrollbar then
 		return false
@@ -382,9 +299,6 @@ function ScrollPanel:IsAboveHScrollbars(x, y)
 	return y >= (self.height - self.scrollbarSize) --FIXME
 end
 
----@param x number
----@param y number
----@return boolean
 function ScrollPanel:IsAboveVScrollbars(x, y)
 	if not self._vscrollbar then
 		return false
@@ -392,9 +306,6 @@ function ScrollPanel:IsAboveVScrollbars(x, y)
 	return x >= (self.width - self.scrollbarSize) --FIXME
 end
 
----@param x number
----@param y number
----@return ScrollPanel|nil
 function ScrollPanel:HitTest(x, y)
 	if self:IsAboveVScrollbars(x, y) then
 		return self
@@ -406,10 +317,6 @@ function ScrollPanel:HitTest(x, y)
 	return inherited.HitTest(self, x, y)
 end
 
----@param x number
----@param y number
----@param ... any
----@return ScrollPanel|boolean
 function ScrollPanel:MouseDown(x, y, ...)
 	if self:IsAboveVScrollbars(x, y) then
 		self._vscrolling = true
@@ -429,12 +336,6 @@ function ScrollPanel:MouseDown(x, y, ...)
 	return inherited.MouseDown(self, x, y, ...)
 end
 
----@param x number
----@param y number
----@param dx number
----@param dy number
----@param ... any
----@return ScrollPanel|boolean
 function ScrollPanel:MouseMove(x, y, dx, dy, ...)
 	if self._vscrolling then
 		local clientArea = self.clientArea
@@ -460,10 +361,6 @@ function ScrollPanel:MouseMove(x, y, dx, dy, ...)
 	return inherited.MouseMove(self, x, y, dx, dy, ...)
 end
 
----@param x number
----@param y number
----@param ... any
----@return ScrollPanel|boolean
 function ScrollPanel:MouseUp(x, y, ...)
 	if self._vscrolling then
 		self._vscrolling = nil
@@ -483,34 +380,15 @@ function ScrollPanel:MouseUp(x, y, ...)
 	return inherited.MouseUp(self, x, y, ...)
 end
 
---- Handles mouse wheel scrolling
---- @param x number Mouse x position
---- @param y number Mouse y position
---- @param up boolean Wheel direction (true = up)
---- @param value number Wheel delta value
---- @param mods table Key modifiers
---- @return boolean handled True if event was handled
-function ScrollPanel:MouseWheel(x, y, up, value, mods)
-	if self.ignoreMouseWheel then
-		return false
-	end
-
-	-- Shift+Wheel = Horizontal scroll
-	if mods.shift then
-		self:HorizontalScrollbar(x, y, up, value)
+function ScrollPanel:MouseWheel(x, y, up, value, ...)
+	if self._vscrollbar and not self.ignoreMouseWheel then
+		self:SetScrollPos(nil, self.scrollPosY - value * 30, false, false)
 		return self
 	end
 
-	-- Regular wheel = Vertical scroll
-	local dir = up and 1 or -1
-	local step = self.scrollbarSize[2] * dir * value
-
-	self.scrollPosY = clamp(0, self.scrollPosY - step, self.maxScrollY)
-	self:RequestUpdate()
-	return self
+	return inherited.MouseWheel(self, x, y, up, value, ...)
 end
 
----@param ... any
 function ScrollPanel:MouseOut(...)
 	inherited.MouseOut(self, ...)
 	self._hHovered = false

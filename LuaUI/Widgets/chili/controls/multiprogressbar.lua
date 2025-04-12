@@ -1,15 +1,16 @@
 --//=============================================================================
 
 --- Multiprogressbar module
---- A control that displays multiple progress bars with customizable colors and textures.
---- @class Multiprogressbar: Control
---- @field drawBorder boolean Draw border around the control (default false)
---- @field borderColor Color Border color (default {1,0,0,1})
---- @field orientation "horizontal" | "vertical" Orientation of the progress bar (default "horizontal")
---- @field reverse boolean Reverse drawing orientation (default false)
---- @field scaleFunction function? Function to rescale progress (default nil). Takes 0-1 and must return 0-1
---- @field bars table[] List of bar components to display
 
+--- Multiprogressbar fields.
+-- Inherits from Control.
+-- @see control.Control
+-- @table Multiprogressbar
+-- @bool[opt=false] drawBorder should the border be drawn?
+-- @tparam {r,g,b,a} borderColor specifies the border color (default: {1,0,0,1})
+-- @string[opt="horizontal"] orientation orientation of the progress bar
+-- @bool[opt=false] reverse reverse drawing orientation
+-- @tparam fnc scaleFunction scaling function that takes 0-1 and must return 0-1
 Multiprogressbar = Control:Inherit({
 	classname = "multiprogressbar",
 
@@ -63,12 +64,6 @@ local function drawBarH(x, y, w, h, color1, color2)
 	glVertex(x, y + h)
 end
 
----@param x number
----@param y number
----@param w number
----@param h number
----@param color1 Color
----@param color2 Color
 local function drawBarV(x, y, w, h, color1, color2)
 	glColor(color1)
 	glVertex(x, y)
@@ -78,7 +73,6 @@ local function drawBarV(x, y, w, h, color1, color2)
 	glVertex(x + w, y)
 end
 
---- Draws the multiprogressbar control.
 function Multiprogressbar:DrawControl()
 	local percentDone = 0
 	local efp
@@ -181,8 +175,6 @@ end
 
 --//=============================================================================
 
---- Performs hit testing for the multiprogressbar.
---- @return Multiprogressbar Returns self if hit.
 function Multiprogressbar:HitTest()
 	return self
 end

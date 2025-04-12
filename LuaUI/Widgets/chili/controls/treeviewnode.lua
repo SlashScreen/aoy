@@ -1,19 +1,17 @@
 --//=============================================================================
 
---- @class TreeViewNode : Control
---- @field padding [number, number, number, number] Padding around the node
---- @field autosize boolean Automatically size to fit content
---- @field caption string Node caption
---- @field expanded boolean Node expansion state
---- @field root boolean Is this node the root node?
---- @field nodes TreeViewNode[] List of child nodes
---- @field treeview TreeView? Reference to the parent tree view
---- @field private _nodes_hidden table List of hidden nodes
---- @field OnSelectChange function[] Selection change event listeners
---- @field OnCollapse function[] Collapse event listeners
---- @field OnExpand function[] Expand event listeners
---- @field OnDraw function[] Draw event listeners
-
+---@class TreeViewNode : Control
+---@field classname string The class name
+---@field caption string Node caption
+---@field expanded boolean Whether node is expanded
+---@field root boolean Whether node is root node
+---@field padding number[] Padding {left,top,right,bottom}
+---@field nodes table<number,TreeViewNode> Child nodes
+---@field treeview TreeView Parent treeview
+---@field _nodes_hidden table<number,TreeViewNode> Hidden nodes when collapsed
+---@field OnSelectChange function[] Selection change listeners
+---@field OnCollapse function[] Node collapse listeners
+---@field OnExpand function[] Node expand listeners
 TreeViewNode = Control:Inherit({
 	classname = "treeviewnode",
 
@@ -41,7 +39,9 @@ local inherited = this.inherited
 
 --//=============================================================================
 
----@param obj table
+---Creates a new TreeViewNode instance
+---@param obj table Configuration object
+---@return TreeViewNode node The created node
 function TreeViewNode:New(obj)
 	if obj.root then
 		obj.padding = { 0, 0, 0, 0 }
@@ -53,7 +53,6 @@ function TreeViewNode:New(obj)
 	return obj
 end
 
----@param obj Object?
 function TreeViewNode:SetParent(obj)
 	obj = UnlinkSafe(obj)
 	local typ = type(obj)
@@ -65,8 +64,6 @@ function TreeViewNode:SetParent(obj)
 	inherited.SetParent(self, obj)
 end
 
----@param obj Object
----@param isNode boolean?
 function TreeViewNode:AddChild(obj, isNode)
 	if isNode ~= false then
 		self.nodes[#self.nodes + 1] = MakeWeakLink(obj)
@@ -77,7 +74,6 @@ function TreeViewNode:AddChild(obj, isNode)
 	return inherited.AddChild(self, obj)
 end
 
----@param obj Object
 function TreeViewNode:RemoveChild(obj)
 	local result = inherited.RemoveChild(self, obj)
 
@@ -116,7 +112,9 @@ TreeViewNode.Clear = TreeViewNode.ClearChildren
 
 --//=============================================================================
 
----@param item any
+---Adds a child node or control
+---@param item string|Control Item to add
+---@return TreeViewNode|nil node Created node or nil
 function TreeViewNode:Add(item)
 	local newnode
 	if type(item) == "string" then
@@ -153,6 +151,8 @@ function TreeViewNode:Select()
 	end
 end
 
+---Toggles node expanded state
+---@return nil
 function TreeViewNode:Toggle()
 	if self.root or not self.treeview then
 		return
@@ -165,6 +165,8 @@ function TreeViewNode:Toggle()
 	end
 end
 
+---Expands the node
+---@return nil
 function TreeViewNode:Expand()
 	if self.root or not self.treeview then
 		return
@@ -184,6 +186,8 @@ function TreeViewNode:Expand()
 	end
 end
 
+---Collapses the node
+---@return nil
 function TreeViewNode:Collapse()
 	if self.root or not self.treeview then
 		return
@@ -202,8 +206,6 @@ end
 
 --//=============================================================================
 
----@param caption string
----@return TreeViewNode|nil
 function TreeViewNode:GetNodeByCaption(caption)
 	for i = 1, #self.nodes do
 		local n = self.nodes[i]
@@ -218,9 +220,6 @@ function TreeViewNode:GetNodeByCaption(caption)
 	end
 end
 
----@param index number
----@param _i number
----@return TreeViewNode|number
 function TreeViewNode:GetNodeByIndex(index, _i)
 	for i = 1, #self.nodes do
 		_i = _i + 1
@@ -241,11 +240,6 @@ end
 
 --//=============================================================================
 
---- Updates the layout of the tree view node and its children.
---- This function handles both expanded and collapsed states of nodes.
---- In collapsed state, only the first child (label) is shown and sized.
---- In expanded state, all children are positioned vertically and sized.
---- @return boolean success Always returns true to indicate successful layout update
 function TreeViewNode:UpdateLayout()
 	local clientWidth = self.clientWidth
 	local children = self.children
@@ -277,11 +271,6 @@ end
 
 --//=============================================================================
 
---- Determines if a given point (x,y) is within the node's expand/collapse button area.
---- The button area is in the left padding region of the node.
---- @param x number The x coordinate to test
---- @param y number The y coordinate to test
---- @return boolean is_within Returns true if the point is within the button area, false otherwise
 function TreeViewNode:_InNodeButton(x, y)
 	if self.root then
 		return false
@@ -295,9 +284,6 @@ function TreeViewNode:_InNodeButton(x, y)
 	return (nodeTop <= y) and (y - nodeTop < self.padding[1])
 end
 
----@param x number
----@param y number
----@param ... TreeViewNode|nil
 function TreeViewNode:HitTest(x, y, ...)
 	local obj = inherited.HitTest(self, x, y, ...)
 	if obj then
@@ -308,9 +294,6 @@ function TreeViewNode:HitTest(x, y, ...)
 	--end
 end
 
----@param x number
----@param y number
----@param ... any
 function TreeViewNode:MouseDown(x, y, ...)
 	if self.root then
 		return inherited.MouseDown(self, x, y, ...)
@@ -336,9 +319,6 @@ function TreeViewNode:MouseDown(x, y, ...)
 	end
 end
 
----@param x number
----@param y number
----@param ... any
 function TreeViewNode:MouseClick(x, y, ...)
 	if self.root then
 		return inherited.MouseClick(self, x, y, ...)
@@ -353,9 +333,6 @@ function TreeViewNode:MouseClick(x, y, ...)
 	return obj
 end
 
----@param x number
----@param y number
----@param ... any
 function TreeViewNode:MouseDblClick(x, y, ...)
 	--//FIXME doesn't get called, related to the FIXME above!
 	if self.root then

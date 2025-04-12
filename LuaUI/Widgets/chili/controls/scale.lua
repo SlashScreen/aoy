@@ -1,17 +1,14 @@
---- Scales module
---- A control for displaying a scale with customizable properties.
---- @class Scales: Control
---- @field min number Minimum value (default -50)
---- @field max number Maximum value (default 50)
---- @field step number Step size (default 10)
---- @field logBase number Logarithmic base (default 1.5)
---- @field defaultWidth number Default width (default 90)
---- @field defaultHeight number Default height (default 12)
---- @field fontsize number Font size (default 8)
---- @field scaleFunction function? Function to rescale graph (default nil) takes 0-1 and must return 0-1
---- @field color Color Scale color (default {0,0,0,1})
---- @field OnChange function[] Value change event listeners
-
+---@class Scale : Control
+---@field classname string The class name
+---@field min number Minimum value
+---@field max number Maximum value
+---@field step number Step size between values
+---@field logBase number Base for logarithmic scale
+---@field defaultWidth number Default width
+---@field defaultHeight number Default height
+---@field fontsize number Font size in pixels
+---@field scaleFunction function|nil Custom scale function (takes 0-1, returns 0-1)
+---@field color number[] Scale color {r,g,b,a}
 Scale = Control:Inherit({
 	classname = "scale",
 	min = -50,
@@ -38,6 +35,9 @@ local function defaultTransform(x)
 	return (math.log(1 + x * 140) / math.log(141))
 end
 
+---Draws the scale lines
+---@param self Scale Scale instance
+---@return nil
 local function drawScaleLines(self)
 	local hline = self.y + self.height
 	local h1 = self.y + self.fontsize
@@ -89,7 +89,6 @@ local function drawScaleLines(self)
 	end
 end
 
---- Draws the scale control.
 function Scale:DrawControl()
 	gl.Color(self.color)
 	gl.BeginEnd(GL.LINES, drawScaleLines, self)
@@ -107,8 +106,6 @@ end
 
 --//=============================================================================
 
---- Performs hit testing for the scale. Always returns false.
---- @return boolean Always false.
 function Scale:HitTest()
 	return false
 end

@@ -1,20 +1,13 @@
 --//=============================================================================
 
 --- ImageListView module
---- A control that displays a list of images in a grid layout.
---- @class ImageListView: LayoutPanel
---- @field autosize boolean Automatically size to fit content
---- @field autoArrangeH boolean Automatically arrange items horizontally
---- @field autoArrangeV boolean Automatically arrange items vertically
---- @field centerItems boolean Center items in cells
---- @field dir string Initial directory
---- @field OnDirChange function[] Directory change event listeners
---- @field iconX number Icon width
---- @field iconY number Icon height
---- @field itemMargin [number, number, number, number] Margin between items
---- @field items string[] List of image file paths
---- @field useRTT boolean Use Render To Texture for images. Experimental
 
+--- ImageListView fields.
+-- Inherits from LayoutPanel.
+-- @see layoutpanel.LayoutPanel
+-- @table ImageListView
+-- @string[opt=""] dir initial directory
+-- @tparam {func1,func2,...} OnDirChange table of function listeners for directory change (default {})
 ImageListView = LayoutPanel:Inherit({
 	classname = "imagelistview",
 
@@ -50,7 +43,6 @@ local image_exts = { ".jpg", ".bmp", ".png", ".tga", ".dds", ".ico", ".gif", ".p
 
 --//=============================================================================
 
----@param obj table
 function ImageListView:New(obj)
 	obj = inherited.New(self, obj)
 	obj:SetDir(obj.dir)
@@ -59,7 +51,6 @@ end
 
 --//=============================================================================
 
----@param dir string
 local function GetParentDir(dir)
 	dir = dir:gsub("\\", "/")
 	local lastChar = dir:sub(-1)
@@ -78,7 +69,6 @@ local function GetParentDir(dir)
 	end
 end
 
----@param filepath string
 local function ExtractFileName(filepath)
 	filepath = filepath:gsub("\\", "/")
 	local lastChar = filepath:sub(-1)
@@ -97,7 +87,6 @@ local function ExtractFileName(filepath)
 	end
 end
 
----@param filepath string
 local function ExtractDir(filepath)
 	filepath = filepath:gsub("\\", "/")
 	local lastChar = filepath:sub(-1)
@@ -118,8 +107,6 @@ end
 
 --//=============================================================================
 
----@param name string
----@param imagefile string
 function ImageListView:_AddFile(name, imagefile)
 	self:AddChild(LayoutPanel:New({
 		width = self.iconX + 10,
@@ -200,7 +187,6 @@ function ImageListView:ScanDir()
 	self:EnableRealign()
 end
 
----@param directory string
 function ImageListView:SetDir(directory)
 	self:DeselectAll()
 	self.dir = directory
@@ -219,7 +205,6 @@ function ImageListView:GoToParentDir()
 	self:SetDir(GetParentDir(self.dir))
 end
 
----@param filepath string
 function ImageListView:GotoFile(filepath)
 	local dir = ExtractDir(filepath)
 	local file = ExtractFileName(filepath)
@@ -242,7 +227,6 @@ end
 
 --//=============================================================================
 
----@param item any
 function ImageListView:Select(item)
 	if type(item) == "number" then
 		self:SelectItem(item)
@@ -260,7 +244,6 @@ end
 
 --//=============================================================================
 
----@param index number
 function ImageListView:DrawItemBkGnd(index)
 	local cell = self._cells[index]
 	local itemPadding = self.itemPadding
@@ -286,8 +269,6 @@ end
 
 --//=============================================================================
 
----@param x number
----@param y number
 function ImageListView:HitTest(x, y)
 	local cx, cy = self:LocalToClient(x, y)
 	local obj = inherited.HitTest(self, cx, cy)
@@ -298,8 +279,6 @@ function ImageListView:HitTest(x, y)
 	return (itemIdx >= 0) and self
 end
 
----@param x number
----@param y number
 function ImageListView:MouseDblClick(x, y)
 	local cx, cy = self:LocalToClient(x, y)
 	local itemIdx = self:GetItemIndexAt(cx, cy)
