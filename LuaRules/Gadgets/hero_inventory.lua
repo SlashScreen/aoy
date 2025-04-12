@@ -44,6 +44,8 @@ for feature_id, feature in pairs(FeatureDefs) do
 end
 
 if gadgetHandler:IsSyncedCode() then
+	-- !SYNCED ==========================================================
+
 	--- @type table<UnitID, integer[]>
 	local inventory = {}
 
@@ -74,22 +76,24 @@ if gadgetHandler:IsSyncedCode() then
 			local item = cmd_params[1]
 			return pick_up_item(item, unit_id)
 		end
+		return false
 	end
 
 	function gadget:AllowCommand(_unitID, unit_def_id, _unitTeam, cmdID, _cmdParams, _cmdOptions, _cmdTag, _synced)
 		if cmdID == CMD_PICKUP_ITEM then
 			return UnitDefs[unit_def_id].customparams.is_hero ~= nil
-		else
-			return true
 		end
+		return true
 	end
 else
-	---@param type "unit" | "feature"
-	---@param id UnitID | FeatureID
-	---@return integer
+	-- !UNSYNCED ==========================================================
+
+	--- @param type "unit" | "feature"
+	--- @param id UnitID | FeatureID
+	--- @return integer
 	function gadget:DefaultCommand(type, id)
 		if type == "feature" then
-			if is_item[id] then
+			if is_item[Spring.GetFeatureDefID(id)] then
 				local selected_units = Spring.GetSelectedUnits()
 				for _, unit_id in ipairs(selected_units) do
 					if is_hero[Spring.GetUnitDefID(unit_id)] then
@@ -98,7 +102,7 @@ else
 				end
 			end
 		end
-		return CMD.WAIT
+		return CMD.WAIT -- TODO return something sensible or nil or something, figure it out
 	end
 end
 
