@@ -3,8 +3,6 @@ local gadget = gadget --- @type Gadget
 --- @alias UnitDefID integer
 --- @alias FeatureID integer
 
-CMD_PICKUP_ITEM = 0xDEADBEEF
-
 function gadget:GetInfo()
 	return {
 		name = "Hero Inventory",
