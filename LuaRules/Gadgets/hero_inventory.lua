@@ -2,12 +2,13 @@ local gadget = gadget --- @type Gadget
 --- @alias UnitID integer
 --- @alias UnitDefID integer
 --- @alias FeatureID integer
+--- @alias FeatureDefID integer
 
 function gadget:GetInfo()
 	return {
 		name = "Hero Inventory",
 		desc = "Tracks hero inventory",
-		author = "Vileblood",
+		author = "Vileblood, GoogleFrog",
 		date = "Present Day, Present Time",
 		license = "MIT",
 		layer = 0,
@@ -15,10 +16,10 @@ function gadget:GetInfo()
 	}
 end
 
-local EVERY_FEATURE_IS_ITEM = true
+local EVERY_FEATURE_IS_ITEM = false
 local EVERY_UNIT_IS_HERO = true
 
-local PICKUP_DIST = 100
+local PICKUP_DIST = 25
 
 local CMD_PICK_UP_ITEM = Spring.Utilities.CMD.PICK_UP_ITEM
 
@@ -49,7 +50,17 @@ for feature_id, feature in pairs(FeatureDefs) do
 	end
 end
 
+--[[ 
+for key, _value in pairs(is_item) do
+	Spring.Echo(key .. " is an item")
+end
+ ]]
+
+---is this feature an item
+---@param featureID FeatureID | nil
+---@return boolean|nil
 local function IsItem(featureID)
+	--- @type FeatureDefID | nil
 	local featureDefID = featureID and Spring.GetFeatureDefID(featureID)
 	return featureDefID and is_item[featureDefID]
 end
@@ -61,24 +72,19 @@ if gadgetHandler:IsSyncedCode() then
 	--- Pick up an item
 	--- @param item string
 	--- @param unit_id integer
-	--- @return boolean
+	--- @return boolean, boolean
 	local function pick_up_item(item, unit_id)
-		local unit_def_id = Spring.GetUnitDefID(unit_id)
-		-- Already handled by AllowCommand 
-		--if not is_hero[unit_def_id] then
-		--	return false
-		--end
 		inventory[unit_id] = inventory[unit_id] or {}
 		Spring.Echo("ValidFeatureID", item, Spring.ValidFeatureID(item), unit_id)
 		if #inventory[unit_id] >= max_inventory_size or not Spring.ValidFeatureID(item) then
 			Spring.ClearUnitGoal(unit_id)
 			return true, true
 		end
-		
+
 		local fx, _, fz = Spring.GetFeaturePosition(item)
 		local ux, _, uz = Spring.GetUnitPosition(unit_id)
-		local distSq = (ux - fx)*(ux - fx) + (uz - fz)*(uz - fz)
-		if distSq > PICKUP_DIST*PICKUP_DIST then
+		local distSq = (ux - fx) * (ux - fx) + (uz - fz) * (uz - fz)
+		if distSq > PICKUP_DIST * PICKUP_DIST then
 			Spring.SetUnitMoveGoal(unit_id, fx, 0, fz, PICKUP_DIST)
 		else
 			table.insert(inventory[unit_id], item)
@@ -102,7 +108,7 @@ if gadgetHandler:IsSyncedCode() then
 			return true
 		end
 	end
-	
+
 	function gadget:UnitCreated(unitID)
 		Spring.InsertUnitCmdDesc(unitID, pick_up_item_command_desc)
 	end
@@ -110,18 +116,15 @@ if gadgetHandler:IsSyncedCode() then
 	function gadget:Initialize()
 		gadgetHandler:RegisterCMDID(CMD_PICK_UP_ITEM)
 	end
-
 else
-	---@param type "unit" | "feature"
-	---@param id UnitID | FeatureID
-	---@return integerlocal beaconCount = 0
-
 	function gadget:Initialize()
 		gadgetHandler:RegisterCMDID(CMD_PICK_UP_ITEM)
 		Spring.SetCustomCommandDrawData(CMD_PICK_UP_ITEM, CMD.FIGHT)
 		Spring.AssignMouseCursor("ick Up Item", "cursorfight", true, true)
 	end
 
+	---@param type "unit" | "feature"
+	---@param id UnitID | FeatureID
 	function gadget:DefaultCommand(type, id)
 		if type == "feature" then
 			if IsItem(id) then
