@@ -22,7 +22,7 @@ VFS.Include(LUAUI_DIRNAME .. "utils.lua", utilFile)
 WG = {}
 Spring.Utilities = {}
 VFS.Include("LuaRules/Utilities/glvolumes.lua")
-VFS.Include("LuaUI/fonts")
+VFS.Include("LuaUI/fonts.lua")
 
 include("setupdefs.lua")
 include("savetable.lua")
