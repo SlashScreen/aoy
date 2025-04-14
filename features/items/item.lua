@@ -1,8 +1,7 @@
 return lowerkeys({
 	item = {
 		description = [[A pick uppable item]],
-		--object = "book.s3o",
-		object = "chickenegg.s3o", -- for testing
+		object = "book.s3o",
 		blocking = false,
 		damage = 10000,
 		reclaimable = true,
