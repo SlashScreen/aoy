@@ -1,8 +1,4 @@
 local gadget = gadget --- @type Gadget
---- @alias UnitID integer
---- @alias UnitDefID integer
---- @alias FeatureID integer
---- @alias FeatureDefID integer
 
 function gadget:GetInfo()
 	return {
