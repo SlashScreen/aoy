@@ -10,9 +10,15 @@ local tree_prototype = {
 	footprintX = 1,
 	footprintZ = 1,
 
-	reclaimable = true,
 	blocking = true,
+	burnable = true,
+
+	reclaimable = true,
+	reclaimTime = 25,
 	energy = 100,
+
+	collisionVolumeScales = [[20 42 20]],
+	collisionVolumeType = [[cylY]],
 
 	customParams = {
 		is_tree = true,
