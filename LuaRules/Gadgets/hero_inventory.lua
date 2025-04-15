@@ -121,6 +121,7 @@ else
 
 	---@param type "unit" | "feature"
 	---@param id UnitID | FeatureID
+	---@return number | nil
 	function gadget:DefaultCommand(type, id)
 		if type == "feature" then
 			if IsItem(id) then

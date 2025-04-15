@@ -13,8 +13,8 @@ return lowerkeys({
 		movementClass = [[KBOT2]],
 		noAutoFire = false,
 		-- allowNonBlockingAim = true,
-		objectName = [[spherebot.s3o]],
-		script = [[cloakraid.lua]],
+		objectName = [[mbot.s3o]],
+		script = [[shieldraid.lua]],
 
 		canmove = 1,
 		canattack = 1,
@@ -22,6 +22,14 @@ return lowerkeys({
 		sightDistance = 560,
 		speed = 115.5,
 		turnRate = 3000,
+
+		builder = true,
+		workerTime = 1,
+
+		canReclaim = true,
+		reclaimspeed = 1,
+		harvestStorage = 50,
+		harvestEnergyStorage = 20,
 
 		collisionVolumeOffsets = [[0 -2 0]],
 		collisionVolumeScales = [[18 28 18]],
