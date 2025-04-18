@@ -1,18 +1,18 @@
-include 'constants.lua'
+include("constants.lua")
 
-local base = piece 'base'
-local head = piece 'head'
-local l_gun = piece 'l_gun'
-local l_gun_barr = piece 'l_gun_barr'
-local r_gun = piece 'r_gun'
-local r_gun_barr = piece 'r_gun_barr'
-local l_thigh, l_leg, l_foot = piece('l_thigh', 'l_leg', 'l_foot')
-local r_thigh, r_leg, r_foot = piece('r_thigh', 'r_leg', 'r_foot')
-local leftLeg = { thigh=piece 'l_thigh', shin=piece'l_leg', foot=piece'l_foot' }
-local rightLeg = { thigh=piece 'r_thigh', shin=piece'r_leg', foot=piece'r_foot' }
+local base = piece("base")
+local head = piece("head")
+local l_gun = piece("l_gun")
+local l_gun_barr = piece("l_gun_barr")
+local r_gun = piece("r_gun")
+local r_gun_barr = piece("r_gun_barr")
+local l_thigh, l_leg, l_foot = piece("l_thigh", "l_leg", "l_foot")
+local r_thigh, r_leg, r_foot = piece("r_thigh", "r_leg", "r_foot")
+local leftLeg = { thigh = piece("l_thigh"), shin = piece("l_leg"), foot = piece("l_foot") }
+local rightLeg = { thigh = piece("r_thigh"), shin = piece("r_leg"), foot = piece("r_foot") }
 
 -- constants
-local smokePiece = {head}
+local smokePiece = { head }
 
 -- signals
 local SIG_WALK = 1
@@ -35,13 +35,13 @@ local function Step(front, back)
 	Turn(front.foot, x_axis, math.rad(70))
 	Move(base, y_axis, -0.5, 9)
 	Move(base, z_axis, -1, 5)
-	
+
 	if front == leftLeg then
 		Turn(base, z_axis, math.rad(8), math.rad(30))
 	else
 		Turn(base, z_axis, math.rad(-8), math.rad(30))
 	end
-	
+
 	Sleep(200)
 end
 
@@ -60,10 +60,10 @@ function script.Create()
 	-- StartThread(GG.Script.SmokeUnit, unitID, smokePiece)
 	Turn(rightLeg.thigh, x_axis, math.rad(60))
 	Turn(leftLeg.thigh, x_axis, math.rad(60))
-				
+
 	Move(rightLeg.shin, z_axis, 0)
 	Move(leftLeg.shin, z_axis, 0)
-	
+
 	Turn(rightLeg.foot, x_axis, math.rad(30))
 	Turn(leftLeg.foot, x_axis, math.rad(30))
 end
@@ -71,16 +71,16 @@ end
 local function Stopping()
 	Signal(SIG_WALK)
 	SetSignalMask(SIG_WALK)
-	
+
 	Turn(rightLeg.thigh, x_axis, math.rad(60), math.rad(200))
 	Turn(leftLeg.thigh, x_axis, math.rad(60), math.rad(200))
-				
+
 	Move(rightLeg.shin, z_axis, 0, 200)
 	Move(leftLeg.shin, z_axis, 0, 200)
-	
+
 	Turn(rightLeg.foot, x_axis, math.rad(30), math.rad(200))
 	Turn(leftLeg.foot, x_axis, math.rad(30), math.rad(200))
-	
+
 	Move(base, y_axis, 0, 200)
 	Move(base, z_axis, 0, 200)
 	Turn(base, z_axis, 0, math.rad(200))
@@ -146,7 +146,7 @@ function script.EndBurst(num)
 end
 
 function script.Killed(recentDamage, maxHealth)
-	local severity = recentDamage/maxHealth
+	local severity = recentDamage / maxHealth
 	if severity <= 0.25 then
 		Explode(head, SFX.NONE)
 		Explode(l_gun_barr, SFX.NONE)
@@ -190,4 +190,13 @@ function script.Killed(recentDamage, maxHealth)
 		Explode(head, SFX.FALL + SFX.SMOKE + SFX.SMOKE + SFX.EXPLODE_ON_HIT)
 		return 2
 	end
+end
+
+function script.StartBuilding(heading, pitch)
+	-- TODO: This is where you would add your unpack / point towards animation
+	SetUnitValue(COB.INBUILDSTANCE, true)
+end
+function script.StopBuilding()
+	-- TODO: This is where you would add your pack-up animation
+	SetUnitValue(COB.INBUILDSTANCE, false)
 end
