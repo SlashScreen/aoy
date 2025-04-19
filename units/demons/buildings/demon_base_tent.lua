@@ -7,18 +7,21 @@ return lowerkeys({
 		footprintZ = 4,
 
 		objectName = "buildings/demon/demon_base_tent.s3o",
+		script = "scripts/demons/buildings/demon_base_tent.lua",
 		health = 1000,
+		metalCost = 150,
 
 		canMove = 0,
 		speed = 0,
 		sightDistance = 560,
 
-		buolder = true,
+		builder = true,
+		workerTime = 5.0,
 
 		collisionVolumeOffsets = [[0 -8 -25]],
 		collisionVolumeScales = [[110 46 0]],
 		collisionVolumeType = [[cylY]],
-		yardmap = "oooo oooo oooo oooo",
+		yardmap = "yyyy yyyy yyyy yyyy",
 
 		buildOptions = {
 			[[demon_engineer]],

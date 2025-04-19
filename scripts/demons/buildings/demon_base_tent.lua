@@ -10,7 +10,7 @@ end
 function script.Create() end
 
 function script.QueryBuildInfo()
-	return nil -- TODO
+	return 0 -- TODO
 end
 
 function script.Killed(recentDamage, maxHealth) end
