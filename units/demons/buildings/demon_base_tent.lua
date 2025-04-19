@@ -13,15 +13,13 @@ return lowerkeys({
 		speed = 0,
 		sightDistance = 560,
 
-		buolder = true,
-
 		collisionVolumeOffsets = [[0 -8 -25]],
 		collisionVolumeScales = [[110 46 0]],
 		collisionVolumeType = [[cylY]],
 		yardmap = "oooo oooo oooo oooo",
 
-		buildOptions = {
-			[[demon_engineer]],
+		customParams = {
+			build_1 = [[demon_engineer]],
 		},
 	},
 })
