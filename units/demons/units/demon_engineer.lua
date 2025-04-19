@@ -15,6 +15,7 @@ return lowerkeys({
 		-- allowNonBlockingAim = true,
 		objectName = [[mbot.s3o]],
 		script = [[shieldraid.lua]],
+		buildPic = [[demon/engineer_placeholder.dds]],
 
 		canmove = 1,
 		canattack = 1,
