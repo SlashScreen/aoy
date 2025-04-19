@@ -41,6 +41,10 @@ return lowerkeys({
 		selfDestructAs = "",
 
 		weapons = {},
+		
+		customParams = {
+			build_time = 10,
+		},
 
 		customdefs = {
 			can_chop = true,
