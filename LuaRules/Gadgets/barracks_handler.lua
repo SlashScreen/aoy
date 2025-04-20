@@ -29,7 +29,13 @@ local function SetupConstruction(unitID, ud, bud)
 		type = CMDTYPE.ICON,
 		name = "Build " .. bud.humanName,
 		action = "build_" .. bud.name,
-		tooltip = "Build " .. bud.humanName .. " for " .. bud.metalCost .. " metal in " .. bud.customParams.build_time .. " seconds",
+		tooltip = "Build "
+			.. bud.humanName
+			.. " for "
+			.. bud.metalCost
+			.. " metal in "
+			.. bud.customParams.build_time
+			.. " seconds",
 	}
 	Spring.InsertUnitCmdDesc(unitID, buildCmd)
 end
@@ -38,6 +44,7 @@ local function SetupConstructionOptions(unitID, ud)
 	local index = 1
 	local option = ud.customParams["build_" .. index]
 	local canBuild = {}
+
 	while option do
 		local bud = UnitDefNames[option]
 		SetupConstruction(unitID, ud, bud)
@@ -45,11 +52,13 @@ local function SetupConstructionOptions(unitID, ud)
 		index = index + 1
 		option = ud.customParams["build_" .. index]
 	end
+
 	local barracks = {
 		queue = {},
 		nextFinishFrame = false,
 		canBuild = canBuild,
 	}
+
 	IterableMap.Add(barrackUnits, unitID, barracks)
 end
 
@@ -62,19 +71,22 @@ end
 
 local function CreateUnitNear(ox, oy, oz, unitDefID, teamID)
 	local range = 20
-	local x, z = ox + range*(math.random() - 0.5), oz + range*(math.random() - 0.5)
+	local x, z = ox + range * (math.random() - 0.5), oz + range * (math.random() - 0.5)
 	local tries = 0
+
 	while not Spring.TestMoveOrder(unitDefID, x, 0, z) and tries < 100 do
-		x, z = ox + range*(math.random() - 0.5), oz + range*(math.random() - 0.5)
+		x, z = ox + range * (math.random() - 0.5), oz + range * (math.random() - 0.5)
 		range = range + 5
 		tries = tries + 1
 	end
+
 	local y = Spring.GetGroundHeight(x, z)
 	Spring.CreateUnit(unitDefID, x, y, z, 0, teamID)
 end
 
 local function UpdateBarracksQueue(unitID, barracks, index, frame)
 	frame = frame or Spring.GetGameFrame()
+
 	if barracks.nextFinishFrame and frame >= barracks.nextFinishFrame then
 		local buildUnitDefID = barracks.queue[1]
 		local ux, uy, uz = Spring.GetUnitPosition(unitID)
@@ -82,19 +94,22 @@ local function UpdateBarracksQueue(unitID, barracks, index, frame)
 		barracks.nextFinishFrame = false
 		table.remove(barracks.queue, 1) -- Shifts down the queue, I hope
 	end
+
 	if barracks.queue[1] and not barracks.nextFinishFrame then
 		local buildUnitDefID = barracks.queue[1]
 		local bud = UnitDefs[buildUnitDefID]
 		barracks.nextFinishFrame = frame + bud.customParams.build_time * FRAMES_PER_SECOND
 	end
-	
-	if frame%30 == 0 then
+
+	if frame % 30 == 0 then
 		local ux, uy, uz = Spring.GetUnitPosition(unitID)
 		Spring.MarkerErasePosition(ux, uy, uz)
 	end
-	if frame%30 == 1 then
+
+	if frame % 30 == 1 then
 		local ux, uy, uz = Spring.GetUnitPosition(unitID)
 		local progress = "-"
+
 		if barracks.nextFinishFrame then
 			local buildUnitDefID = barracks.queue[1]
 			local bud = UnitDefs[buildUnitDefID]
@@ -111,6 +126,7 @@ local function HandleConstruction(unitID, unitDefID, teamID, cmdID, cmdOptions)
 	if not barracks.canBuild[buildUnitDefID] then
 		return
 	end
+
 	local bud = UnitDefs[buildUnitDefID]
 	local cost = bud.metalCost
 	if cmdOptions.right then
@@ -143,7 +159,11 @@ function gadget:GameFrame(frame)
 end
 
 function gadget:AllowCommand(unitID, unitDefID, teamID, cmdID, cmdParams, cmdOptions, cmdTag, synced)
-	if IterableMap.Get(barrackUnits, unitID) and cmdID >= CMD_BUILD_UNIT_RANGE and cmdID <= CMD_BUILD_UNIT_RANGE_UPPER then
+	if
+		IterableMap.Get(barrackUnits, unitID)
+		and cmdID >= CMD_BUILD_UNIT_RANGE
+		and cmdID <= CMD_BUILD_UNIT_RANGE_UPPER
+	then
 		HandleConstruction(unitID, unitDefID, teamID, cmdID, cmdOptions)
 		return false
 	end
