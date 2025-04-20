@@ -1,9 +1,6 @@
 --- Grid module
 
---- Grid fields.
--- Inherits from LayoutPanel.
--- @see layoutpanel.LayoutPanel
--- @table Grid
+--- @class Grid : LayoutPanel
 Grid = LayoutPanel:Inherit({
 	classname = "grid",
 	resizeItems = true,

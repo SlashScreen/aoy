@@ -1,5 +1,3 @@
----@alias Color {r:number, g:number, b:number, a:number}
-
 local includes = {
 	--"headers/autolocalizer.lua",
 	"headers/util.lua",

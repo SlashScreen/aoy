@@ -2,12 +2,10 @@
 
 --- Colorbars module
 
---- Colorbar fields.
--- Inherits from Control.
--- @see control.Control
--- @table Colorbars
--- @tparam {r,g,b,a} color color table, (default {1,1,1,1})
--- @tparam {func1,func2,...} OnChange listener functions for color changes, (default {})
+---@class ColorBars : Control
+---@field color Color color table, (default {1,1,1,1})
+---@field OnChange function[] listener functions for color changes, (default {})
+
 Colorbars = Control:Inherit({
 	classname = "colorbars",
 	color = { 1, 1, 1, 1 },

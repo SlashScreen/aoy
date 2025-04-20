@@ -1,0 +1,52 @@
+--- @meta
+
+--- @module "controls/button"
+--- @module "controls/checkbox"
+--- @module "controls/colorbars"
+--- @module "controls/combobox"
+--- @module "controls/editbox"
+--- @module "controls/font"
+--- @module "controls/grid"
+--- @module "controls/imagelistview"
+--- @module "controls/label"
+--- @module "controls/line"
+--- @module "controls/LayoutPanel"
+--- @module "controls/multiprogressbar"
+--- @module "controls/panel"
+--- @module "controls/scale"
+--- @module "controls/screen"
+--- @module "controls/scrollpanel"
+--- @module "controls/slider"
+--- @module "controls/stackpanel"
+--- @module "controls/tabbaritem"
+--- @module "controls/tabpanel"
+--- @module "controls/textbox"
+--- @module "controls/trackbar"
+
+--- @alias Chili {
+--- Button: Button,
+--- Checkbox: Checkbox,
+--- ColorBars: ColorBars,
+--- ComboBox: ComboBox,
+--- EditBox: EditBox,
+--- Font: Font,
+--- Grid: Grid,
+--- ImageListView: ImageListView,
+--- Label: Label,
+--- LayoutPanel: LayoutPanel,
+--- Line: Line,
+--- MultiProgressBar: MultiProgressBar,
+--- Panel: Panel,
+--- Scale: Scale,
+--- Screen: Screen,
+--- ScrollPanel: ScrollPanel,
+--- StackPanel: StackPanel,
+--- TabBarItem: TabBarItem,
+--- TabPanel: TabPanel,
+--- TextBox: TextBox,
+--- Trackbar: Trackbar,
+--- Window: Window,
+--- Screen0: Screen,
+--- }
+
+--- @alias Color { r: number, g: number, b: number, a: number? } Color table with red, green, blue, and optional alpha components.

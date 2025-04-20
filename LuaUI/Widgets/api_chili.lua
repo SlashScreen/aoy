@@ -1,3 +1,4 @@
+--- @module "controls/typedefs.lua"
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -20,7 +21,9 @@ end
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+--- @type Chili
 local Chili
+--- @type Screen
 local screen0
 local th
 local tk
@@ -51,6 +54,7 @@ function widget:Initialize()
 	tf = Chili.FontHandler
 
 	--// Export Widget Globals
+	--- @type Chili
 	WG.Chili = Chili
 	WG.Chili.Screen0 = screen0
 

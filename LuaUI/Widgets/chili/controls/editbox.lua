@@ -1,19 +1,16 @@
 --//=============================================================================
 
---- EditBox module
+---@class EditBox : Control
+---Inherits from Control.
+---@field cursorColor Color cursor color, (default {0,0,1,0.7})
+---@field selectionColor Color selection color, (default {0,1,1,0.3})
+---@field align string? alignment, (default "left")
+---@field valign string? vertical alignment, (default "linecenter")
+---@field text string? text contained in the editbox, (default "")
+---@field hint string? hint to be displayed when there is no text and the control isn't focused, (default "")
+---@field cursor integer? cursor position, (default 1)
+---@field passwordInput boolean? specifies whether the text should be treated as a password
 
---- EditBox fields.
--- Inherits from Control.
--- @see control.Control
--- @table EditBox
--- @tparam {r,g,b,a} cursorColor cursor color, (default {0,0,1,0.7})
--- @tparam {r,g,b,a} selectionColor selection color, (default {0,1,1,0.3})
--- @string[opt="left"] align alignment
--- @string[opt="linecenter"] valign vertical alignment
--- @string[opt=""] text text contained in the editbox
--- @string[opt=""] hint hint to be displayed when there is no text and the control isn't focused
--- @int[opt=1] cursor cursor position
--- @bool passwordInput specifies whether the text should be treated as a password
 EditBox = Control:Inherit({
 	classname = "editbox",
 

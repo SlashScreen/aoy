@@ -1,13 +1,11 @@
 --//=============================================================================
 
---- ImageListView module
+--- @class ImageListView : LayoutPanel
+--- @field dir string initial directory
+--- @field OnDirChange table<function> table of function listeners for directory change (default {})
+--- @field iconX number width of the image icons (default 64)
+--- @field iconY number height of the image icons (default 64)
 
---- ImageListView fields.
--- Inherits from LayoutPanel.
--- @see layoutpanel.LayoutPanel
--- @table ImageListView
--- @string[opt=""] dir initial directory
--- @tparam {func1,func2,...} OnDirChange table of function listeners for directory change (default {})
 ImageListView = LayoutPanel:Inherit({
 	classname = "imagelistview",
 

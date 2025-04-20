@@ -2,15 +2,13 @@
 
 --- Trackbar module
 
---- Trackbar fields.
--- Inherits from Control.
--- @see control.Control
--- @table Trackbar
--- @int[opt=0] min minimum value of the Trackbar
--- @int[opt=100] max maximum value of the Trackbar
--- @int[opt=50] value value of the Trackbar
--- @int[opt=50] step step value
--- @tparam {func1,fun2,...} OnChange function listeners for value change (default {})
+--- Trackbar class.
+--- @class Trackbar:Control
+--- @field min integer minimum value of the Trackbar (default 0)
+--- @field max integer maximum value of the Trackbar (default 100)
+--- @field value integer value of the Trackbar (default 50)
+--- @field step integer step value (default 1)
+--- @fields OnChange function[] function listeners for value change
 Trackbar = Control:Inherit({
 	classname = "trackbar",
 	value = 50,
