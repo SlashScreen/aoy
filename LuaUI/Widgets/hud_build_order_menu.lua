@@ -75,10 +75,10 @@ local chiliCache = {}
 local vsx, vsy = sGetWindowGeometry()
 
 local sGetConfigInt = Spring.GetConfigInt
-local buildOrderUI = sGetConfigInt("evo_buildorderui", 1)
+local buildOrderUI = sGetConfigInt("buildorderui", 1)
 local showCost = sGetConfigInt("evo_showcost", 1) == 1
-local showTechReq = sGetConfigInt("evo_showtechreq", 1) == 1
-local showHotkeys = sGetConfigInt("evo_showhotkeys", 1) == 1
+local showTechReq = sGetConfigInt("showtechreq", 1) == 1
+local showHotkeys = sGetConfigInt("showhotkeys", 1) == 1
 WG.buildOrderUI = { updateConfigInt = false }
 
 local fontSize = 14 * widgetScale
@@ -329,11 +329,8 @@ local function createGridWindow(config)
 		end
 	end
 
-	Spring.Echo("gridwindow is: " .. tostring(gridWindow))
-
 	grid.updateGrid = updateGrid
 	gridWindow:Hide()
-	Spring.Echo("grid window created")
 	return grid, gridWindow
 end --createGridWindow
 
@@ -426,7 +423,6 @@ end --applyStateHandler
 --------------------------------------------------------------------------------
 local function InitializeControls()
 	orderGrid, orderWindow = createGridWindow(Config.ordermenu)
-	Spring.Echo("Initialized order window as " .. tostring(orderWindow))
 	buildGrid, buildWindow = createGridWindow(Config.buildmenu)
 end --InitializeControls
 
