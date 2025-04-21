@@ -1,16 +1,14 @@
 ---@class TextBox : Control
----@field classname string The class name
 ---@field text string Text content
----@field selStart number Selection start position
----@field selEnd number Selection end position
----@field defaultWidth number Default width
----@field defaultHeight number Default height
 ---@field autoHeight boolean Whether height adjusts to content
 ---@field autoObeyLineHeight boolean Whether to obey line height in autosize
 ---@field align "left"|"center"|"right" Text alignment
 ---@field valign "top"|"ascender"|"center"|"bottom" Vertical alignment
 ---@field font table Font configuration
 ---@field OnTextClick function[] Text click listeners
+---@field _wrappedText string[] Wrapped text lines
+---@field _lines string[] Lines of text, split by newlines
+---@field fontsize number Font size
 TextBox = Control:Inherit({
 	classname = "textbox",
 

@@ -3,16 +3,13 @@
 --- TreeView module
 
 ---@class TreeView : Control
----@field classname string The class name
 ---@field autosize boolean Whether tree auto-sizes
 ---@field minItemHeight number Minimum height of items
----@field defaultWidth string Default width
----@field defaultHeight string Default height
 ---@field selected number|nil Selected node index
 ---@field root TreeViewNode Root node
 ---@field nodes table<number,TreeViewNode> Array of nodes
 ---@field defaultExpanded boolean Whether nodes are expanded by default
----@field OnSelectNode function[] Node selection listeners
+---@field OnSelectNode CallbackFun[] Node selection listeners
 TreeView = Control:Inherit({
 	classname = "treeview",
 

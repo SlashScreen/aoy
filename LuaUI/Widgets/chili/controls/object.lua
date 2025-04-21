@@ -2,28 +2,34 @@
 
 --- Object module
 
----@class Object
+---@class Object: userdata
+---@field name string The name of the object
 ---@field classname string The class name
+---@field defaultWidth number|string Default width of the object
+---@field defaultHeight number|string Default height of the object
 ---@field visible boolean Whether object is visible
 ---@field children table<number,Object> Array of visible children
 ---@field children_hidden table<number,Object> Array of hidden children
 ---@field childrenByName table<string,Object> Map of child name to child
 ---@field preserveChildrenOrder boolean Whether to preserve child order
----@field OnDispose function[] Disposal event listeners
----@field OnClick function[] Click event listeners
----@field OnDblClick function[] Double click event listeners
----@field OnMouseDown function[] Mouse down event listeners
----@field OnMouseUp function[] Mouse up event listeners
----@field OnMouseMove function[] Mouse move event listeners
----@field OnMouseWheel function[] Mouse wheel event listeners
----@field OnMouseOver function[] Mouse over event listeners
----@field OnMouseOut function[] Mouse out event listeners
----@field OnKeyPress function[] Key press event listeners
----@field OnTextInput function[] Text input event listeners
----@field OnFocusUpdate function[] Focus update event listeners
----@field OnHide function[] Hide event listeners
----@field OnShow function[] Show event listeners
+---@field OnDispose CallbackFun[] Disposal event listeners
+---@field OnClick CallbackFun[] Click event listeners
+---@field OnDblClick CallbackFun[] Double click event listeners
+---@field OnMouseDown CallbackFun[] Mouse down event listeners
+---@field OnMouseUp CallbackFun[] Mouse up event listeners
+---@field OnMouseMove CallbackFun[] Mouse move event listeners
+---@field OnMouseWheel CallbackFun[] Mouse wheel event listeners
+---@field OnMouseOver CallbackFun[] Mouse over event listeners
+---@field OnMouseOut CallbackFun[] Mouse out event listeners
+---@field OnKeyPress CallbackFun[] Key press event listeners
+---@field OnTextInput CallbackFun[] Text input event listeners
+---@field OnFocusUpdate CallbackFun[] Focus update event listeners
+---@field OnHide CallbackFun[] Hide event listeners
+---@field OnShow CallbackFun[] Show event listeners
 ---@field disableChildrenHitTest boolean Whether children receive mouse events
+---@field inherited Object?
+---@field parent Object? The parent object
+---@field private _hlinks table<number,Object> Hard links to this object for garbage collection
 Object = {
 	classname = "object",
 	--x         = 0,
@@ -204,6 +210,10 @@ function Object:Clone()
 	return newinst
 end
 
+--- Creates a new class that inherits from this object
+--- @generic T : Object
+--- @param class table Table of new and overriding values
+--- @return T new_class A new class that inherits from this object
 function Object:Inherit(class)
 	class.inherited = self
 

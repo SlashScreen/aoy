@@ -3,15 +3,14 @@
 --- Font module
 
 ---@class Font : Object
----@field classname string The class name
 ---@field font string Font filename
 ---@field size number Font size in pixels
 ---@field outlineWidth number Width of outline
 ---@field outlineWeight number Weight of outline
 ---@field shadow boolean Whether shadow is enabled
 ---@field outline boolean Whether outline is enabled
----@field color number[] Font color {r,g,b,a}
----@field outlineColor number[] Outline color {r,g,b,a}
+---@field color ColorTable Font color {r,g,b,a}
+---@field outlineColor ColorTable Outline color {r,g,b,a}
 ---@field autoOutlineColor boolean Whether to auto-generate outline color
 Font = Object:Inherit({
 	font = fontfile,

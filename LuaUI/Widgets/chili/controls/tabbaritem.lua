@@ -1,11 +1,8 @@
 --//=============================================================================
 
 ---@class TabBarItem : Button
----@field classname string The class name
----@field caption string Item caption
----@field height string Item height
+---@field height string|number Item height
 TabBarItem = Button:Inherit({
-	classname = "tabbaritem",
 	caption = "tab",
 	height = "100%",
 })

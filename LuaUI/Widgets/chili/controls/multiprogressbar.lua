@@ -1,12 +1,20 @@
 --//=============================================================================
 
----@class MultiProgressBar : Control
+---@class Multiprogressbar : Control
 ---@field drawBorder boolean? should the border be drawn?
 ---@field borderColor {r:number, g:number, b:number, a:number}? specifies the border color (default: {1,0,0,1})
 ---@field orientation "horizontal"|"vertical"? orientation of the progress bar
 ---@field reverse boolean? reverse drawing orientation
 ---@field scaleFunction fun(p: number):number? scaling function that takes 0-1 and must return 0-1
-
+---@field bars {
+---color1: Color,
+---color2: Color,
+---percent: number,
+---texture: string?,
+---s: number?,
+---t: number?,
+---tileSize: number?,
+---}[] list of bar components to display, each bar is a table with the following fields:
 Multiprogressbar = Control:Inherit({
 	classname = "multiprogressbar",
 

@@ -2,19 +2,8 @@
 
 --- Image module
 
---- Image fields.
--- Inherits from Control.
--- @see button.Button
--- @table Image
--- @tparam {r,g,b,a} color color, (default {1,1,1,1})
--- @string[opt=nil] file path
--- @bool[opt=true] keepAspect aspect should be kept
--- @tparam {func1,func2} OnClick function listeners to be invoked on click (default {})
 ---@class Image : Button
----@field classname string The class name
----@field defaultWidth number Default width (64)
----@field defaultHeight number Default height (64)
----@field padding number[] Padding {left,top,right,bottom}
+---@field padding [number, number, number, number] Padding {left,top,right,bottom}
 ---@field color table Color Color tint {r,g,b,a}
 ---@field file string? Primary image file path
 ---@field file2 string? Secondary image file path
@@ -22,9 +11,7 @@
 ---@field flip2 boolean Whether to flip secondary image vertically
 ---@field keepAspect boolean Whether to maintain aspect ratio
 ---@field useRTT boolean Whether to use render-to-texture
----@field OnClick function[] Click event listeners
----@field width number Control width
----@field height number Control height
+---@field OnClick CallbackFun[] Click event listeners
 Image = Button:Inherit({
 	classname = "image",
 

@@ -3,8 +3,7 @@
 --- ScrollPanel module
 
 ---@class ScrollPanel : Control
----@field classname string The class name
----@field backgroundColor number[] Background color {r,g,b,a}
+---@field backgroundColor ColorTable Background color {r,g,b,a}
 ---@field scrollbarSize number Size of scrollbars
 ---@field scrollPosX number Horizontal scroll position
 ---@field scrollPosY number Vertical scroll position
@@ -13,9 +12,6 @@
 ---@field verticalScrollbar boolean Whether vertical scrollbar is shown
 ---@field horizontalScrollbar boolean Whether horizontal scrollbar is shown
 ---@field ignoreMouseWheel boolean Whether to ignore mouse wheel events
----@field contentArea table Content area {left,top,right,bottom}
----@field clientArea table Client area {left,top,right,bottom}
----@field OnScroll function[] Scroll event listeners
 ScrollPanel = Control:Inherit({
 	classname = "scrollpanel",
 	padding = { 0, 0, 0, 0 },

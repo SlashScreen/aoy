@@ -3,16 +3,15 @@
 --- Progressbar module
 
 ---@class Progressbar : Control
----@field classname string The class name
 ---@field min number Minimum value
 ---@field max number Maximum value
 ---@field value number Current value
----@field color table Color {r,g,b,a}
----@field backgroundColor table Background color {r,g,b,a}
+---@field color ColorTable Color {r,g,b,a}
+---@field backgroundColor ColorTable Background color {r,g,b,a}
 ---@field orientation "horizontal"|"vertical" Bar orientation
 ---@field reverse boolean Whether to fill in reverse direction
 ---@field noSkin boolean Whether to use skin
----@field OnChange function[] Value change listeners
+---@field OnChange CallbackFun[] Value change listeners
 Progressbar = Control:Inherit({
 	classname = "progressbar",
 

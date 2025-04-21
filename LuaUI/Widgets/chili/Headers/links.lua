@@ -71,7 +71,7 @@ end
 --- This prevents the garbage collector from collecting the object until the hard link is garbage collected.
 --- @param obj any The object to create a hard link to.
 --- @param gc function? Optional garbage collection function.
---- @return userdata The hard link.
+--- @return userdata  hlinkThe hard link.
 function MakeHardLink(obj, gc)
 	obj = UnlinkSafe(obj) --// unlink hard-/weak-links -> faster (else it would have to go through multiple metatables)
 

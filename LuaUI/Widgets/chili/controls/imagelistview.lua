@@ -1,11 +1,19 @@
 --//=============================================================================
 
 --- @class ImageListView : LayoutPanel
---- @field dir string initial directory
+--- @field dir string current directory (default "")
+--- @field autosize boolean whether to automatically adjust size based on content (default true)
+--- @field autoArrangeH boolean whether to automatically arrange items horizontally (default false)
+--- @field autoArrangeV boolean whether to automatically arrange items vertically (default false)
+--- @field centerItems boolean whether to center items in the view (default false)
 --- @field OnDirChange table<function> table of function listeners for directory change (default {})
 --- @field iconX number width of the image icons (default 64)
 --- @field iconY number height of the image icons (default 64)
-
+--- @field itemMargin [number, number, number, number] margin around each item (default {1, 1, 1, 1})
+--- @field selectable boolean whether items can be selected (default true)
+--- @field multiSelect boolean whether multiple items can be selected (default true)
+--- @field items table<string> list of items in the view (default {})
+--- @field useRTT boolean whether to use render-to-texture for images (default false)
 ImageListView = LayoutPanel:Inherit({
 	classname = "imagelistview",
 

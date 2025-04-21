@@ -1,13 +1,8 @@
 --- Window module
 
 ---@class Window : Control
----@field classname string The class name
 ---@field draggable boolean Whether window can be dragged
 ---@field resizable boolean Whether window can be resized
----@field minWidth number Minimum width
----@field minHeight number Minimum height 
----@field defaultWidth number Default width
----@field defaultHeight number Default height
 Window = Control:Inherit({
 	classname = "window",
 	resizable = true,

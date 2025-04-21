@@ -8,7 +8,9 @@
 --- @field max integer maximum value of the Trackbar (default 100)
 --- @field value integer value of the Trackbar (default 50)
 --- @field step integer step value (default 1)
---- @fields OnChange function[] function listeners for value change
+--- @fields OnChange CallbackFun[] function listeners for value change
+--- @field useValueTooltip boolean if true, tooltip will show the current value (default true)
+--- @field hitpadding [number, number, number, number] padding around the trackbar for hit detection (default {0, 0, 0, 0})
 Trackbar = Control:Inherit({
 	classname = "trackbar",
 	value = 50,

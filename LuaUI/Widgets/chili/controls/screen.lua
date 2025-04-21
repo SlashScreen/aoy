@@ -1,16 +1,18 @@
 --- Screen module
 
---- Screen fields.
--- Inherits from Object.
--- @see object.Object
--- @table Screen
--- @int[opt=0] x x position
--- @int[opt=0] y y position
--- @int[opt=0] width width
--- @int[opt=0] height height
--- @tparam control.Control activeControl active control
--- @tparam control.Control focusedControl focused control
--- @tparam control.Control hoveredControl hovered control
+--- @class Screen: Object
+--- @field x integer x position (default: 0)
+--- @field y integer y position (default: 0)
+--- @field width integer width (default: 0)
+--- @field height integer height (default: 0)
+--- @field activeControl Control active control
+--- @field focusedControl Control focused control
+--- @field hoveredControl Control hovered control
+--- @field currentTooltip Control current tooltip control
+--- @field _lastHoveredControl Control last hovered control
+--- @field _lastClicked integer last clicked timer
+--- @field _lastClickedX integer last clicked x position
+--- @field _lastClickedY integer last clicked y position
 Screen = Object:Inherit({
 	--Screen = Control:Inherit{
 	classname = "screen",

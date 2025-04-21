@@ -1,17 +1,15 @@
 --//=============================================================================
 
 ---@class TreeViewNode : Control
----@field classname string The class name
----@field caption string Node caption
 ---@field expanded boolean Whether node is expanded
 ---@field root boolean Whether node is root node
----@field padding number[] Padding {left,top,right,bottom}
 ---@field nodes table<number,TreeViewNode> Child nodes
 ---@field treeview TreeView Parent treeview
 ---@field _nodes_hidden table<number,TreeViewNode> Hidden nodes when collapsed
----@field OnSelectChange function[] Selection change listeners
----@field OnCollapse function[] Node collapse listeners
----@field OnExpand function[] Node expand listeners
+---@field OnSelectChange CallbackFun[] Selection change listeners
+---@field OnCollapse CallbackFun[] Node collapse listeners
+---@field OnExpand CallbackFun[] Node expand listeners
+---@field OnDraw CallbackFun[] Node draw listeners
 TreeViewNode = Control:Inherit({
 	classname = "treeviewnode",
 

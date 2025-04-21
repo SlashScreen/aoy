@@ -3,9 +3,8 @@
 --- Colorbars module
 
 ---@class ColorBars : Control
----@field color Color color table, (default {1,1,1,1})
----@field OnChange function[] listener functions for color changes, (default {})
-
+---@field color ColorTable color table, (default {1,1,1,1})
+---@field OnChange CallbackFun[] listener functions for color changes, (default {})
 Colorbars = Control:Inherit({
 	classname = "colorbars",
 	color = { 1, 1, 1, 1 },

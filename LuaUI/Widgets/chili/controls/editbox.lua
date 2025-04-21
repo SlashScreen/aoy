@@ -1,16 +1,19 @@
 --//=============================================================================
 
 ---@class EditBox : Control
----Inherits from Control.
 ---@field cursorColor Color cursor color, (default {0,0,1,0.7})
 ---@field selectionColor Color selection color, (default {0,1,1,0.3})
----@field align string? alignment, (default "left")
----@field valign string? vertical alignment, (default "linecenter")
----@field text string? text contained in the editbox, (default "")
----@field hint string? hint to be displayed when there is no text and the control isn't focused, (default "")
----@field cursor integer? cursor position, (default 1)
----@field passwordInput boolean? specifies whether the text should be treated as a password
-
+---@field align "left"|"center"|"right" alignment, (default "left")
+---@field valign "linecenter"|"center"|"top"|"bottom" vertical alignment, (default "linecenter")
+---@field text string text contained in the editbox, (default "")
+---@field hint string hint to be displayed when there is no text and the control isn't focused, (default "")
+---@field cursor integer cursor position, (default 1)
+---@field passwordInput boolean specifies whether the text should be treated as a password
+---@field offset integer offset of the text, (default 1)
+---@field selStart integer? start of the selection, (default nil)
+---@field selEnd integer? end of the selection, (default nil)
+---@field allowUnicode boolean specifies whether the editbox should accept unicode characters, (default true)
+---@field hintFont Font font used for the hint
 EditBox = Control:Inherit({
 	classname = "editbox",
 

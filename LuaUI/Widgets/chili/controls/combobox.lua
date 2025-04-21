@@ -3,13 +3,9 @@
 --- ComboBox module
 
 ---@class ComboBox : Button
----@field classname string The class name
----@field caption string Display caption
----@field defaultWidth number Default width
----@field defaultHeight number Default height
 ---@field items table<number,string|table> Items in the ComboBox
 ---@field selected number ID of the selected item
----@field OnSelect function[] Listener functions for selection changes
+---@field OnSelect CallbackFun[] Listener functions for selection changes
 ---@field maxDropDownHeight number Maximum height of dropdown
 ---@field minDropDownHeight number Minimum height of dropdown
 ---@field maxDropDownWidth number Maximum width of dropdown

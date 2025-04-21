@@ -7,8 +7,8 @@
 ---@field defaultWidth number Default width
 ---@field defaultHeight number Default height
 ---@field fontsize number Font size in pixels
----@field scaleFunction function|nil Custom scale function (takes 0-1, returns 0-1)
----@field color number[] Scale color {r,g,b,a}
+---@field scaleFunction fun(x:number):number Custom scale function (takes 0-1, returns 0-1)
+---@field color ColorTable Scale color {r,g,b,a}
 Scale = Control:Inherit({
 	classname = "scale",
 	min = -50,

@@ -1,19 +1,15 @@
 --//=============================================================================
 
 ---@class TabBar : LayoutPanel
----@field classname string The class name
----@field orientation "horizontal" Orientation of tabs
+---@field orientation "horizontal"|"vertical" Orientation of tabs
 ---@field resizeItems boolean Whether items resize
 ---@field centerItems boolean Whether items are centered
----@field padding number[] Padding {left,top,right,bottom}
----@field itemPadding number[] Item padding {left,top,right,bottom}
----@field itemMargin number[] Item margin {left,top,right,bottom}
 ---@field minItemWidth number Minimum item width
 ---@field minItemHeight number Minimum item height
 ---@field tabs table<number,string> Tab captions
 ---@field selected string|nil Selected tab name
 ---@field selected_obj TabBarItem|nil Selected tab object
----@field OnChange function[] Selection change listeners
+---@field OnChange CallbackFun[] Selection change listeners
 TabBar = LayoutPanel:Inherit({
 	classname = "tabbar",
 	orientation = "horizontal",

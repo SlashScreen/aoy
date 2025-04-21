@@ -3,11 +3,8 @@
 --- StackPanel module
 
 ---@class StackPanel : LayoutPanel
----@field classname string The class name
 ---@field orientation "vertical"|"horizontal" Panel orientation
 ---@field resizeItems boolean Whether to resize items
----@field itemPadding number[] Item padding {left,top,right,bottom}
----@field itemMargin number[] Item margin {left,top,right,bottom}
 StackPanel = LayoutPanel:Inherit({
 	classname = "stackpanel",
 	orientation = "vertical",

@@ -2,34 +2,58 @@
 
 --- Control module
 
+local fontfile = LUAUI_DIRNAME .. "fonts/" .. Spring.GetConfigString("ui_font", "JosefinSans-SemiBold.ttf")
+local fontfile2 = LUAUI_DIRNAME .. "fonts/" .. Spring.GetConfigString("ui_font2", "JosefinSans-Bold.ttf")
+
 ---@class Control : Object
 ---@field classname string The class name
----@field padding number[] Table of padding {left,top,right,bottom}
+---@field padding [number, number, number, number] Table of padding {left,top,right,bottom}
 ---@field borderThickness number Border thickness in pixels
----@field borderColor number[] Border color {r,g,b,a}
----@field borderColor2 number[] Secondary border color {r,g,b,a}
----@field backgroundColor number[] Background color {r,g,b,a}
----@field focusColor number[] Focus color {r,g,b,a}
+---@field borderColor ColorTable Border color
+---@field borderColor2 ColorTable Secondary border color
+---@field backgroundColor ColorTable Background color
+---@field focusColor ColorTable Focus color
 ---@field autosize boolean Whether size is determined automatically
 ---@field savespace boolean If true with autosize, shrinks control to minimum needed space
----@field resizeGripSize number[] Size of resize grip {width,height}
----@field dragGripSize number[] Size of drag grip {width,height}
+---@field resizeGripSize [number, number] Size of resize grip {width,height}
+---@field dragGripSize [number, number] Size of drag grip {width,height}
 ---@field dragUseGrip boolean Whether to use drag grip
 ---@field draggable boolean Whether control can be dragged
 ---@field resizable boolean Whether control can be resized
+---@field tweakDragUseGrip boolean Whether to use drag grip in tweak mode
+---@field tweakDraggable boolean Whether control can be dragged in tweak mode
+---@field tweakResizable boolean Whether control can be resized in tweak mode
 ---@field minWidth number Minimum width
 ---@field minHeight number Minimum height
 ---@field maxWidth number Maximum width
 ---@field maxHeight number Maximum height
 ---@field fixedRatio boolean Whether width/height ratio is fixed
 ---@field tooltip string? Tooltip text
----@field font table Font configuration
----@field state table Control state (focused,hovered,etc)
----@field OnResize function[] Resize event listeners
-
-local fontfile = LUAUI_DIRNAME .. "fonts/" .. Spring.GetConfigString("ui_font", "JosefinSans-SemiBold.ttf")
-local fontfile2 = LUAUI_DIRNAME .. "fonts/" .. Spring.GetConfigString("ui_font2", "JosefinSans-Bold.ttf")
-
+---@field font {
+---font: string,
+---size: number,
+---shadow: boolean,
+---outline: boolean,
+---outlineWidth: number,
+---outlineWeight: number,
+---color: Color,
+---outlineColor: Color,
+---autoOutlineColor: boolean,
+---} Font configuration
+---@field state {
+---focused: boolean,
+---hovered: boolean,
+---checked: boolean,
+---selected: boolean, --FIXME implement
+---pressed: boolean,
+---enabled: boolean, --FIXME implement
+---} State of the control
+---@field skin SkinHandler?
+---@field skinName string? Name of the skin
+---@field drawcontrolv2 boolean? Whether to use the new DrawControl gl state
+---@field useRTT boolean Whether to use Render To Texture (RTT)
+---@field useDLists boolean Whether to use Display Lists
+---@field OnResize CallbackFun[] Resize event listeners
 Control = Object:Inherit({
 	classname = "control",
 	padding = { 5, 5, 5, 5 },
@@ -97,7 +121,7 @@ local inherited = this.inherited
 --//=============================================================================
 
 --- Creates a new Control instance.
----@param obj table Configuration object.
+---@param obj Control
 ---@return Control The created control instance.
 function Control:New(obj)
 	--// backward compability

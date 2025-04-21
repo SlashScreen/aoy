@@ -2,12 +2,9 @@
 
 --- TabPanel module
 
---- TabPanel fields.
--- Inherits from LayoutPanel.
--- @see layoutpanel.LayoutPanel
--- @table TabPanel
--- @tparam {tab1,tab2,...} tabs contained in the tab panel, each tab has a .name (string) and a .children field (table of Controls)(default {})
--- @tparam chili.Control currentTab currently visible tab
+--- @class TabPanel : LayoutPanel
+--- @field public tabs table<string, table> A table containing the tabs in the tab panel. Each tab has a `name` (string) and a `children` field (table of Controls).
+--- @field public currentTab Control The currently visible tab.
 TabPanel = LayoutPanel:Inherit({
 	classname = "tabpanel",
 	orientation = "vertical",

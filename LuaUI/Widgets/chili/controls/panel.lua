@@ -1,11 +1,6 @@
 --//=============================================================================
 
---- Panel module
-
---- Panel fields.
--- Inherits from Control.
--- @see control.Control
--- @table Panel
+--- @class Panel : Control
 Panel = Control:Inherit({
 	classname = "panel",
 	defaultWidth = 100,
