@@ -37,6 +37,7 @@
 --- Line: Line,
 --- MultiProgressBar: Multiprogressbar,
 --- Panel: Panel,
+--- Progressbar: Progressbar,
 --- Scale: Scale,
 --- Screen: Screen,
 --- ScrollPanel: ScrollPanel,

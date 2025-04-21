@@ -28,8 +28,8 @@ local inherited = this.inherited
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
---- Set text
---- @param t string Text to set
+--- Set text content of the TextBox
+---@param t string Text to set
 function TextBox:SetText(t)
 	if self.text == t then
 		return
@@ -42,6 +42,10 @@ end
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+--- Split a string by a separator
+---@param s string String to split
+---@param separator string Separator character
+---@return string[] results Table of split substrings
 local function Split(s, separator)
 	local results = {}
 	for part in s:gmatch("[^" .. separator .. "]+") do
@@ -50,7 +54,10 @@ local function Split(s, separator)
 	return results
 end
 
--- remove first n elemets from t, return them
+--- Remove and return the first n elements from a table
+---@param t table Table to remove from
+---@param n integer Number of elements to remove
+---@return table removed The removed elements
 local function Take(t, n)
 	local removed = {}
 	for i = 1, n do
@@ -59,7 +66,9 @@ local function Take(t, n)
 	return removed
 end
 
--- appends t1 to t2 in-place
+--- Append all elements of t2 to t1 in-place
+---@param t1 table Table to append to
+---@param t2 table Table to append from
 local function Append(t1, t2)
 	local l = #t1
 	for i = 1, #t2 do
@@ -70,7 +79,7 @@ end
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
----Updates layout based on content
+--- Updates layout based on content and adjusts height if autoHeight is enabled
 ---@return nil
 function TextBox:UpdateLayout()
 	local font = self.font
@@ -100,6 +109,7 @@ function TextBox:UpdateLayout()
 	end
 end
 
+--- Draws the TextBox control
 function TextBox:DrawControl()
 	local paddx, paddy = unpack4(self.clientArea)
 	local x = paddx

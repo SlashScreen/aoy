@@ -51,6 +51,8 @@ function TreeViewNode:New(obj)
 	return obj
 end
 
+---Sets the parent of this node
+---@param obj Object Parent object
 function TreeViewNode:SetParent(obj)
 	obj = UnlinkSafe(obj)
 	local typ = type(obj)
@@ -138,6 +140,8 @@ function TreeViewNode:Add(item)
 	return newnode
 end
 
+---Selects this node in the treeview
+---@return nil
 function TreeViewNode:Select()
 	if self.root or not self.treeview then
 		return
@@ -204,6 +208,9 @@ end
 
 --//=============================================================================
 
+---Get a child node by caption
+---@param caption string Caption to search for
+---@return TreeViewNode|nil
 function TreeViewNode:GetNodeByCaption(caption)
 	for i = 1, #self.nodes do
 		local n = self.nodes[i]
@@ -218,6 +225,10 @@ function TreeViewNode:GetNodeByCaption(caption)
 	end
 end
 
+---Get a child node by index
+---@param index integer Index to search for
+---@param _i integer Internal index (for recursion)
+---@return TreeViewNode|integer
 function TreeViewNode:GetNodeByIndex(index, _i)
 	for i = 1, #self.nodes do
 		_i = _i + 1
@@ -238,6 +249,8 @@ end
 
 --//=============================================================================
 
+---Update layout for this node and its children
+---@return boolean
 function TreeViewNode:UpdateLayout()
 	local clientWidth = self.clientWidth
 	local children = self.children
@@ -282,6 +295,10 @@ function TreeViewNode:_InNodeButton(x, y)
 	return (nodeTop <= y) and (y - nodeTop < self.padding[1])
 end
 
+---Hit test for TreeViewNode
+---@param x number X coordinate
+---@param y number Y coordinate
+---@return Object|nil
 function TreeViewNode:HitTest(x, y, ...)
 	local obj = inherited.HitTest(self, x, y, ...)
 	if obj then
@@ -292,6 +309,10 @@ function TreeViewNode:HitTest(x, y, ...)
 	--end
 end
 
+---Handle mouse down event
+---@param x number X coordinate
+---@param y number Y coordinate
+---@return Object|nil
 function TreeViewNode:MouseDown(x, y, ...)
 	if self.root then
 		return inherited.MouseDown(self, x, y, ...)
@@ -317,6 +338,10 @@ function TreeViewNode:MouseDown(x, y, ...)
 	end
 end
 
+---Handle mouse click event
+---@param x number X coordinate
+---@param y number Y coordinate
+---@return Object|nil
 function TreeViewNode:MouseClick(x, y, ...)
 	if self.root then
 		return inherited.MouseClick(self, x, y, ...)
@@ -331,6 +356,10 @@ function TreeViewNode:MouseClick(x, y, ...)
 	return obj
 end
 
+---Handle mouse double click event
+---@param x number X coordinate
+---@param y number Y coordinate
+---@return Object|nil
 function TreeViewNode:MouseDblClick(x, y, ...)
 	--//FIXME doesn't get called, related to the FIXME above!
 	if self.root then
@@ -348,18 +377,21 @@ end
 
 --//=============================================================================
 
+---Draw the node (calls skin/theme or listeners)
 function TreeViewNode:DrawNode()
 	if self.treeview then
 		self.treeview.DrawNode(self)
 	end
 end
 
+---Draw the node's children (calls skin/theme or listeners)
 function TreeViewNode:DrawNodeTree()
 	if self.treeview then
 		self.treeview.DrawNodeTree(self)
 	end
 end
 
+---Draw the TreeViewNode control
 function TreeViewNode:DrawControl()
 	if self.root then
 		return
@@ -372,6 +404,7 @@ function TreeViewNode:DrawControl()
 	self:DrawNodeTree()
 end
 
+---Draw children of this node
 function TreeViewNode:DrawChildren()
 	if not (self.expanded or self.root) then
 		self:_DrawInClientArea(self.children[1].Draw, self.children[1])
@@ -383,6 +416,7 @@ function TreeViewNode:DrawChildren()
 	end
 end
 
+---Draw children for list view
 function TreeViewNode:DrawChildrenForList()
 	if not (self.expanded or self.root) then
 		self:_DrawInClientArea(self.children[1].DrawForList, self.children[1])

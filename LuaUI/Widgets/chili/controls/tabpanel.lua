@@ -74,6 +74,8 @@ function TabPanel:New(obj)
 	return obj
 end
 
+---Add a new tab to the TabPanel
+---@param tab table Tab definition (must have .name and .children)
 function TabPanel:AddTab(tab)
 	local tabbar = self.children[1]
 	tabbar:AddChild(
@@ -94,6 +96,8 @@ end
 
 --//=============================================================================
 
+---Change the currently visible tab
+---@param tabname string Name of the tab to show
 function TabPanel:ChangeTab(tabname)
 	if not tabname or not self.tabIndexMapping[tabname] then
 		return

@@ -12,6 +12,8 @@ local inherited = this.inherited
 
 --//=============================================================================
 
+---Set the caption of the TabBarItem
+---@param caption string The new caption
 function TabBarItem:SetCaption(caption)
 	--FIXME inform parent
 	if self.caption == caption then
@@ -23,6 +25,9 @@ end
 
 --//=============================================================================
 
+---Handle mouse down event for TabBarItem
+---@param ... any
+---@return TabBarItem|nil
 function TabBarItem:MouseDown(...)
 	if not self.parent then
 		return

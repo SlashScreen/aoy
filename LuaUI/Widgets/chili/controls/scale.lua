@@ -35,8 +35,8 @@ local function defaultTransform(x)
 	return (math.log(1 + x * 140) / math.log(141))
 end
 
----Draws the scale lines
----@param self Scale Scale instance
+--- Draws the scale lines for the control
+---@param self Scale The scale control instance
 ---@return nil
 local function drawScaleLines(self)
 	local hline = self.y + self.height
@@ -89,6 +89,8 @@ local function drawScaleLines(self)
 	end
 end
 
+--- Draws the Scale control
+---@return nil
 function Scale:DrawControl()
 	gl.Color(self.color)
 	gl.BeginEnd(GL.LINES, drawScaleLines, self)
@@ -106,6 +108,8 @@ end
 
 --//=============================================================================
 
+--- Hit test for Scale (always returns false)
+---@return boolean
 function Scale:HitTest()
 	return false
 end

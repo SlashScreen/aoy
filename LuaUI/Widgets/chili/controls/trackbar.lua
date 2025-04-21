@@ -50,6 +50,9 @@ local function FormatNum(num)
 	end
 end
 
+---Creates a new Trackbar instance
+---@param obj table Configuration object
+---@return Trackbar trackbar The created trackbar
 function Trackbar:New(obj)
 	obj = inherited.New(self, obj)
 
@@ -65,6 +68,9 @@ end
 
 --//=============================================================================
 
+---Clamp a value to the min/max range
+---@param v number Value to clamp
+---@return number clamped Clamped value
 function Trackbar:_Clamp(v)
 	if self.min < self.max then
 		if v < self.min then
@@ -84,6 +90,10 @@ end
 
 --//=============================================================================
 
+---Get percent position along the bar
+---@param x number? X coordinate
+---@param y number? Y coordinate
+---@return number percent Percent along the bar (0-1)
 function Trackbar:_GetPercent(x, y)
 	if x then
 		local pl, pt, pr, pb = unpack4(self.hitpadding)
@@ -106,8 +116,8 @@ end
 --//=============================================================================
 
 --- Sets the minimum and maximum value of the track bar
--- @int[opt=0] min minimum value
--- @int[opt=1] max maximum value (why is 1 the default?)
+---@param min number Minimum value
+---@param max number Maximum value
 function Trackbar:SetMinMax(min, max)
 	self.min = tonumber(min) or 0
 	self.max = tonumber(max) or 1
@@ -115,7 +125,7 @@ function Trackbar:SetMinMax(min, max)
 end
 
 --- Sets the value of the track bar
--- @int v value of the track abr
+---@param v number Value to set
 function Trackbar:SetValue(v)
 	if type(v) ~= "number" then
 		Spring.Log("Chili", "error", "Wrong param to Trackbar:SetValue(number v)")
@@ -139,20 +149,35 @@ end
 
 --//=============================================================================
 
+---Draws the Trackbar control
+---@return nil
 function Trackbar:DrawControl() end
 
 --//=============================================================================
 
+---Hit test for Trackbar (returns self for hit)
+---@return Trackbar
 function Trackbar:HitTest()
 	return self
 end
 
+---Handle mouse down event
+---@param x number X coordinate
+---@param y number Y coordinate
+---@return Trackbar
 function Trackbar:MouseDown(x, y)
 	local percent = self:_GetPercent(x, y)
 	self:SetValue(self.min + percent * (self.max - self.min))
 	return self
 end
 
+---Handle mouse move event
+---@param x number X coordinate
+---@param y number Y coordinate
+---@param dx number Delta X
+---@param dy number Delta Y
+---@param button integer Mouse button
+---@return Trackbar|nil
 function Trackbar:MouseMove(x, y, dx, dy, button)
 	if button == 1 then
 		local percent = self:_GetPercent(x, y)
