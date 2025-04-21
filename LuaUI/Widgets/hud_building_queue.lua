@@ -16,10 +16,14 @@ end
 
 --- @type Chili
 local Chili
---- @type StackPanel
-local queue_panel
+--- @type Window
+local root_window
+--- @type LayoutPanel
+local root_panel
 --- @type Progressbar
 local progress_bar
+--- @type Label
+local test_label
 
 function widget:Initialize()
 	Chili = WG.Chili
@@ -29,35 +33,46 @@ function widget:Initialize()
 		return
 	end
 
-	Spring.Echo("Attempting to initialize queue")
+	root_window = Chili.Window:New({
+		name = "RootWindow",
+		parent = Chili.Screen0,
+	})
 
-	queue_panel = Chili.StackPanel:New({
-		name = "BuildingQueuePanel",
+	root_panel = Chili.LayoutPanel:New({
+		name = "RootPanel",
 		x = 10,
 		y = 10,
-		width = 200,
-		height = 400,
-		resizeItems = false,
-		itemMargin = { 0, 0, 0, 0 },
 	})
+	root_window:AddChild(root_panel)
 
 	progress_bar = Chili.Progressbar:New({
 		name = "BuildingProgressBar",
-		x = 10,
-		y = 420,
+		x = 0,
+		y = 15,
 		width = 200,
 		height = 20,
 		value = 0,
 		maxValue = 100,
 	})
+	root_panel:AddChild(progress_bar)
 
-	queue_panel:AddChild(progress_bar)
+	test_label = Chili.Label:New({
+		name = "TestLabel",
+		caption = "wheeee!",
+		y = 40,
+		height = 20,
+	})
+	root_panel:AddChild(test_label)
+
+	root_window:Show()
 end
 
 function widget:Shutdown()
-	if queue_panel then
-		queue_panel:Dispose()
+	if root_window then
 		progress_bar:Dispose()
+		test_label:Dispose()
+		root_panel:Dispose()
+		root_window:Dispose()
 	end
 end
 

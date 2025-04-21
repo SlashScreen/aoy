@@ -3,10 +3,6 @@
 --- Label module
 
 ---@class Label : Control
----@field classname string The class name
----@field defaultWidth number Default width
----@field defaultHeight number Default height
----@field padding number[] Padding {left,top,right,bottom}
 ---@field autosize boolean Whether label auto-sizes
 ---@field autoObeyLineHeight boolean Whether to obey line height in autosize
 ---@field align "left"|"right"|"center" Text alignment

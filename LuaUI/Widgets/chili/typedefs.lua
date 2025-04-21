@@ -53,3 +53,5 @@
 --- @alias Color { r: number, g: number, b: number, a: number? } Color table with red, green, blue, and optional alpha components.
 --- @alias ColorTable [ number, number, number, number? ] Color table with red, green, blue, and optional alpha components as numbers.
 --- @alias CallbackFun fun(...: any) Callback function type, can be used for event listeners or other callback mechanisms.
+
+--- @class NewObjectParameters
