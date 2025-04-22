@@ -21,6 +21,7 @@ return lowerkeys({
 		yardmap = "yyyy yyyy yyyy yyyy",
 
 		customParams = {
+			is_factory = true,
 			build_1 = [[demon_engineer]],
 		},
 	},
