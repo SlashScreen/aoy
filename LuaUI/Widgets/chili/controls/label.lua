@@ -1,50 +1,49 @@
---//=============================================================================
+--// =============================================================================
 
 --- Label module
 
----@class Label : Control
----@field autosize boolean Whether label auto-sizes
----@field autoObeyLineHeight boolean Whether to obey line height in autosize
----@field align "left"|"right"|"center" Text alignment
----@field valign "linecenter"|"ascender"|"top"|"center"|"bottom" Vertical alignment
----@field caption string Text to display
-Label = Control:Inherit({
+--- Label fields.
+-- Inherits from Control.
+-- @see control.Control
+-- @table Label
+-- @string[opt = "left"] align alignment
+-- @string[opt = "linecenter"] valign vertical alignment
+-- @string[opt = "no text"] caption text to be displayed
+Label = Control:Inherit{
 	classname = "label",
 
-	defaultWidth = 70,
+	defaultWidth  = 70,
 	defaultHeight = 20,
 
-	padding = { 0, 0, 0, 0 },
+	padding = {0, 0, 0, 0},
 
 	autosize = true,
-	autoObeyLineHeight = true, --// (needs autosize) if true, autosize will obey the lineHeight (-> texts with the same line count will have the same height)
+	autoObeyLineHeight = true, --// (needs autosize) if true, autosize will obey the lineHeight (- > texts with the same line count will have the same height)
 
-	align = "left",
-	valign = "linecenter", --// usefull too "ascender"
-	caption = "no text",
-})
+	align    = "left",
+	valign   = "linecenter", --// usefull too "ascender"
+	caption  = "no text",
+
+	noFont = false,
+}
 
 local this = Label
 local inherited = this.inherited
 
---//=============================================================================
+--// =============================================================================
 
----Creates a new Label instance
----@param obj table Configuration object
----@return Label label The created label
 function Label:New(obj)
 	obj = inherited.New(self, obj)
 	obj:SetCaption(obj.caption)
 	return obj
 end
 
---//=============================================================================
+--// =============================================================================
 
----Sets the label caption
----@param newcaption string New caption text
----@return nil
+--- Set the label caption
+-- @string newcaption new caption to be set
 function Label:SetCaption(newcaption)
-	if self.caption == newcaption then
+	if (self.caption == newcaption) then
 		return
 	end
 	self.caption = newcaption
@@ -52,21 +51,20 @@ function Label:SetCaption(newcaption)
 	self:Invalidate()
 end
 
----Updates the label layout
----@return nil
+
 function Label:UpdateLayout()
 	local font = self.font
 
-	if self.autosize then
-		self._caption = self.caption
-		local w = font:GetTextWidth(self.caption)
-		local h, d, numLines = font:GetTextHeight(self.caption)
+	if (self.autosize) then
+		self._caption  = self.caption
+		local w = font:GetTextWidth(self.caption);
+		local h, d, numLines = font:GetTextHeight(self.caption);
 
 		h = h + 1
-		if self.autoObeyLineHeight then
+		if (self.autoObeyLineHeight) then
 			h = math.ceil(numLines * font:GetLineHeight())
 		else
-			h = math.ceil(h - d)
+			h = math.ceil(h-d)
 		end
 
 		if font.shadow then
@@ -101,13 +99,13 @@ function Label:UpdateLayout()
 	end
 end
 
----Draws the label
----@return nil
+--// =============================================================================
+
 function Label:DrawControl()
 	local font = self.font
 	font:DrawInBox(self._caption, 0, 0, self.width, self.height, self.align, self.valign)
 
-	if self.debug then
+	if (self.debug) then
 		gl.Color(0, 1, 0, 0.5)
 		gl.PolygonMode(GL.FRONT_AND_BACK, GL.LINE)
 		gl.LineWidth(2)
@@ -117,4 +115,4 @@ function Label:DrawControl()
 	end
 end
 
---//=============================================================================
+--// =============================================================================

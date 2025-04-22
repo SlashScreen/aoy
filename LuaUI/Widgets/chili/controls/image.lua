@@ -1,75 +1,69 @@
---//=============================================================================
+--// =============================================================================
 
 --- Image module
 
----@class Image : Button
----@field padding [number, number, number, number] Padding {left,top,right,bottom}
----@field color table Color Color tint {r,g,b,a}
----@field file string? Primary image file path
----@field file2 string? Secondary image file path
----@field flip boolean Whether to flip primary image vertically
----@field flip2 boolean Whether to flip secondary image vertically
----@field keepAspect boolean Whether to maintain aspect ratio
----@field useRTT boolean Whether to use render-to-texture
----@field OnClick CallbackFun[] Click event listeners
-Image = Button:Inherit({
+--- Image fields.
+-- Inherits from Control.
+-- @see button.Button
+-- @table Image
+-- @tparam {r, g, b, a} color color, (default {1, 1, 1, 1})
+-- @string[opt = nil] file path
+-- @bool[opt = true] keepAspect aspect should be kept
+-- @tparam {func1, func2} OnClick function listeners to be invoked on click (default {})
+Image = Button:Inherit{
 	classname = "image",
 
-	defaultWidth = 64,
+	defaultWidth  = 64,
 	defaultHeight = 64,
-	padding = { 0, 0, 0, 0 },
-	color = { 1, 1, 1, 1 },
+	padding = {0, 0, 0, 0},
+	color = {1, 1, 1, 1},
+	color2 = nil,
 
-	file = nil,
+	file  = nil,
 	file2 = nil,
 
-	flip = true,
-	flip2 = true,
+	flip  = true;
+	flip2 = true;
+	firstDraw = true,
 
-	keepAspect = true,
+	keepAspect = true;
+	crop = false;
+	
+	checkFileExists = false;
+	keepCheckingForImage = false;
+	fallbackFile = false;
+	imageLoadTime = 3.5; -- Seconds
 
-	useRTT = false,
+	useRTT = false;
 
-	OnClick = {},
-})
+	OnClick  = {},
+
+	noFont = true,
+}
+
+chili_imageAlreadyDrawn = {}
 
 local this = Image
 local inherited = this.inherited
 
----Creates a new Image instance
----@param obj table Configuration object
----@return Image image The created image
-function Image:New(obj)
-	return inherited.New(self, obj)
-end
+--// =============================================================================
 
---//=============================================================================
-
----Draws texture maintaining aspect ratio
----@param x number Left position
----@param y number Top position
----@param w number Width
----@param h number Height
----@param tw number Texture width
----@param th number Texture height
----@param flipy boolean Whether to flip vertically
----@return nil
-local function _DrawTextureAspect(x, y, w, h, tw, th, flipy)
-	local twa = w / tw
-	local tha = h / th
+local function _DrawTextureAspect(x, y, w, h , tw, th, flipy)
+	local twa = w/tw
+	local tha = h/th
 
 	local aspect = 1
-	if twa < tha then
+	if (twa < tha) then
 		aspect = twa
-		y = y + h * 0.5 - th * aspect * 0.5
-		h = th * aspect
+		y = y + h*0.5 - th*aspect*0.5
+		h = th*aspect
 	else
 		aspect = tha
-		x = x + w * 0.5 - tw * aspect * 0.5
-		w = tw * aspect
+		x = x + w*0.5 - tw*aspect*0.5
+		w = tw*aspect
 	end
 
-	local right = math.ceil(x + w)
+	local right  = math.ceil(x + w)
 	local bottom = math.ceil(y + h)
 	x = math.ceil(x)
 	y = math.ceil(y)
@@ -77,79 +71,153 @@ local function _DrawTextureAspect(x, y, w, h, tw, th, flipy)
 	gl.TexRect(x, y, right, bottom, false, flipy)
 end
 
----Draws the image control
----@return nil
+local function _DrawTextureCrop(x, y, w, h , tw, th, flipy)
+	local targetAspect = w/h
+	local imageAspect = tw/th
+
+	local right  = math.ceil(x + w)
+	local bottom = math.ceil(y + h)
+	x = math.ceil(x)
+	y = math.ceil(y)
+
+	local imageX = math.max(0,(1.0 - targetAspect/imageAspect)/2)
+	local imageY = math.max(0,(1.0 - imageAspect/targetAspect)/2)
+
+	if flipy then
+		gl.TexRect(x,y,right,bottom,imageX,imageY,1 -imageX,1-imageY)
+	else
+		gl.TexRect(x,y,right,bottom,imageX,1-imageY,1 -imageX,imageY)
+	end
+end
+
+function Image:ResetImageLoadTimer()
+	self._loadTimer = nil
+end
+
 function Image:DrawControl()
-	if not (self.file or self.file2) then
+	local file = self.file
+	local file2 = self.file2
+	if (not (file or file2)) then
 		return
 	end
-	gl.Color(self.color)
-
-	if self.keepAspect then
-		if self.file2 then
-			TextureHandler.LoadTexture(0, self.file2, self)
-			local texInfo = gl.TextureInfo(self.file2) or { xsize = 1, ysize = 1 }
+	
+	if self.checkFileExists then
+		if self._loadTimer then
+			if Spring.DiffTimers(Spring.GetTimer(), self._loadTimer) > self.imageLoadTime then
+				self.checkFileExists = false
+				if self.keepCheckingForImage then
+					if file then
+						local data = gl.TextureInfo(file)
+						if (not data) or data.ysize == -1 then
+							self.checkFileExists = true
+							self._loadTimer = Spring.GetTimer()
+						end
+					end
+					if file2 then
+						local data = gl.TextureInfo(file2)
+						if (not data) or data.ysize == -1 then
+							self.checkFileExists = true
+							self._loadTimer = Spring.GetTimer()
+						end
+					end
+				end
+			end
+		elseif ((not file) or VFS.FileExists(file)) and ((not file2) or VFS.FileExists(file2)) then
+			self._loadTimer = Spring.GetTimer()
+		end
+	
+		if self.fallbackFile then
+			file = self.fallbackFile
+			file2 = nil
+		else
+			return
+		end
+	end
+	
+	if (self.keepAspect) then
+		if (file2) then
+			gl.Color(self.color2 or self.color)
+			TextureHandler.LoadTexture(0, file2, self)
+			local texInfo = gl.TextureInfo(file2) or {xsize = 1, ysize = 1}
 			local tw, th = texInfo.xsize, texInfo.ysize
 			_DrawTextureAspect(0, 0, self.width, self.height, tw, th, self.flip2)
 		end
-		if self.file then
-			TextureHandler.LoadTexture(0, self.file, self)
-			local texInfo = gl.TextureInfo(self.file) or { xsize = 1, ysize = 1 }
+		if (file) then
+			gl.Color(self.color)
+			TextureHandler.LoadTexture(0, file, self)
+			local texInfo = gl.TextureInfo(file) or {xsize = 1, ysize = 1}
 			local tw, th = texInfo.xsize, texInfo.ysize
 			_DrawTextureAspect(0, 0, self.width, self.height, tw, th, self.flip)
 		end
 	else
-		if self.file2 then
-			TextureHandler.LoadTexture(0, self.file2, self)
-			gl.TexRect(0, 0, self.width, self.height, false, self.flip2)
+		if (self.crop) then
+			-- Don't do the chili_imageAlreadyDrawn white rectangle fix because
+			-- crop already does gl.TextureInfo (although, should it be cached?)
+			if (file2) then
+				gl.Color(self.color2 or self.color)
+				TextureHandler.LoadTexture(0, file2, self)
+				local texInfo = gl.TextureInfo(file2) or {xsize = 1, ysize = 1}
+				local tw, th = texInfo.xsize, texInfo.ysize
+				_DrawTextureCrop(0, 0, self.width, self.height, tw, th, self.flip2)
+			end
+			if (file) then
+				gl.Color(self.color)
+				TextureHandler.LoadTexture(0, file, self)
+				local texInfo = gl.TextureInfo(file) or {xsize = 1, ysize = 1}
+				local tw, th = texInfo.xsize, texInfo.ysize
+				_DrawTextureCrop(0, 0, self.width, self.height, tw, th, self.flip)
+			end
+		else
+			if (file2) then
+				gl.Color(self.color2 or self.color)
+				TextureHandler.LoadTexture(0, file2, self)
+				if not chili_imageAlreadyDrawn[file2] then
+					gl.TextureInfo(file2)
+					chili_imageAlreadyDrawn[file2] = true
+				end
+				gl.TexRect(0, 0, self.width, self.height, false, self.flip2)
+			end
+			if (file) then
+				gl.Color(self.color)
+				TextureHandler.LoadTexture(0, file, self)
+				if not chili_imageAlreadyDrawn[file] then
+					gl.TextureInfo(file)
+					chili_imageAlreadyDrawn[file] = true
+				end
+				gl.TexRect(0, 0, self.width, self.height, false, self.flip)
+			end
 		end
-		if self.file then
-			TextureHandler.LoadTexture(0, self.file, self)
-			gl.TexRect(0, 0, self.width, self.height, false, self.flip)
-		end
+		self.firstDraw = false
 	end
 	gl.Texture(0, false)
 end
 
---//=============================================================================
+--// =============================================================================
 
----Check if image is interactive
----@return boolean|nil isActive Whether image has click handlers
 function Image:IsActive()
 	local onclick = self.OnClick
-	if onclick and onclick[1] then
+	if (onclick and onclick[1]) then
 		return true
 	end
 end
 
----Hit test for the image
----@return Image|boolean self Returns self if hit test succeeds
 function Image:HitTest()
-	--FIXME check if there are any eventhandlers linked (OnClick,OnMouseUp,...)
+	--FIXME check if there are any eventhandlers linked (OnClick, OnMouseUp, ...)
 	return self:IsActive() and self
 end
 
----Handles mouse down event
----@param ... any Additional arguments
----@return Image|Object|boolean self Returns self if handled
 function Image:MouseDown(...)
 	--// we don't use `this` here because it would call the eventhandler of the button class,
 	--// which always returns true, but we just want to do so if a calllistener handled the event
 	return Control.MouseDown(self, ...) or self:IsActive() and self
 end
 
----Handles mouse up event
----@param ... any Additional arguments
----@return Image|Object|boolean self Returns self if handled
 function Image:MouseUp(...)
 	return Control.MouseUp(self, ...) or self:IsActive() and self
 end
 
----Handles mouse click event
----@param ... any Additional arguments
----@return Image|Object|boolean self Returns self if handled
 function Image:MouseClick(...)
 	return Control.MouseClick(self, ...) or self:IsActive() and self
 end
 
---//=============================================================================
+--// =============================================================================

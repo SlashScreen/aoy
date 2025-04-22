@@ -38,10 +38,12 @@ function widget:Initialize()
 		parent = Chili.Screen0,
 	})
 
-	root_panel = Chili.LayoutPanel:New({
+	root_panel = Chili.Control:New({
 		name = "RootPanel",
-		x = 10,
-		y = 10,
+		x = 0,
+		y = 0,
+		right = 0,
+		bottom = 0,
 	})
 	root_window:AddChild(root_panel)
 
@@ -53,16 +55,16 @@ function widget:Initialize()
 		height = 20,
 		value = 0,
 		maxValue = 100,
+		parent = root_panel,
 	})
-	root_panel:AddChild(progress_bar)
 
 	test_label = Chili.Label:New({
 		name = "TestLabel",
 		caption = "wheeee!",
 		y = 40,
 		height = 20,
+		parent = root_panel,
 	})
-	root_panel:AddChild(test_label)
 
 	root_window:Show()
 end

@@ -19,13 +19,13 @@ local includes = {
 	"controls/window.lua",
 	"controls/label.lua",
 	"controls/button.lua",
-	"controls/textbox.lua",
+	"controls/editbox.lua",
+	"controls/textbox.lua", -- uses editbox
 	"controls/checkbox.lua",
 	"controls/trackbar.lua",
 	"controls/colorbars.lua",
 	"controls/scrollpanel.lua",
 	"controls/image.lua",
-	"controls/textbox.lua",
 	"controls/layoutpanel.lua",
 	"controls/grid.lua",
 	"controls/stackpanel.lua",
@@ -36,20 +36,20 @@ local includes = {
 	"controls/panel.lua",
 	"controls/treeviewnode.lua",
 	"controls/treeview.lua",
-	"controls/editbox.lua",
 	"controls/line.lua",
 	"controls/combobox.lua",
 	"controls/tabbaritem.lua",
 	"controls/tabbar.lua",
 	"controls/tabpanel.lua",
+	"controls/detachabletabpanel.lua",
 }
 
 local Chili = widget
 
-Chili.CHILI_DIRNAME = CHILI_DIRNAME or (LUAUI_DIRNAME .. "Widgets/chili/")
-Chili.SKIN_DIRNAME = SKIN_DIRNAME or (CHILI_DIRNAME .. "skins/")
+Chili.CHILI_DIRNAME = CHILI_DIRNAME or ((LUAUI_DIRNAME or LUA_DIRNAME) .. "Widgets/chili/")
+Chili.SKIN_DIRNAME  =  SKIN_DIRNAME or (CHILI_DIRNAME .. "skins/")
 
-if -1 > 0 then
+if (-1 > 0) then
 	Chili = {}
 	-- make the table strict
 	VFS.Include(Chili.CHILI_DIRNAME .. "headers/strict.lua")(Chili, widget)
@@ -59,4 +59,5 @@ for _, file in ipairs(includes) do
 	VFS.Include(Chili.CHILI_DIRNAME .. file, Chili, VFS.RAW_FIRST)
 end
 
-return Chili -- TODO: Needs types somehow.
+
+return Chili
