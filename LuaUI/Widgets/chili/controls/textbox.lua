@@ -1,26 +1,32 @@
----@class TextBox : Control
----@field text string Text content
----@field autoHeight boolean Whether height adjusts to content
----@field autoObeyLineHeight boolean Whether to obey line height in autosize
----@field align "left"|"center"|"right" Text alignment
----@field valign "top"|"ascender"|"center"|"bottom" Vertical alignment
----@field font table Font configuration
----@field OnTextClick function[] Text click listeners
----@field _wrappedText string[] Wrapped text lines
----@field _lines string[] Lines of text, split by newlines
----@field fontsize number Font size
-TextBox = Control:Inherit({
+--- TextBox module
+
+--- TextBox fields.
+-- Inherits from Control.
+-- @see control.Control
+-- @table TextBox
+-- @string[opt = ""] text text contained in the editbox
+-- @bool[opt = true] autoHeight sets height to text size, useful for embedding in scrollboxes
+-- @bool[opt = true] autoObeyLineHeight (needs autoHeight) if true, autoHeight will obey the lineHeight (- > texts with the same line count will have the same height)
+-- @int[opt = 12] fontSize font size
+TextBox = EditBox:Inherit{
 	classname = "textbox",
 
-	padding = { 0, 0, 0, 0 },
+	padding = {0, 0, 0, 0},
 
-	text = "line1\nline2",
-	autoHeight = true,
+	text      = "line1\nline2",
+	autoHeight  = true,
 	autoObeyLineHeight = true,
-	fontsize = 12,
 
-	_lines = {},
-})
+	editable = false,
+	selectable = false,
+	multiline = true,
+	noFont = false,
+	noHint = true,
+
+	borderColor     = {0, 0, 0, 0},
+	focusColor      = {0, 0, 0, 0},
+	backgroundColor = {0, 0, 0, 0},
+}
 
 local this = TextBox
 local inherited = this.inherited
@@ -28,88 +34,6 @@ local inherited = this.inherited
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
---- Set text content of the TextBox
----@param t string Text to set
-function TextBox:SetText(t)
-	if self.text == t then
-		return
-	end
-	self.text = t
-	self:RequestRealign()
-	self:Invalidate() -- seems RequestRealign() doesn't always cause an invalidate
-end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
---- Split a string by a separator
----@param s string String to split
----@param separator string Separator character
----@return string[] results Table of split substrings
-local function Split(s, separator)
-	local results = {}
-	for part in s:gmatch("[^" .. separator .. "]+") do
-		results[#results + 1] = part
-	end
-	return results
-end
-
---- Remove and return the first n elements from a table
----@param t table Table to remove from
----@param n integer Number of elements to remove
----@return table removed The removed elements
-local function Take(t, n)
-	local removed = {}
-	for i = 1, n do
-		removed[#removed + 1] = table.remove(t, 1)
-	end
-	return removed
-end
-
---- Append all elements of t2 to t1 in-place
----@param t1 table Table to append to
----@param t2 table Table to append from
-local function Append(t1, t2)
-	local l = #t1
-	for i = 1, #t2 do
-		t1[i + l] = t2[i]
-	end
-end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
---- Updates layout based on content and adjusts height if autoHeight is enabled
----@return nil
-function TextBox:UpdateLayout()
-	local font = self.font
-	local padding = self.padding
-	local width = self.width - padding[1] - padding[3]
-	local height = self.height - padding[2] - padding[4]
-	if self.autoHeight then
-		height = 1e9
-	end
-
-	self._wrappedText = font:WrapText(self.text, width, height)
-
-	if self.autoHeight then
-		local textHeight, textDescender, numLines = font:GetTextHeight(self._wrappedText)
-		textHeight = textHeight - textDescender
-
-		if self.autoObeyLineHeight then
-			if numLines > 1 then
-				textHeight = numLines * font:GetLineHeight()
-			else
-				--// AscenderHeight = LineHeight w/o such deep chars as 'g','p',...
-				textHeight = math.min(math.max(textHeight, font:GetAscenderHeight()), font:GetLineHeight())
-			end
-		end
-
-		self:Resize(nil, textHeight, true, true)
-	end
-end
-
---- Draws the TextBox control
 function TextBox:DrawControl()
 	local paddx, paddy = unpack4(self.clientArea)
 	local x = paddx
@@ -118,7 +42,7 @@ function TextBox:DrawControl()
 	local font = self.font
 	font:Draw(self._wrappedText, x, y)
 
-	if self.debug then
+	if (self.debug) then
 		gl.Color(0, 1, 0, 0.5)
 		gl.PolygonMode(GL.FRONT_AND_BACK, GL.LINE)
 		gl.LineWidth(2)

@@ -1,84 +1,84 @@
---//=============================================================================
+--// =============================================================================
 
----@class TabBar : LayoutPanel
----@field orientation "horizontal"|"vertical" Orientation of tabs
----@field resizeItems boolean Whether items resize
----@field centerItems boolean Whether items are centered
----@field minItemWidth number Minimum item width
----@field minItemHeight number Minimum item height
----@field tabs table<number,string> Tab captions
----@field selected string|nil Selected tab name
----@field selected_obj TabBarItem|nil Selected tab object
----@field OnChange CallbackFun[] Selection change listeners
-TabBar = LayoutPanel:Inherit({
-	classname = "tabbar",
-	orientation = "horizontal",
-	resizeItems = false,
-	centerItems = false,
-	padding = { 0, 0, 0, 0 },
-	itemPadding = { 0, 0, 0, 0 },
-	itemMargin = { 0, 0, 0, 0 },
-	minItemWidth = 70,
+TabBar = LayoutPanel:Inherit{
+	classname    = "tabbar",
+	orientation  = "horizontal",
+	resizeItems  = false,
+	centerItems  = false,
+	padding      = {0, 0, 0, 0},
+	itemPadding  = {0, 0, 0, 0},
+	itemMargin   = {0, 0, 0, 0},
+	minItemWidth  = 70,
 	minItemHeight = 20,
-	tabs = {},
-	selected = nil,
-	OnChange = {},
-})
+	tabs         = {},
+	selected     = nil,
+	preserveChildrenOrder = true,
+	OnChange     = {},
+}
 
 local this = TabBar
 local inherited = this.inherited
 
---//=============================================================================
+--// =============================================================================
 
----Creates a new TabBar instance
----@param obj table Configuration object
----@return TabBar bar The created tab bar
 function TabBar:New(obj)
 	obj = inherited.New(self, obj)
-	if obj.tabs then
+	if (obj.tabs) then
 		for i = 1, #obj.tabs do
 			obj:AddChild(
-				TabBarItem:New({
-					caption = obj.tabs[i],
+				TabBarItem:New {
+					name = obj.tabs[i].name,
+					caption = obj.tabs[i].caption or obj.tabs[i].name,
+					tooltip = obj.tabs[i].tooltip,
+					font = obj.tabs[i].font,
+					objectOverrideFont = obj.tabs[i].objectOverrideFont,
 					defaultWidth = obj.minItemWidth,
 					defaultHeight = obj.minItemHeight,
-				}) --FIXME inherit font too
+				}
 			)
 		end
 	end
 
-	if not obj.children[1] then
-		obj:AddChild(TabBarItem:New({ caption = "tab" }))
+	if obj.children[1] then
+		obj:Select(obj.selected)
+		self.selected = 1
 	end
-
-	obj:Select(obj.selected)
 
 	return obj
 end
 
---//=============================================================================
+--// =============================================================================
 
----Sets the orientation of the tab bar
----@param orientation "horizontal"|"vertical" New orientation
----@return nil
 function TabBar:SetOrientation(orientation)
 	inherited.SetOrientation(self, orientation)
 end
 
---//=============================================================================
-
----Selects a tab by name
----@param tabname string Name of tab to select
----@return boolean selected Whether tab was found and selected
-function TabBar:Select(tabname)
+--// =============================================================================
+function TabBar:DisableHighlight()
 	for i = 1, #self.children do
 		local c = self.children[i]
-		if c.caption == tabname then
+		c.state.selected = false
+		c:Invalidate()
+	end
+end
+
+function TabBar:EnableHighlight()
+	if self.selected_obj then
+		self.selected_obj.state.selected = true
+		self.selected_obj:Invalidate()
+	end
+end
+
+function TabBar:Select(tabname, highlight)
+	for i = 1, #self.children do
+		local c = self.children[i]
+		if c.name == tabname then
 			if self.selected_obj then
 				self.selected_obj.state.selected = false
 				self.selected_obj:Invalidate()
 			end
 			c.state.selected = true
+			self.selected = i
 			self.selected_obj = c
 			c:Invalidate()
 			self:CallListeners(self.OnChange, tabname)
@@ -89,12 +89,39 @@ function TabBar:Select(tabname)
 	if not self.selected_obj then
 		local c = self.children[1]
 		c.state.selected = true
+		self.selected = 1
 		self.selected_obj = c
 		self.selected_obj:Invalidate()
-		self:CallListeners(self.OnChange, c.caption)
+		self:CallListeners(self.OnChange, c.name)
 	end
 
 	return false
 end
 
---//=============================================================================
+function TabBar:IsSelected(name)
+	if not self.selected then
+		return false
+	end
+	return self.children[self.selected] and self.children[self.selected].name == name
+end
+
+function TabBar:Remove(tabname, updateSelection)
+	for i = 1, #self.children do
+		local c = self.children[i]
+		if c.name == tabname then
+			c:Dispose()
+			-- selects next tab
+			if updateSelection and #self.children > 0 then
+				c = self.children[math.min(i, #self.children)]
+				self:Select(c.name)
+			else
+				self.selected_obj = nil
+				self.selected = nil
+			end
+			return true
+		end
+	end
+
+	return false
+end
+--// =============================================================================

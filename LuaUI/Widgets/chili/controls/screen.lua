@@ -1,29 +1,30 @@
 --- Screen module
 
---- @class Screen: Object
---- @field x integer x position (default: 0)
---- @field y integer y position (default: 0)
---- @field width integer width (default: 0)
---- @field height integer height (default: 0)
---- @field activeControl Control active control
---- @field focusedControl Control focused control
---- @field hoveredControl Control hovered control
---- @field currentTooltip Control current tooltip control
---- @field _lastHoveredControl Control last hovered control
---- @field _lastClicked integer last clicked timer
---- @field _lastClickedX integer last clicked x position
---- @field _lastClickedY integer last clicked y position
-Screen = Object:Inherit({
-	--Screen = Control:Inherit{
-	classname = "screen",
-	x = 0,
-	y = 0,
-	width = 0,
-	height = 0,
+--- Screen fields.
+-- Inherits from Object.
+-- @see object.Object
+-- @table Screen
+-- @int[opt = 0] x x position
+-- @int[opt = 0] y y position
+-- @int[opt = 0] width width
+-- @int[opt = 0] height height
+-- @tparam control.Control activeControl active control
+-- @tparam control.Control focusedControl focused control
+-- @tparam control.Control hoveredControl hovered control
+Screen = Object:Inherit{
+--Screen = Control:Inherit{
+	classname = 'screen',
+	x         = 0,
+	y         = 0,
+	width     = 0,
+	height    = 0,
 
 	preserveChildrenOrder = true,
 
+	-- The active control is the control currently receiving mouse events
 	activeControl = nil,
+	-- we also store the mouse button that was clicked
+	activeControlBtn = nil,
 	focusedControl = nil,
 	hoveredControl = nil,
 	currentTooltip = nil,
@@ -32,20 +33,21 @@ Screen = Object:Inherit({
 	_lastClicked = Spring.GetTimer(),
 	_lastClickedX = 0,
 	_lastClickedY = 0,
-})
+}
 
 local this = Screen
 local inherited = this.inherited
 
---//=============================================================================
+--// =============================================================================
 
 function Screen:New(obj)
 	local vsx, vsy = gl.GetViewSizes()
-	if (obj.width or -1) <= 0 then
+	
+	if ((obj.width or -1) <= 0) then
 		obj.width = vsx
 	end
-	if (obj.height or -1) <= 0 then
-		obj.height = vsy
+	if ((obj.height or -1) <= 0) then
+		obj.height = math.ceil(vsy)
 	end
 
 	obj = inherited.New(self, obj)
@@ -55,6 +57,7 @@ function Screen:New(obj)
 
 	return obj
 end
+
 
 function Screen:OnGlobalDispose(obj)
 	if CompareLinks(self.activeControl, obj) then
@@ -74,7 +77,7 @@ function Screen:OnGlobalDispose(obj)
 	end
 end
 
---//=============================================================================
+--// =============================================================================
 
 --FIXME add new coordspace Device (which does y-invert)
 
@@ -82,20 +85,29 @@ function Screen:ParentToLocal(x, y)
 	return x, y
 end
 
+
 function Screen:LocalToParent(x, y)
 	return x, y
 end
+
 
 function Screen:LocalToScreen(x, y)
 	return x, y
 end
 
+
 function Screen:ScreenToLocal(x, y)
 	return x, y
 end
 
+
 function Screen:ScreenToClient(x, y)
 	return x, y
+end
+
+
+function Screen:UnscaledClientToScreen(x, y)
+	return x*WG.uiScale, y*WG.uiScale
 end
 
 function Screen:ClientToScreen(x, y)
@@ -103,35 +115,67 @@ function Screen:ClientToScreen(x, y)
 end
 
 function Screen:IsRectInView(x, y, w, h)
-	return (x <= self.width) and (x + w >= 0) and (y <= self.height) and (y + h >= 0)
+	return (x <= self.width) and
+	       (x + w >= 0) and
+	       (y <= self.height) and
+	       (y + h >= 0)
 end
 
---//=============================================================================
+
+function Screen:IsVisibleOnScreen()
+	return true
+end
+
+--// =============================================================================
 
 function Screen:Resize(w, h)
-	self.width = w
-	self.height = h
+	self.width = math.ceil(w)
+	self.height = math.ceil(h)
 	self:CallChildren("RequestRealign")
 end
 
---//=============================================================================
+
+--// =============================================================================
 
 function Screen:Update(...)
 	--//FIXME create a passive MouseMove event and use it instead?
 	self:RequestUpdate()
 	local hoveredControl = UnlinkSafe(self.hoveredControl)
 	local activeControl = UnlinkSafe(self.activeControl)
-	if hoveredControl and not activeControl then
-		local x, y = Spring.GetMouseState()
+	if hoveredControl and (not activeControl) then
+		local x, y, _, _, _, outsideSpring = Spring.GetMouseState()
+		if outsideSpring then
+			if self.currentTooltip then
+				self.currentTooltip = nil
+			end
+			if self.activeControl then
+				self.activeControl:MouseOut()
+				self.activeControl = nil
+			end
+			if self.hoveredControl then
+				self.hoveredControl:MouseOut()
+				self.hoveredControl = nil
+			end
+			return
+		end
 		y = select(2, gl.GetViewSizes()) - y
 		local cx, cy = hoveredControl:ScreenToLocal(x, y)
 		hoveredControl:MouseMove(cx, cy, 0, 0)
 	end
 end
 
+
 function Screen:IsAbove(x, y, ...)
+	if select(6, Spring.GetMouseState()) then
+		-- Do not register hits for offscreen mouse.
+		-- See https://springrts.com/mantis/view.php?id = 5671 for the good solution.
+		return
+	end
+	-- What is this for?
+	
 	local activeControl = UnlinkSafe(self.activeControl)
 	if activeControl then
+		self.currentTooltip = activeControl.tooltip
 		return true
 	end
 
@@ -148,10 +192,10 @@ function Screen:IsAbove(x, y, ...)
 		end
 
 		self.hoveredControl = MakeWeakLink(hoveredControl, self.hoveredControl)
-		if hoveredControl then
+		if (hoveredControl) then
 			local control = hoveredControl
 			--// find tooltip in hovered control or its parents
-			while (not control.tooltip) and control.parent do
+			while (not control.tooltip) and (control.parent) do
 				control = control.parent
 			end
 			self.currentTooltip = control.tooltip
@@ -159,38 +203,48 @@ function Screen:IsAbove(x, y, ...)
 			self.currentTooltip = nil
 		end
 		self._lastHoveredControl = self.hoveredControl
-	elseif self._lastHoveredControl then
+	elseif (self._lastHoveredControl) then
 		self.currentTooltip = self._lastHoveredControl.tooltip
 	end
 
-	return not not hoveredControl
+	return (not not hoveredControl)
 end
 
 function Screen:FocusControl(control)
 	--UnlinkSafe(self.activeControl)
 	if not CompareLinks(control, self.focusedControl) then
-		local focusedControl = UnlinkSafe(self.focusedControl)
-		if focusedControl then
-			focusedControl.state.focused = false
-			focusedControl:FocusUpdate() --rename FocusLost()
-		end
-		self.focusedControl = nil
-		if control then
-			self.focusedControl = MakeWeakLink(control, self.focusedControl)
-			self.focusedControl.state.focused = true
-			self.focusedControl:FocusUpdate() --rename FocusGain()
-		end
+			local focusedControl = UnlinkSafe(self.focusedControl)
+			if focusedControl then
+				focusedControl.state.focused = false
+				focusedControl:FocusUpdate() --rename FocusLost()
+			end
+			self.focusedControl = nil
+			if control then
+				self.focusedControl = MakeWeakLink(control, self.focusedControl)
+				self.focusedControl.state.focused = true
+				if self.focusedControl.hidden then
+					self.focusedControl:Show()
+				end
+				self.focusedControl:FocusUpdate() --rename FocusGain()
+			end
 	end
 end
 
-function Screen:MouseDown(x, y, ...)
+function Screen:MouseDown(x, y, btn, ...)
 	y = select(2, gl.GetViewSizes()) - y
 
-	local activeControl = inherited.MouseDown(self, x, y, ...)
+	local activeControl = inherited.MouseDown(self, x, y, btn, ...)
+	local oldActiveControl = UnlinkSafe(self.activeControl)
+	if activeControl ~= oldActiveControl and oldActiveControl ~= nil then
+		-- send the mouse up to controls so they know to release
+		self:MouseUp(x, y, self.activeControlBtn, ...)
+	end
 	self:FocusControl(activeControl)
 	self.activeControl = MakeWeakLink(activeControl, self.activeControl)
-	return not not activeControl
+	self.activeControlBtn = btn
+	return (not not activeControl)
 end
+
 
 function Screen:MouseUp(x, y, ...)
 	y = select(2, gl.GetViewSizes()) - y
@@ -205,14 +259,13 @@ function Screen:MouseUp(x, y, ...)
 
 		if CompareLinks(hoveredControl, activeControl) then
 			--//FIXME send this to controls too, when they didn't `return self` in MouseDown!
-			if
-				(math.abs(x - self._lastClickedX) < 3)
-				and (math.abs(y - self._lastClickedY) < 3)
-				and (Spring.DiffTimers(now, self._lastClicked) < 0.45) --FIXME 0.45 := doubleClick time (use spring config?)
+			if (math.abs(x - self._lastClickedX) < 3) and
+				(math.abs(y - self._lastClickedY) < 3) and
+				(Spring.DiffTimers(now, self._lastClicked) < 0.45 ) --FIXME 0.45 : = doubleClick time (use spring config?)
 			then
 				obj = activeControl:MouseDblClick(cx, cy, ...)
 			end
-			if obj == nil then
+			if (obj == nil) then
 				obj = activeControl:MouseClick(cx, cy, ...)
 			end
 		end
@@ -222,19 +275,21 @@ function Screen:MouseUp(x, y, ...)
 
 		obj = activeControl:MouseUp(cx, cy, ...) or obj
 		self.activeControl = nil
-		return not not obj
+		return (not not obj)
 	else
 		return (not not inherited.MouseUp(self, x, y, ...))
 	end
 end
+
 
 function Screen:MouseMove(x, y, dx, dy, ...)
 	y = select(2, gl.GetViewSizes()) - y
 	local activeControl = UnlinkSafe(self.activeControl)
 	if activeControl then
 		local cx, cy = activeControl:ScreenToLocal(x, y)
+	local sx, sy = activeControl:LocalToScreen(cx, cy)
 		local obj = activeControl:MouseMove(cx, cy, dx, -dy, ...)
-		if obj == false then
+		if (obj == false) then
 			self.activeControl = nil
 		elseif (not not obj) and (obj ~= activeControl) then
 			self.activeControl = MakeWeakLink(obj, self.activeControl)
@@ -247,15 +302,17 @@ function Screen:MouseMove(x, y, dx, dy, ...)
 	return (not not inherited.MouseMove(self, x, y, dx, -dy, ...))
 end
 
+
 function Screen:MouseWheel(x, y, ...)
 	y = select(2, gl.GetViewSizes()) - y
 	local activeControl = UnlinkSafe(self.activeControl)
 	if activeControl then
 		local cx, cy = activeControl:ScreenToLocal(x, y)
 		local obj = activeControl:MouseWheel(cx, cy, ...)
-		if obj == false then
+		if not obj then
 			self.activeControl = nil
-		elseif (not not obj) and (obj ~= activeControl) then
+			return false
+		elseif obj ~= activeControl then
 			self.activeControl = MakeWeakLink(obj, self.activeControl)
 			return true
 		else
@@ -266,6 +323,7 @@ function Screen:MouseWheel(x, y, ...)
 	return (not not inherited.MouseWheel(self, x, y, ...))
 end
 
+
 function Screen:KeyPress(...)
 	local focusedControl = UnlinkSafe(self.focusedControl)
 	if focusedControl then
@@ -273,6 +331,7 @@ function Screen:KeyPress(...)
 	end
 	return (not not inherited:KeyPress(...))
 end
+
 
 function Screen:TextInput(...)
 	local focusedControl = UnlinkSafe(self.focusedControl)
@@ -282,4 +341,12 @@ function Screen:TextInput(...)
 	return (not not inherited:TextInput(...))
 end
 
---//=============================================================================
+
+function Screen:TextEditing(...)
+	local focusedControl = UnlinkSafe(self.focusedControl)
+	if focusedControl then
+		return (not not focusedControl:TextEditing(...))
+	end
+	return (not not inherited:TextEditing(...))
+end
+--// =============================================================================

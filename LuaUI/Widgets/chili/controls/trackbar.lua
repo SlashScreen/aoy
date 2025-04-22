@@ -1,48 +1,51 @@
---//=============================================================================
+--// =============================================================================
 
 --- Trackbar module
 
---- Trackbar class.
---- @class Trackbar:Control
---- @field min integer minimum value of the Trackbar (default 0)
---- @field max integer maximum value of the Trackbar (default 100)
---- @field value integer value of the Trackbar (default 50)
---- @field step integer step value (default 1)
---- @fields OnChange CallbackFun[] function listeners for value change
---- @field useValueTooltip boolean if true, tooltip will show the current value (default true)
---- @field hitpadding [number, number, number, number] padding around the trackbar for hit detection (default {0, 0, 0, 0})
-Trackbar = Control:Inherit({
+--- Trackbar fields.
+-- Inherits from Control.
+-- @see control.Control
+-- @table Trackbar
+-- @int[opt = 0] min minimum value of the Trackbar
+-- @int[opt = 100] max maximum value of the Trackbar
+-- @int[opt = 50] value value of the Trackbar
+-- @int[opt = 50] step step value
+-- @tparam {func1, fun2, ...} OnChange function listeners for value change (default {})
+Trackbar = Control:Inherit{
 	classname = "trackbar",
-	value = 50,
-	min = 0,
-	max = 100,
-	step = 1,
+	value     = 50,
+	min       = 0,
+	max       = 100,
+	step      = 1,
 	useValueTooltip = nil,
 
-	defaultWidth = 90,
-	defaultHeight = 20,
+	defaultWidth     = 90,
+	defaultHeight    = 20,
 
-	hitpadding = { 0, 0, 0, 0 },
+	hitpadding  = {0, 0, 0, 0},
+	noFont = true,
 
 	OnChange = {},
-})
+}
 
 local this = Trackbar
 local inherited = this.inherited
 
---//=============================================================================
+--// =============================================================================
 
-local function FormatNum(num)
-	if num == 0 then
+local strFormat = string.format
+local function FormatNum(num, precFormat)
+	if precFormat then
+		return strFormat(precFormat, num)
+	elseif (num == 0) then
 		return "0"
 	else
-		local strFormat = string.format
 		local absNum = math.abs(num)
-		if absNum < 0.01 then
+		if (absNum < 0.01) then
 			return strFormat("%.3f", num)
-		elseif absNum < 1 then
+		elseif (absNum < 1) then
 			return strFormat("%.2f", num)
-		elseif absNum < 10 then
+		elseif (absNum < 10) then
 			return strFormat("%.1f", num)
 		else
 			return strFormat("%.0f", num)
@@ -50,13 +53,11 @@ local function FormatNum(num)
 	end
 end
 
----Creates a new Trackbar instance
----@param obj table Configuration object
----@return Trackbar trackbar The created trackbar
+
 function Trackbar:New(obj)
 	obj = inherited.New(self, obj)
 
-	if ((not obj.tooltip) or (obj.tooltip == "")) and (obj.useValueTooltip ~= false) then
+	if ((not obj.tooltip) or (obj.tooltip == '')) and (obj.useValueTooltip ~= false) then
 		obj.useValueTooltip = true
 	end
 
@@ -66,124 +67,103 @@ function Trackbar:New(obj)
 	return obj
 end
 
---//=============================================================================
+--// =============================================================================
 
----Clamp a value to the min/max range
----@param v number Value to clamp
----@return number clamped Clamped value
 function Trackbar:_Clamp(v)
-	if self.min < self.max then
-		if v < self.min then
+	if (self.min < self.max) then
+		if (v < self.min) then
 			v = self.min
-		elseif v > self.max then
+		elseif (v > self.max) then
 			v = self.max
 		end
 	else
-		if v > self.min then
+		if (v > self.min) then
 			v = self.min
-		elseif v < self.max then
+		elseif (v < self.max) then
 			v = self.max
 		end
 	end
 	return v
 end
 
---//=============================================================================
+--// =============================================================================
 
----Get percent position along the bar
----@param x number? X coordinate
----@param y number? Y coordinate
----@return number percent Percent along the bar (0-1)
 function Trackbar:_GetPercent(x, y)
-	if x then
+	if (x) then
 		local pl, pt, pr, pb = unpack4(self.hitpadding)
-		if x < pl then
+		if (x < pl) then
 			return 0
 		end
-		if x > self.width - pr then
+		if (x > self.width-pr) then
 			return 1
 		end
 
 		local cx = x - pl
 		local barWidth = self.width - (pl + pr)
 
-		return (cx / barWidth)
+		return (cx/barWidth)
 	else
-		return (self.value - self.min) / (self.max - self.min)
+		return (self.value-self.min)/(self.max-self.min)
 	end
 end
 
---//=============================================================================
+--// =============================================================================
 
 --- Sets the minimum and maximum value of the track bar
----@param min number Minimum value
----@param max number Maximum value
+-- @int[opt = 0] min minimum value
+-- @int[opt = 1] max maximum value (why is 1 the default?)
 function Trackbar:SetMinMax(min, max)
 	self.min = tonumber(min) or 0
 	self.max = tonumber(max) or 1
 	self:SetValue(self.value)
 end
 
+
 --- Sets the value of the track bar
----@param v number Value to set
+-- @int v value of the track abr
+local floor = math.floor
 function Trackbar:SetValue(v)
-	if type(v) ~= "number" then
-		Spring.Log("Chili", "error", "Wrong param to Trackbar:SetValue(number v)")
-		return
-	end
-	local r = v % self.step
-	if r > 0.5 * self.step then
-		v = v + self.step - r
-	else
-		v = v - r
-	end
+	local steps = floor((v / self.step) + 0.5)
+	v = steps * self.step
 	v = self:_Clamp(v)
 	local oldvalue = self.value
 	self.value = v
-	if self.useValueTooltip then
-		self.tooltip = "Current: " .. FormatNum(self.value)
+	if self.tooltipFunction then
+		self.tooltip = self.tooltipFunction(self, v)
+	elseif self.useValueTooltip then
+		self.tooltip = "Current: ".. FormatNum(v, self.tooltip_format)
 	end
 	self:CallListeners(self.OnChange, v, oldvalue)
 	self:Invalidate()
 end
 
---//=============================================================================
+--// =============================================================================
 
----Draws the Trackbar control
----@return nil
-function Trackbar:DrawControl() end
+function Trackbar:DrawControl()
+end
 
---//=============================================================================
+--// =============================================================================
 
----Hit test for Trackbar (returns self for hit)
----@return Trackbar
 function Trackbar:HitTest()
 	return self
 end
 
----Handle mouse down event
----@param x number X coordinate
----@param y number Y coordinate
----@return Trackbar
-function Trackbar:MouseDown(x, y)
-	local percent = self:_GetPercent(x, y)
-	self:SetValue(self.min + percent * (self.max - self.min))
+function Trackbar:MouseDown(x, y, button)
+	if (button == 1) then
+		inherited.MouseDown(self, x, y)
+		local percent = self:_GetPercent(x, y)
+		self:SetValue(self.min + percent*(self.max-self.min))
+	end
 	return self
 end
 
----Handle mouse move event
----@param x number X coordinate
----@param y number Y coordinate
----@param dx number Delta X
----@param dy number Delta Y
----@param button integer Mouse button
----@return Trackbar|nil
 function Trackbar:MouseMove(x, y, dx, dy, button)
-	if button == 1 then
+	if (button == 1) then
+		inherited.MouseMove(self, x, y, dx, dy, button)
 		local percent = self:_GetPercent(x, y)
-		self:SetValue(self.min + percent * (self.max - self.min))
-		return self
+		self:SetValue(self.min + percent*(self.max-self.min))
 	end
+	return self
 end
 
---//=============================================================================
+--// =============================================================================
