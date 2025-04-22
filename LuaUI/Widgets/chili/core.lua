@@ -47,9 +47,9 @@ local includes = {
 local Chili = widget
 
 Chili.CHILI_DIRNAME = CHILI_DIRNAME or ((LUAUI_DIRNAME or LUA_DIRNAME) .. "Widgets/chili/")
-Chili.SKIN_DIRNAME  =  SKIN_DIRNAME or (CHILI_DIRNAME .. "skins/")
+Chili.SKIN_DIRNAME = SKIN_DIRNAME or (CHILI_DIRNAME .. "skins/")
 
-if (-1 > 0) then
+if -1 > 0 then
 	Chili = {}
 	-- make the table strict
 	VFS.Include(Chili.CHILI_DIRNAME .. "headers/strict.lua")(Chili, widget)
@@ -58,6 +58,5 @@ end
 for _, file in ipairs(includes) do
 	VFS.Include(Chili.CHILI_DIRNAME .. file, Chili, VFS.RAW_FIRST)
 end
-
 
 return Chili

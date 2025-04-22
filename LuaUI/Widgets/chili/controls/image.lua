@@ -2,68 +2,67 @@
 
 --- Image module
 
---- Image fields.
--- Inherits from Control.
--- @see button.Button
--- @table Image
--- @tparam {r, g, b, a} color color, (default {1, 1, 1, 1})
--- @string[opt = nil] file path
--- @bool[opt = true] keepAspect aspect should be kept
--- @tparam {func1, func2} OnClick function listeners to be invoked on click (default {})
-Image = Button:Inherit{
+---@class Image : Button
+---@field padding [number, number, number, number] Padding {left,top,right,bottom}
+---@field color table Color Color tint {r,g,b,a}
+---@field file string? Primary image file path
+---@field file2 string? Secondary image file path
+---@field flip boolean Whether to flip primary image vertically
+---@field flip2 boolean Whether to flip secondary image vertically
+---@field keepAspect boolean Whether to maintain aspect ratio
+---@field useRTT boolean Whether to use render-to-texture
+---@field OnClick CallbackFun[] Click event listeners
+Image = Button:Inherit({
 	classname = "image",
 
-	defaultWidth  = 64,
+	defaultWidth = 64,
 	defaultHeight = 64,
-	padding = {0, 0, 0, 0},
-	color = {1, 1, 1, 1},
+	padding = { 0, 0, 0, 0 },
+	color = { 1, 1, 1, 1 },
 	color2 = nil,
 
-	file  = nil,
+	file = nil,
 	file2 = nil,
 
-	flip  = true;
-	flip2 = true;
+	flip = true,
+	flip2 = true,
 	firstDraw = true,
 
-	keepAspect = true;
-	crop = false;
-	
-	checkFileExists = false;
-	keepCheckingForImage = false;
-	fallbackFile = false;
-	imageLoadTime = 3.5; -- Seconds
+	keepAspect = true,
+	crop = false,
 
-	useRTT = false;
+	checkFileExists = false,
+	keepCheckingForImage = false,
+	fallbackFile = false,
+	imageLoadTime = 3.5, -- Seconds
 
-	OnClick  = {},
+	useRTT = false,
+
+	OnClick = {},
 
 	noFont = true,
-}
+})
 
 chili_imageAlreadyDrawn = {}
 
-local this = Image
-local inherited = this.inherited
-
 --// =============================================================================
 
-local function _DrawTextureAspect(x, y, w, h , tw, th, flipy)
-	local twa = w/tw
-	local tha = h/th
+local function _DrawTextureAspect(x, y, w, h, tw, th, flipy)
+	local twa = w / tw
+	local tha = h / th
 
 	local aspect = 1
-	if (twa < tha) then
+	if twa < tha then
 		aspect = twa
-		y = y + h*0.5 - th*aspect*0.5
-		h = th*aspect
+		y = y + h * 0.5 - th * aspect * 0.5
+		h = th * aspect
 	else
 		aspect = tha
-		x = x + w*0.5 - tw*aspect*0.5
-		w = tw*aspect
+		x = x + w * 0.5 - tw * aspect * 0.5
+		w = tw * aspect
 	end
 
-	local right  = math.ceil(x + w)
+	local right = math.ceil(x + w)
 	local bottom = math.ceil(y + h)
 	x = math.ceil(x)
 	y = math.ceil(y)
@@ -71,22 +70,22 @@ local function _DrawTextureAspect(x, y, w, h , tw, th, flipy)
 	gl.TexRect(x, y, right, bottom, false, flipy)
 end
 
-local function _DrawTextureCrop(x, y, w, h , tw, th, flipy)
-	local targetAspect = w/h
-	local imageAspect = tw/th
+local function _DrawTextureCrop(x, y, w, h, tw, th, flipy)
+	local targetAspect = w / h
+	local imageAspect = tw / th
 
-	local right  = math.ceil(x + w)
+	local right = math.ceil(x + w)
 	local bottom = math.ceil(y + h)
 	x = math.ceil(x)
 	y = math.ceil(y)
 
-	local imageX = math.max(0,(1.0 - targetAspect/imageAspect)/2)
-	local imageY = math.max(0,(1.0 - imageAspect/targetAspect)/2)
+	local imageX = math.max(0, (1.0 - targetAspect / imageAspect) / 2)
+	local imageY = math.max(0, (1.0 - imageAspect / targetAspect) / 2)
 
 	if flipy then
-		gl.TexRect(x,y,right,bottom,imageX,imageY,1 -imageX,1-imageY)
+		gl.TexRect(x, y, right, bottom, imageX, imageY, 1 - imageX, 1 - imageY)
 	else
-		gl.TexRect(x,y,right,bottom,imageX,1-imageY,1 -imageX,imageY)
+		gl.TexRect(x, y, right, bottom, imageX, 1 - imageY, 1 - imageX, imageY)
 	end
 end
 
@@ -97,10 +96,10 @@ end
 function Image:DrawControl()
 	local file = self.file
 	local file2 = self.file2
-	if (not (file or file2)) then
+	if not (file or file2) then
 		return
 	end
-	
+
 	if self.checkFileExists then
 		if self._loadTimer then
 			if Spring.DiffTimers(Spring.GetTimer(), self._loadTimer) > self.imageLoadTime then
@@ -125,7 +124,7 @@ function Image:DrawControl()
 		elseif ((not file) or VFS.FileExists(file)) and ((not file2) or VFS.FileExists(file2)) then
 			self._loadTimer = Spring.GetTimer()
 		end
-	
+
 		if self.fallbackFile then
 			file = self.fallbackFile
 			file2 = nil
@@ -133,42 +132,42 @@ function Image:DrawControl()
 			return
 		end
 	end
-	
-	if (self.keepAspect) then
-		if (file2) then
+
+	if self.keepAspect then
+		if file2 then
 			gl.Color(self.color2 or self.color)
 			TextureHandler.LoadTexture(0, file2, self)
-			local texInfo = gl.TextureInfo(file2) or {xsize = 1, ysize = 1}
+			local texInfo = gl.TextureInfo(file2) or { xsize = 1, ysize = 1 }
 			local tw, th = texInfo.xsize, texInfo.ysize
 			_DrawTextureAspect(0, 0, self.width, self.height, tw, th, self.flip2)
 		end
-		if (file) then
+		if file then
 			gl.Color(self.color)
 			TextureHandler.LoadTexture(0, file, self)
-			local texInfo = gl.TextureInfo(file) or {xsize = 1, ysize = 1}
+			local texInfo = gl.TextureInfo(file) or { xsize = 1, ysize = 1 }
 			local tw, th = texInfo.xsize, texInfo.ysize
 			_DrawTextureAspect(0, 0, self.width, self.height, tw, th, self.flip)
 		end
 	else
-		if (self.crop) then
+		if self.crop then
 			-- Don't do the chili_imageAlreadyDrawn white rectangle fix because
 			-- crop already does gl.TextureInfo (although, should it be cached?)
-			if (file2) then
+			if file2 then
 				gl.Color(self.color2 or self.color)
 				TextureHandler.LoadTexture(0, file2, self)
-				local texInfo = gl.TextureInfo(file2) or {xsize = 1, ysize = 1}
+				local texInfo = gl.TextureInfo(file2) or { xsize = 1, ysize = 1 }
 				local tw, th = texInfo.xsize, texInfo.ysize
 				_DrawTextureCrop(0, 0, self.width, self.height, tw, th, self.flip2)
 			end
-			if (file) then
+			if file then
 				gl.Color(self.color)
 				TextureHandler.LoadTexture(0, file, self)
-				local texInfo = gl.TextureInfo(file) or {xsize = 1, ysize = 1}
+				local texInfo = gl.TextureInfo(file) or { xsize = 1, ysize = 1 }
 				local tw, th = texInfo.xsize, texInfo.ysize
 				_DrawTextureCrop(0, 0, self.width, self.height, tw, th, self.flip)
 			end
 		else
-			if (file2) then
+			if file2 then
 				gl.Color(self.color2 or self.color)
 				TextureHandler.LoadTexture(0, file2, self)
 				if not chili_imageAlreadyDrawn[file2] then
@@ -177,7 +176,7 @@ function Image:DrawControl()
 				end
 				gl.TexRect(0, 0, self.width, self.height, false, self.flip2)
 			end
-			if (file) then
+			if file then
 				gl.Color(self.color)
 				TextureHandler.LoadTexture(0, file, self)
 				if not chili_imageAlreadyDrawn[file] then
@@ -196,7 +195,7 @@ end
 
 function Image:IsActive()
 	local onclick = self.OnClick
-	if (onclick and onclick[1]) then
+	if onclick and onclick[1] then
 		return true
 	end
 end

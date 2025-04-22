@@ -1,20 +1,29 @@
 --// =============================================================================
-
-TabBar = LayoutPanel:Inherit{
-	classname    = "tabbar",
-	orientation  = "horizontal",
-	resizeItems  = false,
-	centerItems  = false,
-	padding      = {0, 0, 0, 0},
-	itemPadding  = {0, 0, 0, 0},
-	itemMargin   = {0, 0, 0, 0},
-	minItemWidth  = 70,
+---@class TabBar : LayoutPanel
+---@field orientation "horizontal"|"vertical" Orientation of tabs
+---@field resizeItems boolean Whether items resize
+---@field centerItems boolean Whether items are centered
+---@field minItemWidth number Minimum item width
+---@field minItemHeight number Minimum item height
+---@field tabs table<number,string> Tab captions
+---@field selected string|nil Selected tab name
+---@field selected_obj TabBarItem|nil Selected tab object
+---@field OnChange CallbackFun[] Selection change listeners
+TabBar = LayoutPanel:Inherit({
+	classname = "tabbar",
+	orientation = "horizontal",
+	resizeItems = false,
+	centerItems = false,
+	padding = { 0, 0, 0, 0 },
+	itemPadding = { 0, 0, 0, 0 },
+	itemMargin = { 0, 0, 0, 0 },
+	minItemWidth = 70,
 	minItemHeight = 20,
-	tabs         = {},
-	selected     = nil,
+	tabs = {},
+	selected = nil,
 	preserveChildrenOrder = true,
-	OnChange     = {},
-}
+	OnChange = {},
+})
 
 local this = TabBar
 local inherited = this.inherited
@@ -23,19 +32,17 @@ local inherited = this.inherited
 
 function TabBar:New(obj)
 	obj = inherited.New(self, obj)
-	if (obj.tabs) then
+	if obj.tabs then
 		for i = 1, #obj.tabs do
-			obj:AddChild(
-				TabBarItem:New {
-					name = obj.tabs[i].name,
-					caption = obj.tabs[i].caption or obj.tabs[i].name,
-					tooltip = obj.tabs[i].tooltip,
-					font = obj.tabs[i].font,
-					objectOverrideFont = obj.tabs[i].objectOverrideFont,
-					defaultWidth = obj.minItemWidth,
-					defaultHeight = obj.minItemHeight,
-				}
-			)
+			obj:AddChild(TabBarItem:New({
+				name = obj.tabs[i].name,
+				caption = obj.tabs[i].caption or obj.tabs[i].name,
+				tooltip = obj.tabs[i].tooltip,
+				font = obj.tabs[i].font,
+				objectOverrideFont = obj.tabs[i].objectOverrideFont,
+				defaultWidth = obj.minItemWidth,
+				defaultHeight = obj.minItemHeight,
+			}))
 		end
 	end
 

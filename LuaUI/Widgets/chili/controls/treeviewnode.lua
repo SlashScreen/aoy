@@ -1,29 +1,39 @@
 --// =============================================================================
 
-TreeViewNode = Control:Inherit{
+---@class TreeViewNode : Control
+---@field expanded boolean Whether node is expanded
+---@field root boolean Whether node is root node
+---@field nodes table<number,TreeViewNode> Child nodes
+---@field treeview TreeView Parent treeview
+---@field _nodes_hidden table<number,TreeViewNode> Hidden nodes when collapsed
+---@field OnSelectChange CallbackFun[] Selection change listeners
+---@field OnCollapse CallbackFun[] Node collapse listeners
+---@field OnExpand CallbackFun[] Node expand listeners
+---@field OnDraw CallbackFun[] Node draw listeners
+TreeViewNode = Control:Inherit({
 	classname = "treeviewnode",
 
-	padding = {16, 0, 0, 0},
+	padding = { 16, 0, 0, 0 },
 	labelFontsize = 14,
 
 	autosize = true,
-	caption   = "node",
-	expanded  = false,
-	
+	caption = "node",
+	expanded = false,
+
 	clickTextToToggle = false,
-	root      = false,
-	leaf      = true,
-	nodes     = {},
-	
-	treeview  = nil,
+	root = false,
+	leaf = true,
+	nodes = {},
+
+	treeview = nil,
 
 	_nodes_hidden = {},
 
 	OnSelectChange = {},
-	OnCollapse     = {},
-	OnExpand       = {},
-	OnDraw         = {},
-}
+	OnCollapse = {},
+	OnExpand = {},
+	OnDraw = {},
+})
 
 local this = TreeViewNode
 local inherited = this.inherited
@@ -31,8 +41,8 @@ local inherited = this.inherited
 --// =============================================================================
 
 function TreeViewNode:New(obj)
-	if (obj.root) then
-		obj.padding = {0, 0, 0, 0}
+	if obj.root then
+		obj.padding = { 0, 0, 0, 0 }
 	end
 
 	assert(obj.treeview)
@@ -40,26 +50,24 @@ function TreeViewNode:New(obj)
 	obj = inherited.New(self, obj)
 	self.labelFontsize = obj.labelFontsize
 	self.objectOverrideFont = obj.objectOverrideFont
-	
+
 	self.clickTextToToggle = obj.clickTextToToggle
 	return obj
 end
-
 
 function TreeViewNode:SetParent(obj)
 	obj = UnlinkSafe(obj)
 	local typ = type(obj)
 
-	if (typ ~= "table") then
+	if typ ~= "table" then
 		self.treeview = nil --FIXME code below in this file doesn't check for nil!
 	end
 
 	inherited.SetParent(self, obj)
 end
 
-
 function TreeViewNode:AddChild(obj, isNode)
-	if (isNode~= false) then
+	if isNode ~= false then
 		self.nodes[#self.nodes + 1] = MakeWeakLink(obj)
 	end
 	if self.parent and self.parent.RequestRealign then
@@ -67,7 +75,6 @@ function TreeViewNode:AddChild(obj, isNode)
 	end
 	return inherited.AddChild(self, obj)
 end
-
 
 function TreeViewNode:RemoveChild(obj)
 	local result = inherited.RemoveChild(self, obj)
@@ -83,25 +90,24 @@ function TreeViewNode:RemoveChild(obj)
 	return result
 end
 
-
 function TreeViewNode:ClearChildren()
 	local caption
-	if not(self.root) then
+	if not self.root then
 		caption = self.children[1]
 		self.children[1] = self.children[#self.children]
 		self.children[#self.children] = nil
 	end
-	
+
 	self.leaf = true
-	
+
 	local collapsed = not self.expanded
 	self:Expand()
 	inherited.ClearChildren(self)
-	if (collapsed) then
+	if collapsed then
 		self:Collapse()
 	end
 
-	if not(self.root) then
+	if not self.root then
 		self.children[1] = caption
 	end
 end
@@ -112,49 +118,67 @@ TreeViewNode.Clear = TreeViewNode.ClearChildren
 
 function TreeViewNode:Add(item)
 	self.leaf = false
-	
+
 	local newnode
-	if (type(item) == "string") then
-		local lbl = TextBox:New{text = item; width = "100%"; padding = {2, 3, 2, 2}; minHeight = self.minHeight; fontsize = self.labelFontsize, objectOverrideFont = self.objectOverrideFont}
-		newnode = TreeViewNode:New{caption = item; treeview = self.treeview; minHeight = self.minHeight; expanded = self.expandedt; labelFontsize = self.labelFontsize, objectOverrideFont = self.objectOverrideFont}
+	if type(item) == "string" then
+		local lbl = TextBox:New({
+			text = item,
+			width = "100%",
+			padding = { 2, 3, 2, 2 },
+			minHeight = self.minHeight,
+			fontsize = self.labelFontsize,
+			objectOverrideFont = self.objectOverrideFont,
+		})
+		newnode = TreeViewNode:New({
+			caption = item,
+			treeview = self.treeview,
+			minHeight = self.minHeight,
+			expanded = self.expandedt,
+			labelFontsize = self.labelFontsize,
+			objectOverrideFont = self.objectOverrideFont,
+		})
 		newnode:AddChild(lbl, false)
 		self:AddChild(newnode)
-	elseif (IsObject(item)) then
-		newnode = TreeViewNode:New{caption = ""; treeview = self.treeview; minHeight = self.minHeight; expanded = self.expandedt; labelFontsize = self.labelFontsize, objectOverrideFont = self.objectOverrideFont}
+	elseif IsObject(item) then
+		newnode = TreeViewNode:New({
+			caption = "",
+			treeview = self.treeview,
+			minHeight = self.minHeight,
+			expanded = self.expandedt,
+			labelFontsize = self.labelFontsize,
+			objectOverrideFont = self.objectOverrideFont,
+		})
 		newnode:AddChild(item, false)
 		self:AddChild(newnode)
 	end
 	return newnode
 end
 
-
 function TreeViewNode:Select()
-	if (self.root) or (not self.treeview) then
+	if self.root or not self.treeview then
 		return
 	end
 
-	if (not CompareLinks(self.treeview.selected, self)) then
+	if not CompareLinks(self.treeview.selected, self) then
 		--// treeview itself calls node:OnSelectChange !
 		self.treeview:Select(self)
 	end
 end
 
-
 function TreeViewNode:Toggle()
-	if (self.root) or (not self.treeview) then
+	if self.root or not self.treeview then
 		return
 	end
-	
-	if (self.expanded) then
+
+	if self.expanded then
 		self:Collapse()
 	else
 		self:Expand()
 	end
 end
 
-
 function TreeViewNode:Expand()
-	if (self.root) or (not self.treeview) then
+	if self.root or not self.treeview then
 		return
 	end
 
@@ -172,9 +196,8 @@ function TreeViewNode:Expand()
 	end
 end
 
-
 function TreeViewNode:Collapse()
-	if (self.root) or (not self.treeview) then
+	if self.root or not self.treeview then
 		return
 	end
 
@@ -198,12 +221,12 @@ end
 function TreeViewNode:GetNodeByCaption(caption)
 	for i = 1, #self.nodes do
 		local n = self.nodes[i]
-		if (n.caption == caption) then
+		if n.caption == caption then
 			return n
 		end
 
 		local result = n:GetNodeByCaption(caption)
-		if (result) then
+		if result then
 			return result
 		end
 	end
@@ -212,12 +235,12 @@ end
 function TreeViewNode:GetNodeByIndex(index, _i)
 	for i = 1, #self.nodes do
 		_i = _i + 1
-		if (_i == index) then
+		if _i == index then
 			return self.nodes[i]
 		end
 
 		local result = self.nodes[i]:GetNodeByIndex(index, _i)
-		if (IsNumber(result)) then
+		if IsNumber(result) then
 			_i = result
 		else
 			return result
@@ -233,8 +256,8 @@ function TreeViewNode:UpdateLayout()
 	local clientWidth = self.clientWidth
 	local children = self.children
 
-	if (not self.expanded) and (not self.root) then
-		if (children[1]) then
+	if (not self.expanded) and not self.root then
+		if children[1] then
 			local c = children[1]
 			c:_UpdateConstraints(0, 0, clientWidth)
 			c:Realign()
@@ -245,7 +268,6 @@ function TreeViewNode:UpdateLayout()
 
 		return true
 	end
-
 
 	local y = 0
 	for i = 1, #children do
@@ -270,37 +292,35 @@ function TreeViewNode:_InNodeButton(x, y)
 		return false
 	end
 
-	local nodeTop = (self.children[1].height - self.padding[1])*0.5
-	return (nodeTop <= y) and (y-nodeTop < self.padding[1])
+	local nodeTop = (self.children[1].height - self.padding[1]) * 0.5
+	return (nodeTop <= y) and (y - nodeTop < self.padding[1])
 end
-
 
 function TreeViewNode:HitTest(x, y, ...)
 	local obj = inherited.HitTest(self, x, y, ...)
-	if (obj) then
+	if obj then
 		return obj
 	end
 	return self
 end
 
-
 function TreeViewNode:MouseDown(x, y, ...)
-	if (self.root) then
+	if self.root then
 		return inherited.MouseDown(self, x, y, ...)
 	end
 
 	--//FIXME this function is needed to recv MouseClick - > fail
-	if (self:_InNodeButton(x, y)) then
+	if self:_InNodeButton(x, y) then
 		return self
 	end
 
-	if (x >= self.padding[1])then
+	if x >= self.padding[1] then
 		--[[ FIXME inherited.MouseDown should be executed before Select()!
 		local obj = inherited.MouseDown(self, x, y, ...)
 		return obj
 		--]]
 
-		if (y < self.padding[2] + self.children[1].height) then
+		if y < self.padding[2] + self.children[1].height then
 			self:Select()
 		end
 
@@ -309,13 +329,12 @@ function TreeViewNode:MouseDown(x, y, ...)
 	end
 end
 
-
 function TreeViewNode:MouseClick(x, y, ...)
-	if (self.root) then
+	if self.root then
 		return inherited.MouseClick(self, x, y, ...)
 	end
 
-	if (self:_InNodeButton(x, y)) then
+	if self:_InNodeButton(x, y) then
 		self:Toggle()
 		return self
 	end
@@ -324,15 +343,14 @@ function TreeViewNode:MouseClick(x, y, ...)
 	return obj
 end
 
-
 function TreeViewNode:MouseDblClick(x, y, ...)
---//FIXME doesn't get called, related to the FIXME above!
-	if (self.root) then
+	--//FIXME doesn't get called, related to the FIXME above!
+	if self.root then
 		return inherited.MouseDblClick(self, x, y, ...)
 	end
 
 	local obj = inherited.MouseDblClick(self, x, y, ...)
-	if (not obj) then
+	if not obj then
 		self:Toggle()
 		obj = self
 	end
@@ -343,31 +361,28 @@ end
 --// =============================================================================
 
 function TreeViewNode:DrawNode()
-	if (self.treeview) then
+	if self.treeview then
 		self.treeview.DrawNode(self)
 	end
 end
 
-
 function TreeViewNode:DrawNodeTree()
-	if (self.treeview) then
+	if self.treeview then
 		self.treeview.DrawNodeTree(self)
 	end
 end
 
-
 function TreeViewNode:DrawControl()
-	if (self.root) then
+	if self.root then
 		return
 	end
 
 	local dontDraw = self:CallListeners(self.OnDraw, self)
-	if (not dontDraw) then
+	if not dontDraw then
 		self:DrawNode()
 	end
 	self:DrawNodeTree()
 end
-
 
 function TreeViewNode:DrawChildren()
 	if not (self.expanded or self.root) then
@@ -375,11 +390,10 @@ function TreeViewNode:DrawChildren()
 		return
 	end
 
-	if (next(self.children)) then
-		self:_DrawChildrenInClientArea('Draw')
+	if next(self.children) then
+		self:_DrawChildrenInClientArea("Draw")
 	end
 end
-
 
 function TreeViewNode:DrawChildrenForList()
 	if not (self.expanded or self.root) then
@@ -387,8 +401,8 @@ function TreeViewNode:DrawChildrenForList()
 		return
 	end
 
-	if (next(self.children)) then
-		self:_DrawChildrenInClientArea('DrawForList')
+	if next(self.children) then
+		self:_DrawChildrenInClientArea("DrawForList")
 	end
 end
 

@@ -2,31 +2,30 @@
 
 --- Trackbar module
 
---- Trackbar fields.
--- Inherits from Control.
--- @see control.Control
--- @table Trackbar
--- @int[opt = 0] min minimum value of the Trackbar
--- @int[opt = 100] max maximum value of the Trackbar
--- @int[opt = 50] value value of the Trackbar
--- @int[opt = 50] step step value
--- @tparam {func1, fun2, ...} OnChange function listeners for value change (default {})
-Trackbar = Control:Inherit{
+--- @class Trackbar:Control
+--- @field min integer minimum value of the Trackbar (default 0)
+--- @field max integer maximum value of the Trackbar (default 100)
+--- @field value integer value of the Trackbar (default 50)
+--- @field step integer step value (default 1)
+--- @fields OnChange CallbackFun[] function listeners for value change
+--- @field useValueTooltip boolean if true, tooltip will show the current value (default true)
+--- @field hitpadding [number, number, number, number] padding around the trackbar for hit detection (default {0, 0, 0, 0})
+Trackbar = Control:Inherit({
 	classname = "trackbar",
-	value     = 50,
-	min       = 0,
-	max       = 100,
-	step      = 1,
+	value = 50,
+	min = 0,
+	max = 100,
+	step = 1,
 	useValueTooltip = nil,
 
-	defaultWidth     = 90,
-	defaultHeight    = 20,
+	defaultWidth = 90,
+	defaultHeight = 20,
 
-	hitpadding  = {0, 0, 0, 0},
+	hitpadding = { 0, 0, 0, 0 },
 	noFont = true,
 
 	OnChange = {},
-}
+})
 
 local this = Trackbar
 local inherited = this.inherited
@@ -37,15 +36,15 @@ local strFormat = string.format
 local function FormatNum(num, precFormat)
 	if precFormat then
 		return strFormat(precFormat, num)
-	elseif (num == 0) then
+	elseif num == 0 then
 		return "0"
 	else
 		local absNum = math.abs(num)
-		if (absNum < 0.01) then
+		if absNum < 0.01 then
 			return strFormat("%.3f", num)
-		elseif (absNum < 1) then
+		elseif absNum < 1 then
 			return strFormat("%.2f", num)
-		elseif (absNum < 10) then
+		elseif absNum < 10 then
 			return strFormat("%.1f", num)
 		else
 			return strFormat("%.0f", num)
@@ -53,11 +52,10 @@ local function FormatNum(num, precFormat)
 	end
 end
 
-
 function Trackbar:New(obj)
 	obj = inherited.New(self, obj)
 
-	if ((not obj.tooltip) or (obj.tooltip == '')) and (obj.useValueTooltip ~= false) then
+	if ((not obj.tooltip) or (obj.tooltip == "")) and (obj.useValueTooltip ~= false) then
 		obj.useValueTooltip = true
 	end
 
@@ -70,16 +68,16 @@ end
 --// =============================================================================
 
 function Trackbar:_Clamp(v)
-	if (self.min < self.max) then
-		if (v < self.min) then
+	if self.min < self.max then
+		if v < self.min then
 			v = self.min
-		elseif (v > self.max) then
+		elseif v > self.max then
 			v = self.max
 		end
 	else
-		if (v > self.min) then
+		if v > self.min then
 			v = self.min
-		elseif (v < self.max) then
+		elseif v < self.max then
 			v = self.max
 		end
 	end
@@ -89,21 +87,21 @@ end
 --// =============================================================================
 
 function Trackbar:_GetPercent(x, y)
-	if (x) then
+	if x then
 		local pl, pt, pr, pb = unpack4(self.hitpadding)
-		if (x < pl) then
+		if x < pl then
 			return 0
 		end
-		if (x > self.width-pr) then
+		if x > self.width - pr then
 			return 1
 		end
 
 		local cx = x - pl
 		local barWidth = self.width - (pl + pr)
 
-		return (cx/barWidth)
+		return (cx / barWidth)
 	else
-		return (self.value-self.min)/(self.max-self.min)
+		return (self.value - self.min) / (self.max - self.min)
 	end
 end
 
@@ -118,7 +116,6 @@ function Trackbar:SetMinMax(min, max)
 	self:SetValue(self.value)
 end
 
-
 --- Sets the value of the track bar
 -- @int v value of the track abr
 local floor = math.floor
@@ -131,7 +128,7 @@ function Trackbar:SetValue(v)
 	if self.tooltipFunction then
 		self.tooltip = self.tooltipFunction(self, v)
 	elseif self.useValueTooltip then
-		self.tooltip = "Current: ".. FormatNum(v, self.tooltip_format)
+		self.tooltip = "Current: " .. FormatNum(v, self.tooltip_format)
 	end
 	self:CallListeners(self.OnChange, v, oldvalue)
 	self:Invalidate()
@@ -139,8 +136,7 @@ end
 
 --// =============================================================================
 
-function Trackbar:DrawControl()
-end
+function Trackbar:DrawControl() end
 
 --// =============================================================================
 
@@ -149,19 +145,19 @@ function Trackbar:HitTest()
 end
 
 function Trackbar:MouseDown(x, y, button)
-	if (button == 1) then
+	if button == 1 then
 		inherited.MouseDown(self, x, y)
 		local percent = self:_GetPercent(x, y)
-		self:SetValue(self.min + percent*(self.max-self.min))
+		self:SetValue(self.min + percent * (self.max - self.min))
 	end
 	return self
 end
 
 function Trackbar:MouseMove(x, y, dx, dy, button)
-	if (button == 1) then
+	if button == 1 then
 		inherited.MouseMove(self, x, y, dx, dy, button)
 		local percent = self:_GetPercent(x, y)
-		self:SetValue(self.min + percent*(self.max-self.min))
+		self:SetValue(self.min + percent * (self.max - self.min))
 	end
 	return self
 end

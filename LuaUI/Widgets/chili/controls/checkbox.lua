@@ -1,36 +1,31 @@
 --// =============================================================================
 
---- Checkbox module
-
---- Checkbox fields.
--- Inherits from Control.
--- @see control.Control
--- @table Checkbox
--- @bool[opt = true] checked checkbox checked state
--- @string[opt = "text"] caption caption to appear in the checkbox
--- @string[opt = "left"] textalign text alignment
--- @string[opt = "right"] boxalign box alignment
--- @int[opt = 10] boxsize box size
--- @tparam {r, g, b, a} textColor text color, (default {0, 0, 0, 1})
--- @tparam {func1, func2, ...} OnChange listener functions for checked state changes, (default {})
-Checkbox = Control:Inherit{
+---@class Checkbox : Control
+---@field caption string
+---@field checked boolean
+---@field textAlign "left"|"center"|"right"|"linecenter"
+---@field boxAlign "left"|"center"|"right"
+---@field boxsize integer
+---@field textColor ColorTable
+---@field OnChange CallbackFun[] listener functions for checked state changes
+Checkbox = Control:Inherit({
 	classname = "checkbox",
-	checked   = true,
-	caption   = "text",
+	checked = true,
+	caption = "text",
 	textalign = "left",
 	textoffset = 0,
-	valign    = "linecenter",
-	boxalign  = "right",
-	boxsize   = 10,
+	valign = "linecenter",
+	boxalign = "right",
+	boxsize = 10,
 	noFont = false,
 
-	textColor = {0, 0, 0, 1},
+	textColor = { 0, 0, 0, 1 },
 
-	defaultWidth     = 70,
-	defaultHeight    = 18,
+	defaultWidth = 70,
+	defaultHeight = 18,
 
-	OnChange = {}
-}
+	OnChange = {},
+})
 
 local this = Checkbox
 local inherited = this.inherited

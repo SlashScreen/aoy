@@ -1,11 +1,13 @@
 --// =============================================================================
 
-TabBarItem = Button:Inherit{
+---@class TabBarItem : Button
+---@field height string|number Item height
+TabBarItem = Button:Inherit({
 	classname = "tabbaritem",
-	caption  = 'tab',
-	height   = "100%",
+	caption = "tab",
+	height = "100%",
 	noFont = false,
-}
+})
 
 local this = TabBarItem
 local inherited = this.inherited
@@ -14,7 +16,7 @@ local inherited = this.inherited
 
 function TabBarItem:SetCaption(caption)
 	--FIXME inform parent
-	if (self.caption == caption) then
+	if self.caption == caption then
 		return
 	end
 	self.caption = caption

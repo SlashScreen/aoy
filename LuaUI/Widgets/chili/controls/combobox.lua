@@ -2,17 +2,18 @@
 
 --- ComboBox module
 
---- ComboBox fields.
--- Inherits from Control.
--- @see control.Control
--- @table ComboBox
--- @tparam {"item1", "item2", ...} items table of items in the ComboBox, (default {"items"})
--- @int[opt = 1] selected id of the selected item
--- @tparam {func1, func2, ...} OnSelect listener functions for selected item changes, (default {})
-ComboBox = Button:Inherit{
+---@class ComboBox : Button
+---@field items table<number,string|table> Items in the ComboBox
+---@field selected number ID of the selected item
+---@field OnSelect CallbackFun[] Listener functions for selection changes
+---@field maxDropDownHeight number Maximum height of dropdown
+---@field minDropDownHeight number Minimum height of dropdown
+---@field maxDropDownWidth number Maximum width of dropdown
+---@field minDropDownWidth number Minimum width of dropdown
+ComboBox = Button:Inherit({
 	classname = "combobox",
-	caption = 'combobox',
-	defaultWidth  = 70,
+	caption = "combobox",
+	defaultWidth = 70,
 	defaultHeight = 20,
 	items = { "items" },
 	itemHeight = 20,
@@ -29,13 +30,21 @@ ComboBox = Button:Inherit{
 	minDropDownWidth = 50,
 	topHeight = 7,
 	noFont = false,
-	preferComboUp = false
-}
+	preferComboUp = false,
+})
 
-local ComboBoxWindow      = Window:Inherit{classname = "combobox_window", resizable = false, draggable = false, }
-local ComboBoxScrollPanel = ScrollPanel:Inherit{classname = "combobox_scrollpanel", horizontalScrollbar = false, }
-local ComboBoxStackPanel  = StackPanel:Inherit{classname = "combobox_stackpanel", autosize = true, resizeItems = false, borderThickness = 0, padding = {0, 0, 0, 0}, itemPadding = {0, 0, 0, 0}, itemMargin = {0, 0, 0, 0}, }
-local ComboBoxItem        = Button:Inherit{classname = "combobox_item"}
+local ComboBoxWindow = Window:Inherit({ classname = "combobox_window", resizable = false, draggable = false })
+local ComboBoxScrollPanel = ScrollPanel:Inherit({ classname = "combobox_scrollpanel", horizontalScrollbar = false })
+local ComboBoxStackPanel = StackPanel:Inherit({
+	classname = "combobox_stackpanel",
+	autosize = true,
+	resizeItems = false,
+	borderThickness = 0,
+	padding = { 0, 0, 0, 0 },
+	itemPadding = { 0, 0, 0, 0 },
+	itemMargin = { 0, 0, 0, 0 },
+})
+local ComboBoxItem = Button:Inherit({ classname = "combobox_item" })
 
 local this = ComboBox
 local inherited = this.inherited
@@ -49,7 +58,7 @@ end
 --- Selects an item by id
 -- @int itemIdx id of the item to be selected
 function ComboBox:Select(itemIdx)
-	if (type(itemIdx) == "number") then
+	if type(itemIdx) == "number" then
 		local item = self.items[itemIdx]
 		if not item then
 			return
@@ -62,7 +71,7 @@ function ComboBox:Select(itemIdx)
 		end
 		self:CallListeners(self.OnSelect, itemIdx, true)
 		self:Invalidate()
-	elseif (type(itemIdx) == "string") then
+	elseif type(itemIdx) == "string" then
 		self:CallListeners(self.OnSelectName, itemIdx, true)
 		for i = 1, #self.items do
 			if self.items[i] == itemIdx then
@@ -81,7 +90,7 @@ function ComboBox:_CloseWindow()
 			self._dropDownWindow = nil
 		end
 	end
-	if (self.state.pressed) then
+	if self.state.pressed then
 		self.state.pressed = false
 		self:Invalidate()
 		return self
@@ -114,13 +123,13 @@ function ComboBox:MouseDown(x, y)
 		for i = 1, #self.items do
 			local item = self.items[i]
 			if type(item) == "string" then
-				local newBtn = ComboBoxItem:New {
+				local newBtn = ComboBoxItem:New({
 					caption = item,
-					width = '100%',
+					width = "100%",
 					height = self.itemHeight,
 					fontsize = self.itemFontSize,
 					objectOverrideFont = self.objectOverrideFont,
-					state = {focused = (i == self.selected), selected = (i == self.selected)},
+					state = { focused = (i == self.selected), selected = (i == self.selected) },
 					OnMouseUp = {
 						function()
 							if selectByName then
@@ -129,18 +138,20 @@ function ComboBox:MouseDown(x, y)
 								self:Select(i)
 							end
 							self:_CloseWindow()
-						end
-					}
-				}
+						end,
+					},
+				})
 				labels[#labels + 1] = newBtn
 				height = height + self.itemHeight
 				width = math.max(width, self.font:GetTextWidth(item))
 			else
 				labels[#labels + 1] = item
-				item.OnMouseUp = { function()
+				item.OnMouseUp = {
+					function()
 						self:Select(i)
 						self:_CloseWindow()
-				end }
+					end,
+				}
 				width = math.max(width, item.width + 5)
 				height = height + item.height -- FIXME: what if this height is relative?
 			end
@@ -158,26 +169,26 @@ function ComboBox:MouseDown(x, y)
 			y = sy - height
 		end
 
-		self._dropDownWindow = ComboBoxWindow:New{
+		self._dropDownWindow = ComboBoxWindow:New({
 			parent = screen,
-			width  = width,
+			width = width,
 			height = height,
 			minHeight = self.minDropDownHeight,
-			x = math.max(sx, math.min(sx + self.width - width, (sx + x - width/2))) + self.selectionOffsetX,
+			x = math.max(sx, math.min(sx + self.width - width, (sx + x - width / 2))) + self.selectionOffsetX,
 			y = y + self.selectionOffsetY,
 			children = {
-				ComboBoxScrollPanel:New{
-					width  = "100%",
+				ComboBoxScrollPanel:New({
+					width = "100%",
 					height = "100%",
 					children = {
-						ComboBoxStackPanel:New{
-							width = '100%',
+						ComboBoxStackPanel:New({
+							width = "100%",
 							children = labels,
-						},
+						}),
 					},
-				}
-			}
-		}
+				}),
+			},
+		})
 		self:CallListeners(self.OnOpen)
 	else
 		self:_CloseWindow()

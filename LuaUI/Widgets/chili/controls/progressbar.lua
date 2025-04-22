@@ -2,37 +2,36 @@
 
 --- Progressbar module
 
---- Progressbar fields.
--- Inherits from Control.
--- @see control.Control
--- @table Progressbar
--- @int[opt = 0] min minimum value of the Progressbar
--- @int[opt = 100] max maximum value of the Progressbar
--- @int[opt = 100] value value of the Progressbar
--- @string[opt = ""] caption text to be displayed
--- @tparam {r, g, b, a} color specifies the color of the bar (default: {0, 0, 1, 1})
--- @tparam {r, g, b, a} backgroundColor specifies the background color (default: {1, 1, 1, 1})
--- @tparam {func1, fun2, ...} OnChange function listeners for value change (default {})
-Progressbar = Control:Inherit{
+---@class Progressbar : Control
+---@field min number Minimum value
+---@field max number Maximum value
+---@field value number Current value
+---@field color ColorTable Color {r,g,b,a}
+---@field backgroundColor ColorTable Background color {r,g,b,a}
+---@field orientation "horizontal"|"vertical" Bar orientation
+---@field reverse boolean Whether to fill in reverse direction
+---@field noSkin boolean Whether to use skin
+---@field OnChange CallbackFun[] Value change listeners
+Progressbar = Control:Inherit({
 	classname = "progressbar",
 
-	defaultWidth     = 90,
-	defaultHeight    = 20,
+	defaultWidth = 90,
+	defaultHeight = 20,
 
-	min       = 0,
-	max       = 100,
-	value     = 100,
+	min = 0,
+	max = 100,
+	value = 100,
 	orientation = "horizontal",
-	reverse   = false,
+	reverse = false,
 
-	caption   = "",
-	noFont    = false,
+	caption = "",
+	noFont = false,
 
-	color     = {0, 0, 1, 1},
-	backgroundColor = {1, 1, 1, 1},
+	color = { 0, 0, 1, 1 },
+	backgroundColor = { 1, 1, 1, 1 },
 
-	OnChange  = {},
-}
+	OnChange = {},
+})
 
 local this = Progressbar
 local inherited = this.inherited
@@ -49,16 +48,16 @@ end
 --// =============================================================================
 
 function Progressbar:_Clamp(v)
-	if (self.min < self.max) then
-		if (v < self.min) then
+	if self.min < self.max then
+		if v < self.min then
 			v = self.min
-		elseif (v > self.max) then
+		elseif v > self.max then
 			v = self.max
 		end
 	else
-		if (v > self.min) then
+		if v > self.min then
 			v = self.min
-		elseif (v < self.max) then
+		elseif v < self.max then
 			v = self.max
 		end
 	end
@@ -72,7 +71,7 @@ end
 function Progressbar:SetColor(...)
 	local color = _ParseColorArgs(...)
 	table.merge(color, self.color)
-	if (not table.iequal(color, self.color)) then
+	if not table.iequal(color, self.color) then
 		self.color = color
 		self:Invalidate()
 	end
@@ -93,10 +92,10 @@ end
 function Progressbar:SetValue(v, setcaption)
 	v = self:_Clamp(v)
 	local oldvalue = self.value
-	if (v ~= oldvalue) then
+	if v ~= oldvalue then
 		self.value = v
 
-		if (setcaption) then
+		if setcaption then
 			self:SetCaption(v)
 		end
 
@@ -108,7 +107,7 @@ end
 --- Sets the caption
 -- @string str caption to be set
 function Progressbar:SetCaption(str)
-	if (self.caption ~= str) then
+	if self.caption ~= str then
 		self.caption = str
 		self:Invalidate()
 	end
@@ -116,46 +115,44 @@ end
 
 --// =============================================================================
 
-
 function Progressbar:DrawControl()
-	local percent = (self.value-self.min)/(self.max-self.min)
+	local percent = (self.value - self.min) / (self.max - self.min)
 	local w = self.width
 	local h = self.height
 
 	gl.Color(self.backgroundColor)
-	if (self.orientation == "horizontal") then
+	if self.orientation == "horizontal" then
 		if self.reverse then
-			gl.Rect(0, 0, w*(1-percent), h)
+			gl.Rect(0, 0, w * (1 - percent), h)
 		else
-			gl.Rect(w*percent, 0, w, h)
+			gl.Rect(w * percent, 0, w, h)
 		end
 	else
 		if self.reverse then
-			gl.Rect(0, 0, w, h*percent)
+			gl.Rect(0, 0, w, h * percent)
 		else
-			gl.Rect(0, h*(1-percent), w, h)
+			gl.Rect(0, h * (1 - percent), w, h)
 		end
 	end
 
 	gl.Color(self.color)
-	if (self.orientation == "horizontal") then
+	if self.orientation == "horizontal" then
 		if self.reverse then
-			gl.Rect(w*(1-percent), 0, w, h)
+			gl.Rect(w * (1 - percent), 0, w, h)
 		else
-			gl.Rect(0, 0, w*percent, h)
+			gl.Rect(0, 0, w * percent, h)
 		end
 	else
 		if self.reverse then
-			gl.Rect(0, h*percent, w, h)
+			gl.Rect(0, h * percent, w, h)
 		else
-			gl.Rect(0, 0, w, h*(1-percent))
+			gl.Rect(0, 0, w, h * (1 - percent))
 		end
 	end
 
-	if (self.caption) and not self.noFont then
-		(self.font):Print(self.caption, w*0.5, h*0.5, "center", "center")
+	if self.caption and not self.noFont then
+		(self.font):Print(self.caption, w * 0.5, h * 0.5, "center", "center")
 	end
 end
-
 
 --// =============================================================================

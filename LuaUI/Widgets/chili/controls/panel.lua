@@ -2,18 +2,12 @@
 
 --- Panel module
 
---- Panel fields.
--- Inherits from Control.
--- @see control.Control
--- @table Panel
-Panel = Control:Inherit{
+--- @class Panel : Control
+Panel = Control:Inherit({
 	classname = "panel",
-	defaultWidth  = 100,
+	defaultWidth = 100,
 	defaultHeight = 100,
 	noFont = true,
-}
-
-local this = Panel
-local inherited = this.inherited
+})
 
 --// =============================================================================

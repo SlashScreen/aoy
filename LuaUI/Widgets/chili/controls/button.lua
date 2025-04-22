@@ -2,23 +2,20 @@
 
 --- Button module
 
---- Button fields.
--- Inherits from Control.
--- @see control.Control
--- @table Button
--- @string[opt = "button"] caption caption to be displayed
-Button = Control:Inherit{
+---@class Button : Control
+---@field caption string Button caption
+Button = Control:Inherit({
 	classname = "button",
-	caption  = 'button',
-	captionAlign  = nil,
-	defaultWidth  = 70,
+	caption = "button",
+	captionAlign = nil,
+	defaultWidth = 70,
 	defaultHeight = 20,
 
 	align = "center",
 	valign = "center",
 	alignPadding = 0.5,
 	noFont = false,
-}
+})
 
 local this = Button
 local inherited = this.inherited
@@ -28,7 +25,7 @@ local inherited = this.inherited
 --- Sets the caption of the button
 -- @string caption new caption of the button
 function Button:SetCaption(caption)
-	if (self.caption == caption) then
+	if self.caption == caption then
 		return
 	end
 	self.caption = caption
@@ -55,7 +52,7 @@ function Button:MouseDown(...)
 end
 
 function Button:MouseUp(...)
-	if (self.state.pressed) then
+	if self.state.pressed then
 		self.state.pressed = false
 		inherited.MouseUp(self, ...)
 		self:Invalidate()

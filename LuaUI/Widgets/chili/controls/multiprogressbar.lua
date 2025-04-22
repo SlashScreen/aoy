@@ -2,25 +2,31 @@
 
 --- Multiprogressbar module
 
---- Multiprogressbar fields.
--- Inherits from Control.
--- @see control.Control
--- @table Multiprogressbar
--- @bool[opt = false] drawBorder should the border be drawn?
--- @tparam {r, g, b, a} borderColor specifies the border color (default: {1, 0, 0, 1})
--- @string[opt = "horizontal"] orientation orientation of the progress bar
--- @bool[opt = false] reverse reverse drawing orientation
--- @tparam fnc scaleFunction scaling function that takes 0-1 and must return 0-1
-Multiprogressbar = Control:Inherit{
+---@class Multiprogressbar : Control
+---@field drawBorder boolean? should the border be drawn?
+---@field borderColor {r:number, g:number, b:number, a:number}? specifies the border color (default: {1,0,0,1})
+---@field orientation "horizontal"|"vertical"? orientation of the progress bar
+---@field reverse boolean? reverse drawing orientation
+---@field scaleFunction fun(p: number):number? scaling function that takes 0-1 and must return 0-1
+---@field bars {
+---color1: Color,
+---color2: Color,
+---percent: number,
+---texture: string?,
+---s: number?,
+---t: number?,
+---tileSize: number?,
+---}[] list of bar components to display, each bar is a table with the following fields:
+Multiprogressbar = Control:Inherit({
 	classname = "multiprogressbar",
 
-	defaultWidth     = 90,
-	defaultHeight    = 20,
+	defaultWidth = 90,
+	defaultHeight = 20,
 
-	padding = {0, 0, 0, 0},
-	fillPadding = {0, 0, 0, 0},
+	padding = { 0, 0, 0, 0 },
+	fillPadding = { 0, 0, 0, 0 },
 	drawBorder = false,
-	borderColor = {1, 0, 0, 1},
+	borderColor = { 1, 0, 0, 1 },
 	orientation = "horizontal",
 	reverse = false, -- draw in reversed orientation
 
@@ -28,21 +34,17 @@ Multiprogressbar = Control:Inherit{
 
 	-- list of bar components to display
 	bars = {
-	{
-		color1 = {1, 0, 1, 1},
-		color2 = {0.7, 0, 0.7, 1},
-		percent = 0.2,
-		texture = nil, -- texture file name
-		s = 1, -- tex coords
-		t = 1,
-		tileSize = nil, --  if set then main axis texture coord = width / tileSize
+		{
+			color1 = { 1, 0, 1, 1 },
+			color2 = { 0.7, 0, 0.7, 1 },
+			percent = 0.2,
+			texture = nil, -- texture file name
+			s = 1, -- tex coords
+			t = 1,
+			tileSize = nil, --  if set then main axis texture coord = width / tileSize
+		},
 	},
-
-	}
-}
-
-local this = Multiprogressbar
-local inherited = this.inherited
+})
 
 --// =============================================================================
 
@@ -75,17 +77,18 @@ local function drawBarV(x, y, w, h, color1, color2)
 	glVertex(x + w, y)
 end
 
-
 function Multiprogressbar:DrawControl()
 	local percentDone = 0
 	local efp
 	local fillPadding = self.fillPadding
 
-	local x, y, w, h = fillPadding[1], fillPadding[2],
-	                   self.width - fillPadding[1] - fillPadding[3],
-	                   self.height  - fillPadding[2] - fillPadding[4]
+	local x, y, w, h =
+		fillPadding[1],
+		fillPadding[2],
+		self.width - fillPadding[1] - fillPadding[3],
+		self.height - fillPadding[2] - fillPadding[4]
 
-	if (self.scaleFunction ~= nil) then  -- if using non linear scale fix the bar
+	if self.scaleFunction ~= nil then -- if using non linear scale fix the bar
 		local totalPercent = 0
 		for _, b in ipairs(self.bars) do
 			totalPercent = totalPercent + (b.percent or 0)
@@ -101,16 +104,15 @@ function Multiprogressbar:DrawControl()
 		end
 	end
 
-
-	if (self.orientation == "horizontal") then
+	if self.orientation == "horizontal" then
 		for _, b in ipairs(self.bars) do
 			if b._drawPercent > 0 then
-				if (self.reverse) then
+				if self.reverse then
 					efp = 1 - percentDone - b._drawPercent
 				else
 					efp = percentDone
 				end
-				if (b.color1 ~= nil) then
+				if b.color1 ~= nil then
 					glBeginEnd(GL.QUADS, drawBarH, x + efp * w, y, w * b._drawPercent, h, b.color1, b.color2)
 				end
 				percentDone = percentDone + b._drawPercent
@@ -120,7 +122,7 @@ function Multiprogressbar:DrawControl()
 					glColor(1, 1, 1, 1)
 
 					local bs = b.s
-					if (b.tileSize) then
+					if b.tileSize then
 						bs = w * b._drawPercent / b.tileSize
 					end
 					gl.TexRect(x + efp * w, y, x + (efp + b._drawPercent) * w, y + h, 0, 0, bs, b.t)
@@ -131,13 +133,13 @@ function Multiprogressbar:DrawControl()
 	else
 		for _, b in ipairs(self.bars) do
 			if b._drawPercent > 0 then
-				if (self.reverse) then
+				if self.reverse then
 					efp = 1 - percentDone - b._drawPercent
 				else
 					efp = percentDone
 				end
 
-				if (b.color1 ~= nil) then
+				if b.color1 ~= nil then
 					glBeginEnd(GL.QUADS, drawBarV, x, y + efp * h, w, h * b._drawPercent, b.color1, b.color2)
 				end
 
@@ -148,7 +150,7 @@ function Multiprogressbar:DrawControl()
 					glColor(1, 1, 1, 1)
 
 					local bt = b.t
-					if (b.tileSize) then
+					if b.tileSize then
 						bt = h * b._drawPercent / b.tileSize
 					end
 					gl.TexRect(x, y + efp * h, x + w, y + (efp + b._drawPercent) * h, 0, 0, b.s, bt)
@@ -169,6 +171,5 @@ end
 function Multiprogressbar:HitTest()
 	return self
 end
-
 
 --// =============================================================================
