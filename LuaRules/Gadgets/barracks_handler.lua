@@ -18,10 +18,12 @@ local IterableMap = VFS.Include("LuaRules/Gadgets/Include/IterableMap.lua")
 
 local barrackUnits = IterableMap.New()
 
-local FRAMES_PER_SECOND = 30 -- Look up whether this is a const that the engine supplies
+local FRAMES_PER_SECOND = Spring.GetFPS() -- Look up whether this is a const that the engine supplies
 
 local CMD_BUILD_UNIT_RANGE = Spring.Utilities.CMD.BUILD_UNIT_RANGE
 local CMD_BUILD_UNIT_RANGE_UPPER = Spring.Utilities.CMD.BUILD_UNIT_RANGE_UPPER
+
+local MAX_JOBS = 5
 
 local function SetupConstruction(unitID, ud, bud)
 	local buildCmd = {
@@ -93,6 +95,11 @@ local function UpdateBarracksQueue(unitID, barracks, index, frame)
 		CreateUnitNear(ux, uy, uz, buildUnitDefID, Spring.GetUnitTeam(unitID))
 		barracks.nextFinishFrame = false
 		table.remove(barracks.queue, 1) -- Shifts down the queue, I hope
+		for i = 1, MAX_JOBS do
+			local value = barracks.queue[i] or 0
+			Spring.SetUnitRulesParam(unitID, "build_queue_" .. i, value)
+		end
+		Script.LuaUI.UpdateBuildQueueUI(unitID)
 	end
 
 	if barracks.queue[1] and not barracks.nextFinishFrame then

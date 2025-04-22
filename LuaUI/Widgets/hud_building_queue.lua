@@ -33,6 +33,18 @@ for def_id, def in pairs(UnitDefs) do
 	end
 end
 
+local function rerender_jobs(unitID)
+	Spring.Echo("Rerendering jobs for " .. tostring(unitID))
+	for i, value in ipairs(jobs) do
+		local building_def_id = Spring.GetUnitRulesParam(unitID, "build_queue_" .. i) or 0
+		if building_def_id == 0 then
+			value.label_handle:SetCaption("no building")
+		else
+			value.label_handle:SetCaption("building " .. building_def_id)
+		end
+	end
+end
+
 function widget:Initialize()
 	Chili = WG.Chili
 
@@ -87,6 +99,8 @@ function widget:Initialize()
 	end
 
 	root_window:Show()
+
+	widgetHandler:RegisterGlobal("UpdateBuildQueueUI", rerender_jobs)
 end
 
 function widget:Shutdown()
@@ -98,14 +112,7 @@ function widget:Shutdown()
 	end
 end
 
-local function rerender_jobs()
-	for _, value in ipairs(jobs) do
-		value.label_handle:SetCaption("Job active:" .. tostring(value.active))
-	end
-end
-
 function widget:CommandsChanged()
-	Spring.Echo("Commands changed")
 	local selected_units = Spring.GetSelectedUnits() --- @type UnitID[]
 	if #selected_units == 0 then
 		return
@@ -114,7 +121,6 @@ function widget:CommandsChanged()
 	local selected_unit = selected_units[1] --- @type UnitID
 	local selected_unit_def_id = Spring.GetUnitDefID(selected_unit)
 	if is_factory[selected_unit_def_id] then
-		Spring.Echo("Selected factory")
 		rerender_jobs()
 	end
 end
