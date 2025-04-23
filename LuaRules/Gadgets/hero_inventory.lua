@@ -116,7 +116,7 @@ else
 	function gadget:Initialize()
 		gadgetHandler:RegisterCMDID(CMD_PICK_UP_ITEM)
 		Spring.SetCustomCommandDrawData(CMD_PICK_UP_ITEM, CMD.FIGHT)
-		Spring.AssignMouseCursor("ick Up Item", "cursorfight", true, true)
+		Spring.AssignMouseCursor("Pick Up Item", "cursorfight", true, true)
 	end
 
 	---@param type "unit" | "feature"

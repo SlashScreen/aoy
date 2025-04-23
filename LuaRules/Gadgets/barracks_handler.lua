@@ -18,7 +18,7 @@ local IterableMap = VFS.Include("LuaRules/Gadgets/Include/IterableMap.lua")
 
 local barrackUnits = IterableMap.New()
 
-local FRAMES_PER_SECOND = Spring.GetFPS() -- Look up whether this is a const that the engine supplies
+local FRAMES_PER_SECOND = 30 -- Look up whether this is a const that the engine supplies
 
 local CMD_BUILD_UNIT_RANGE = Spring.Utilities.CMD.BUILD_UNIT_RANGE
 local CMD_BUILD_UNIT_RANGE_UPPER = Spring.Utilities.CMD.BUILD_UNIT_RANGE_UPPER

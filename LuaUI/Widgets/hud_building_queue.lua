@@ -10,7 +10,6 @@ function widget:GetInfo()
 		license = "GNU GPL, v2 or later",
 		layer = 1,
 		enabled = true,
-		handler = true,
 	}
 end
 
@@ -121,6 +120,6 @@ function widget:CommandsChanged()
 	local selected_unit = selected_units[1] --- @type UnitID
 	local selected_unit_def_id = Spring.GetUnitDefID(selected_unit)
 	if is_factory[selected_unit_def_id] then
-		rerender_jobs()
+		rerender_jobs(selected_unit)
 	end
 end
