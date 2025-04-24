@@ -12,7 +12,7 @@ function widget:GetInfo()
 		license = "https://unlicense.org/",
 		layer = -828888,
 		handler = true,
-		enabled = true,
+		enabled = false,
 	}
 end
 

@@ -18,8 +18,8 @@
 				padding: 3dp;
 				display: flex;
 				flex-direction: column;
-				width: 200dp;
-				height: 200dp;
+				height: 30vh;
+				width: 40vh;
 				gap: 3dp;
 			}
 
@@ -27,7 +27,6 @@
 				display: flex;
 				flex: 1;
 				gap: 3dp;
-				height: 50dp;
 			}
 
 			.action {
