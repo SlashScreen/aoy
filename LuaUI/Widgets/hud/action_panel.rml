@@ -1,0 +1,52 @@
+<rml>
+	<head>
+		<style> 
+			body {
+				height: 100%;
+				width: 100%;
+				font-family: "Josefin Sans";
+				font-size: 16dp;
+				pointer-events: none;
+			}
+
+			#widget {
+				position: absolute;
+				background: #000000;
+				bottom: 0;
+				right: 0;
+				pointer-events: auto;
+				padding: 3dp;
+				display: flex;
+				flex-direction: column;
+				width: 200dp;
+				height: 200dp;
+				gap: 3dp;
+			}
+
+			.row {
+				display: flex;
+				flex: 1;
+				gap: 3dp;
+				height: 50dp;
+			}
+
+			.action {
+				flex: 1;
+				background: #ff0000;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="widget" data-model="action_panel_model">
+			<div class="row" data-for="row: actions">
+				<span
+					data-visible = "action.visible"
+					data-for="action: row" 
+					data-event-mousedown="button_hook(action.row, action.column)"
+					class = "action"
+				>{{action.name}}</span>
+			</div>
+		</div>
+	</body>
+</rml>

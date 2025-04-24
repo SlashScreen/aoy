@@ -11,7 +11,13 @@ end
 RmlGuard = true
 
 -- Load fonts
-RmlUi.LoadFontFace("Fonts/FreeMonoBold.ttf", true)
+--- @type string[]
+local fonts = {
+	"JosefinSans-Regular.ttf",
+}
+for _, font in ipairs(fonts) do
+	RmlUi.LoadFontFace("LuaUI/fonts/" .. font, true)
+end
 
 -- Mouse Cursor Aliases
 --[[

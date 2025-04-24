@@ -46,9 +46,6 @@ function widget:Initialize()
 		dm_handle.exampleValue = options[math.random(1, 4)]
 	end
 
-	RmlUi.LoadFontFace("LuaUI/fonts/JosefinSans-Regular.ttf")
-	document = widget.rmlContext:Update()
-
 	document = widget.rmlContext:LoadDocument("LuaUi/Widgets/hud/simple_demo.rml", widget)
 	document:ReloadStyleSheet()
 	document:Show()
