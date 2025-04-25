@@ -17,7 +17,6 @@ function pwl() -- ???  (print widget list)
 	end
 end
 
-include("keysym.h.lua")
 include("utils.lua")
 include("system.lua")
 include("cache.lua") --contain cached override for Spring.GetVisibleUnit (performance optimization). All overrides that are placed here have global reach

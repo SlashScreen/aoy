@@ -82,6 +82,8 @@ local init_model = {
 --- @field queueing boolean
 --- @field texture string
 
+local unit_commands --- @type UnitOrder[]
+
 local function clear_menu()
 	for _, row in pairs(dm_handle.actions) do
 		for _, value in pairs(row) do
@@ -92,28 +94,7 @@ local function clear_menu()
 end
 
 local function layoutHandler(xIcons, yIcons, cmdCount, commands)
-	local debug_text = ""
-	for _, value in pairs(commands) do
-		debug_text = debug_text .. value.name .. ", "
-	end
-	Spring.Echo(debug_text)
-
-	clear_menu()
-	local column = 1
-	local row = 1
-	for i = 1, cmdCount, 1 do
-		--- @type UnitOrder
-		local command = commands[i]
-		--- @type ActionButton
-		local entry = dm_handle.actions[row][column]
-
-		entry.name = "[" .. command.name .. "]"
-		entry.visible = not (command.hidden or command.disabled)
-
-		row = math.floor(i / MAX_ROWS) + 1
-		column = (i % MAX_COLUMNS_PER_ROW) + 1
-		Spring.Echo("Set entry " .. tostring(row) .. ", " .. tostring(column))
-	end
+	unit_commands = commands
 	return "", xIcons, yIcons, {}, {}, {}, {}, {}, {}, {}, { [1337] = 9001 }
 end
 
@@ -149,5 +130,34 @@ function widget:Shutdown()
 	end
 	if widget.rmlContext then
 		RmlUi.RemoveContext(widget.whInfo.name)
+	end
+end
+
+function widget:CommandsChanged()
+	Spring.Echo("Commands Changed")
+	local commands = unit_commands
+	local cmdCount = #commands
+
+	local debug_text = ""
+	for _, value in pairs(commands) do
+		debug_text = debug_text .. value.name .. ", "
+	end
+	Spring.Echo(debug_text)
+
+	clear_menu()
+	local column = 1
+	local row = 1
+	for i = 1, cmdCount, 1 do
+		--- @type UnitOrder
+		local command = commands[i]
+		--- @type ActionButton
+		local entry = dm_handle.actions[row][column]
+
+		entry.name = "[" .. command.name .. "]"
+		entry.visible = not (command.hidden or command.disabled)
+
+		row = math.floor(i / MAX_ROWS) + 1
+		column = (i % MAX_COLUMNS_PER_ROW) + 1
+		Spring.Echo("Set entry " .. tostring(row) .. ", " .. tostring(column))
 	end
 end
