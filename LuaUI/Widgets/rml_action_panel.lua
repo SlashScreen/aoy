@@ -93,15 +93,6 @@ local function clear_menu()
 	Spring.Echo("menu cleared")
 end
 
-local function layoutHandler(xIcons, yIcons, cmdCount, commands)
-	unit_commands = commands
-	return "", xIcons, yIcons, {}, {}, {}, {}, {}, {}, {}, { [1337] = 9001 }
-end
-
-local function OverrideDefaultMenu()
-	widgetHandler:ConfigLayoutHandler(layoutHandler)
-end
-
 function widget:Initialize()
 	widget.rmlContext = RmlUi.CreateContext(widget.whInfo.name)
 
@@ -116,8 +107,6 @@ function widget:Initialize()
 		Spring.Echo("Failed to load document")
 		return
 	end
-
-	OverrideDefaultMenu()
 
 	RmlUi.SetDebugContext(widget.whInfo.name)
 	document:ReloadStyleSheet()
