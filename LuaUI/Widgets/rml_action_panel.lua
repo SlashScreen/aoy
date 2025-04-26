@@ -41,6 +41,7 @@ end
 --- @field visible boolean
 
 local dm_handle --- @type Model
+local DATA_MODEL_NAME = "action_panel_model"
 --- @type Model
 local init_model = {
 	button_hook = eventCallback,
@@ -66,6 +67,7 @@ local init_model = {
 		},
 	},
 }
+local needs_update = false
 
 --- @class UnitOrder
 --- @field type integer
@@ -95,6 +97,7 @@ end
 
 local function layoutHandler(xIcons, yIcons, cmdCount, commands)
 	unit_commands = commands
+	widgetHandler:CommandsChanged()
 	return "", xIcons, yIcons, {}, {}, {}, {}, {}, {}, {}, { [1337] = 9001 }
 end
 
@@ -105,17 +108,11 @@ end
 function widget:Initialize()
 	widget.rmlContext = RmlUi.CreateContext(widget.whInfo.name)
 
-	dm_handle = widget.rmlContext:OpenDataModel("action_panel_model", init_model)
-	if not dm_handle then
-		Spring.Echo("RmlUi: Failed to open data model ", "action_panel_model")
-		return
-	end
+	dm_handle = widget.rmlContext:OpenDataModel(DATA_MODEL_NAME, init_model)
+	assert(dm_handle ~= nil, "RmlUi: Failed to open data model " .. DATA_MODEL_NAME)
 
 	document = widget.rmlContext:LoadDocument("LuaUi/Widgets/hud/action_panel.rml", widget)
-	if not document then
-		Spring.Echo("Failed to load document")
-		return
-	end
+	assert(document ~= nil, "Failed to load document")
 
 	OverrideDefaultMenu()
 
@@ -133,7 +130,30 @@ function widget:Shutdown()
 	end
 end
 
+local function dump(o)
+	if type(o) == "table" then
+		local s = "{ "
+		for k, v in pairs(o) do
+			if type(k) ~= "number" then
+				k = '"' .. k .. '"'
+			end
+			s = s .. "[" .. k .. "] = " .. dump(v) .. ","
+		end
+		return s .. "} "
+	else
+		return tostring(o)
+	end
+end
+
 function widget:CommandsChanged()
+	needs_update = true
+end
+
+function widget:Update()
+	if not needs_update then
+		return
+	end
+
 	Spring.Echo("Commands Changed")
 	local commands = unit_commands
 	local cmdCount = #commands
@@ -147,17 +167,28 @@ function widget:CommandsChanged()
 	clear_menu()
 	local column = 1
 	local row = 1
+	local actions = dm_handle.actions
+	Spring.Echo("Got Actions " .. dump(actions))
+
 	for i = 1, cmdCount, 1 do
-		--- @type UnitOrder
-		local command = commands[i]
-		--- @type ActionButton
-		local entry = dm_handle.actions[row][column]
+		Spring.Echo(i)
+		local command = commands[i] --- @type UnitOrder
+		Spring.Echo("Got Command")
+
+		local entry_row = actions[row]
+		Spring.Echo("Got Entry Row")
+		local entry = entry_row[column]
+		Spring.Echo("Got Entry")
 
 		entry.name = "[" .. command.name .. "]"
+		Spring.Echo("Set Name")
 		entry.visible = not (command.hidden or command.disabled)
+		Spring.Echo("Set Visible")
 
 		row = math.floor(i / MAX_ROWS) + 1
 		column = (i % MAX_COLUMNS_PER_ROW) + 1
 		Spring.Echo("Set entry " .. tostring(row) .. ", " .. tostring(column))
 	end
+
+	needs_update = false
 end
