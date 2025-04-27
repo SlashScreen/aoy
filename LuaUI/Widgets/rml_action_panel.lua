@@ -87,9 +87,10 @@ local needs_update = false
 local unit_commands --- @type UnitOrder[]
 
 local function clear_menu()
-	for _, row in pairs(dm_handle.actions) do
-		for _, value in pairs(row) do
+	for r, row in pairs(dm_handle.actions) do
+		for a, value in pairs(row) do
 			value.visible = false
+			Spring.Echo("keys are " .. r .. ", " .. a)
 		end
 	end
 	Spring.Echo("menu cleared")
@@ -130,33 +131,23 @@ function widget:Shutdown()
 	end
 end
 
-local function dump(o)
-	if type(o) == "table" then
-		local s = "{ "
-		for k, v in pairs(o) do
-			if type(k) ~= "number" then
-				k = '"' .. k .. '"'
-			end
-			s = s .. "[" .. k .. "] = " .. dump(v) .. ","
-		end
-		return s .. "} "
-	else
-		return tostring(o)
-	end
-end
-
 function widget:CommandsChanged()
 	needs_update = true
 end
 
 function widget:Update()
 	if not needs_update then
+		clear_menu()
+		return
+	end
+
+	if true then
 		return
 	end
 
 	Spring.Echo("Commands Changed")
 	local commands = unit_commands
-	local cmdCount = #commands
+	local cmd_count = #commands
 
 	local debug_text = ""
 	for _, value in pairs(commands) do
@@ -164,31 +155,37 @@ function widget:Update()
 	end
 	Spring.Echo(debug_text)
 
-	clear_menu()
-	local column = 1
-	local row = 1
 	local actions = dm_handle.actions
-	Spring.Echo("Got Actions " .. dump(actions))
 
-	for i = 1, cmdCount, 1 do
-		Spring.Echo(i)
-		local command = commands[i] --- @type UnitOrder
-		Spring.Echo("Got Command")
+	local function loop()
+		for row = 1, MAX_ROWS do
+			for column = 1, MAX_COLUMNS_PER_ROW do
+				local i = ((row - 1) * MAX_COLUMNS_PER_ROW) + column
+				if i > cmd_count then
+					return
+				end
 
-		local entry_row = actions[row]
-		Spring.Echo("Got Entry Row")
-		local entry = entry_row[column]
-		Spring.Echo("Got Entry")
+				Spring.Echo(i .. " " .. row .. ", " .. column)
 
-		entry.name = "[" .. command.name .. "]"
-		Spring.Echo("Set Name")
-		entry.visible = not (command.hidden or command.disabled)
-		Spring.Echo("Set Visible")
+				local command = commands[i] --- @type UnitOrder
+				local entry = actions[row][column]
 
-		row = math.floor(i / MAX_ROWS) + 1
-		column = (i % MAX_COLUMNS_PER_ROW) + 1
-		Spring.Echo("Set entry " .. tostring(row) .. ", " .. tostring(column))
+				entry.name = command.name
+				entry.visible = not (command.hidden or command.disabled)
+
+				Spring.Echo(
+					"Set entry "
+						.. row
+						.. ", "
+						.. column
+						.. " name: "
+						.. command.name
+						.. " visible: "
+						.. tostring(entry.visible)
+				)
+			end
+		end
 	end
-
+	loop()
 	needs_update = false
 end
