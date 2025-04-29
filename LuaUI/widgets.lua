@@ -1198,6 +1198,7 @@ function widgetHandler:GroupChanged(groupID)
 end
 
 function widgetHandler:CommandsChanged()
+	Spring.Echo("Received CommandsChanged!")
 	if widgetHandler:UpdateSelection() then -- for selectionchanged
 		return -- selection updated, don't call commands changed.
 	end
@@ -1652,6 +1653,7 @@ end
 -- local helper (not a real call-in)
 local oldSelection = {}
 function widgetHandler:UpdateSelection()
+	Spring.Echo("Received UpdateSelection!")
 	local changed
 	local newSelection = Spring.GetSelectedUnits()
 	if #newSelection == #oldSelection then
@@ -1681,6 +1683,7 @@ function widgetHandler:UpdateSelection()
 				end
 			end
 		end
+		Spring.Echo("Invoking SelectionChanged!")
 		if widgetHandler:SelectionChanged(newSelection, subselection) then
 			-- selection changed, don't set old selection to new selection as it is soon to change.
 			return true
@@ -1692,9 +1695,10 @@ end
 
 function widgetHandler:SelectionChanged(selectedUnits, subselection)
 	for _, w in ipairs(self.SelectionChangedList) do
-		if widgetHandler.WG["smartselect"] and not widgetHandler.WG["smartselect"].updateSelection then
-			return
-		end
+		-- Do note below means SelectionChanged can return an array to "overwrite" the units to be selected
+		-- It will short circuit commandschanged from being propagated
+		-- Be aware of the implication of this (as well of the possibility of an infinite loop e.g. if a widget always returns non-nil on SelectionChanged())
+		-- A widget returning nil means it accepts the new selection after handling its internal logic
 		local unitArray = w:SelectionChanged(selectedUnits, subselection)
 		if unitArray then
 			Spring.SelectUnitArray(unitArray)

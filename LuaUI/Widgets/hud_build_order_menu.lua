@@ -51,7 +51,6 @@ end
 local hotkeyLabels = {}
 --------------------------------------------------------------------------------
 -- Localize
-local sForceLayoutUpdate = Spring.ForceLayoutUpdate
 local sSetActiveCommand = Spring.SetActiveCommand
 local sGetCmdDescIndex = Spring.GetCmdDescIndex
 local sGetActiveCommand = Spring.GetActiveCommand
@@ -704,24 +703,12 @@ local function updateLabel()
 	end
 end --updateLabel
 
-local function OverrideDefaultMenu()
-	local function layoutHandler(xIcons, yIcons, cmdCount, commands)
-		widgetHandler.commands = commands
-		widgetHandler.commands.n = cmdCount
-		widgetHandler:CommandsChanged()
-		local customCmds = widgetHandler.customCommands
-		return "", xIcons, yIcons, {}, customCmds, {}, {}, {}, {}, {}, { [1337] = 9001 }
-	end
-	widgetHandler:ConfigLayoutHandler(layoutHandler)
-	sForceLayoutUpdate()
-end --OverrideDefaultMenu
 --------------------------------------------------------------------------------
 function widget:Initialize()
 	if not WG.Chili then
 		widgetHandler:RemoveWidget()
 		return
 	end
-	OverrideDefaultMenu()
 
 	Chili = WG.Chili
 	Window = Chili.Window
@@ -786,7 +773,5 @@ end --ViewResize
 function widget:Shutdown()
 	orderWindow:Dispose()
 	buildWindow:Dispose()
-	widgetHandler:ConfigLayoutHandler(nil)
 	chiliCache = nil
-	sForceLayoutUpdate()
 end --Shutdown

@@ -96,16 +96,6 @@ local function clear_menu()
 	Spring.Echo("menu cleared")
 end
 
-local function layoutHandler(xIcons, yIcons, cmdCount, commands)
-	unit_commands = commands
-	widgetHandler:CommandsChanged()
-	return "", xIcons, yIcons, {}, {}, {}, {}, {}, {}, {}, { [1337] = 9001 }
-end
-
-local function OverrideDefaultMenu()
-	widgetHandler:ConfigLayoutHandler(layoutHandler)
-end
-
 function widget:Initialize()
 	widget.rmlContext = RmlUi.CreateContext(widget.whInfo.name)
 
@@ -114,8 +104,6 @@ function widget:Initialize()
 
 	document = widget.rmlContext:LoadDocument("LuaUi/Widgets/hud/action_panel.rml", widget)
 	assert(document ~= nil, "Failed to load document")
-
-	OverrideDefaultMenu()
 
 	RmlUi.SetDebugContext(widget.whInfo.name)
 	document:ReloadStyleSheet()
