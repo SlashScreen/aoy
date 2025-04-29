@@ -129,10 +129,6 @@ function widget:Update()
 		return
 	end
 
-	if true then
-		return
-	end
-
 	Spring.Echo("Commands Changed")
 	local commands = unit_commands
 	local cmd_count = #commands
