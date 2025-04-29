@@ -29,7 +29,22 @@ include("setupdefs.lua")
 include("savetable.lua")
 
 include("debug.lua")
+
+-- Override default engine UI handling
+
 include("layout.lua") -- contains a simple LayoutButtons()
+
+-- consider using ZK or BAR LayoutButtons, they might handle some gotchas
+-- see also: https://github.com/beyond-all-reason/Beyond-All-Reason/blob/27b2e2fa9a62c85db50a825ca4a88ebf689a1e16/luaui/layout.lua#L42-L80
+
+-- defined in basecontent layout.lua, use dummyhandler only to capture commandschanged()
+ConfigLayoutHandler(false)
+
+-- refresh, this prevents default engine buildmenu still showing up after a luaui reload
+Spring.ForceLayoutUpdate()
+
+--/ Override default engine UI handling
+
 include("widgets.lua") -- the widget handler
 
 --------------------------------------------------------------------------------
@@ -149,5 +164,3 @@ end
 -- The unit (and some of the Draw) call-ins are handled
 -- differently (see LuaUI/widgets.lua / UpdateCallIns())
 --
-
---------------------------------------------------------------------------------
