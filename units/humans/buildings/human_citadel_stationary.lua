@@ -1,13 +1,13 @@
 return lowerkeys({
-	demon_base_tent = {
-		name = [[Base Tent]],
-		description = [[The base of operations for the demons. Can make engineers.]],
+	human_citadel_stationary = {
+		name = [[Citadel]],
+		description = [[The heart of any human invasion force.]],
 		category = [[LAND BUILDING]],
 		footprintX = 4,
 		footprintZ = 4,
 
-		objectName = "demons/buildings/demon_base_tent.s3o",
-		script = "scripts/demons/buildings/demon_base_tent.lua",
+		objectName = "humans/buildings/human_citadel.s3o",
+		script = "scripts/humans/buildings/human_citadel_stationary.lua",
 		health = 1000,
 		metalCost = 150,
 
@@ -22,7 +22,10 @@ return lowerkeys({
 
 		customParams = {
 			is_factory = true,
-			build_1 = [[demon_engineer]],
+			build_1 = [[human_andros]],
+
+			can_stand_up = true,
+			mobile_form = "human_citadel_mobile",
 		},
 	},
 })
