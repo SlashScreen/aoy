@@ -33,57 +33,75 @@ local stand_up_command_desc = {
 	tooltip = "Pick the building up off the ground",
 }
 
---- @type {[UnitDefID]: string}
-local can_sit_down = {}
---- @type {[UnitDefID]: string}
-local can_stand_up = {}
+local can_sit_down = {} --- @type {[UnitDefID]: UnitDefID}
+local can_stand_up = {} --- @type {[UnitDefID]: UnitDefID}
 
 -- Initialize tables
 for unit_def_id, unit_def in pairs(UnitDefs) do
 	if unit_def.customParams.can_sit_down then
-		can_sit_down[unit_def_id] = unit_def.customParams.stationary_form
+		can_sit_down[unit_def_id] = UnitDefNames[unit_def.customParams.stationary_form].id
 	end
 
 	if unit_def.customParams.can_stand_up then
-		can_stand_up[unit_def_id] = unit_def.customParams.mobile_form
+		can_stand_up[unit_def_id] = UnitDefNames[unit_def.customParams.mobile_form].id
 	end
 end
 
 if gadgetHandler:IsSyncedCode() then
 	---@param unit_id UnitID
 	---@param unit_def_id UnitDefID
+	---@param team_id TeamID
 	---@return boolean
-	---@return boolean
-	local function sit_down(unit_id, unit_def_id)
-		-- TODO: Replace unit with stationary building
-		return true, true
+	local function sit_down(unit_id, unit_def_id, team_id)
+		local x, y, z = Spring.GetUnitPosition(unit_id)
+		if x == nil then
+			return false
+		end
+		local facing = Spring.GetUnitBuildFacing(unit_id) --[[@as integer]]
+		-- Create alternative
+		Spring.DestroyUnit(unit_id, false, true)
+		if Spring.CreateUnit(can_sit_down[unit_def_id], x, y, z, facing, team_id) == nil then
+			return false
+		end
+
+		return true
 	end
 
 	---@param unit_id UnitID
 	---@param unit_def_id UnitDefID
+	---@param team_id TeamID
 	---@return boolean
-	---@return boolean
-	local function stand_up(unit_id, unit_def_id)
-		-- TODO: Replace buildings with mobile unit
-		return true, true
+	local function stand_up(unit_id, unit_def_id, team_id)
+		local x, y, z = Spring.GetUnitPosition(unit_id)
+		if x == nil then
+			return false
+		end
+		local facing = Spring.GetUnitBuildFacing(unit_id) --[[@as integer]]
+		-- Create alternative
+		Spring.DestroyUnit(unit_id, false, true)
+		if Spring.CreateUnit(can_stand_up[unit_def_id], x, y, z, facing, team_id) == nil then
+			return false
+		end
+
+		return true
 	end
 
-	function gadget:CommandFallback(unit_id, unit_def_id, _unit_team, cmd_id, _cmd_params, _cmd_options)
+	function gadget:AllowCommand(unit_id, unit_def_id, unit_team, cmd_id, _cmdParams, _cmdOptions, _cmdTag, _synced)
 		if cmd_id == CMD_SIT_DOWN then
-			return sit_down(unit_id, unit_def_id)
-		elseif cmd_id == CMD_STAND_UP then
-			return stand_up(unit_id, unit_def_id)
-		end
-	end
+			if can_sit_down[unit_def_id] == nil then
+				return false
+			end
 
-	function gadget:AllowCommand(_unitID, unit_def_id, _unitTeam, cmd_id, _cmdParams, _cmdOptions, _cmdTag, _synced)
-		if cmd_id == CMD_SIT_DOWN then
-			return can_sit_down[unit_def_id] ~= nil
+			return sit_down(unit_id, unit_def_id, unit_team)
 		elseif cmd_id == CMD_STAND_UP then
-			return can_stand_up[unit_def_id] ~= nil
-		else
-			return true
+			if can_stand_up[unit_def_id] == nil then
+				return false
+			end
+
+			return stand_up(unit_id, unit_def_id, unit_team)
 		end
+
+		return true
 	end
 
 	function gadget:Initialize()
@@ -91,9 +109,14 @@ if gadgetHandler:IsSyncedCode() then
 		gadgetHandler:RegisterCMDID(CMD_STAND_UP)
 	end
 
-	function dadget:UnitCreated(unit_id)
-		Spring.InsertUnitCmdDesc(unit_id, sit_down_command_desc)
-		Spring.InsertUnitCmdDesc(unit_id, stand_up_command_desc)
+	function gadget:UnitCreated(unit_id)
+		if can_sit_down[Spring.GetUnitDefID(unit_id)] ~= nil then
+			Spring.InsertUnitCmdDesc(unit_id, sit_down_command_desc)
+		end
+
+		if can_stand_up[Spring.GetUnitDefID(unit_id)] ~= nil then
+			Spring.InsertUnitCmdDesc(unit_id, stand_up_command_desc)
+		end
 	end
 else
 	function gadget:Initialize()

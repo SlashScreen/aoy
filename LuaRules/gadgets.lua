@@ -21,6 +21,7 @@
 --- @alias UnitDefID integer
 --- @alias FeatureID integer
 --- @alias FeatureDefID integer
+--- @alias TeamID integer
 
 local SAFEWRAP = 0
 -- 0: disabled
