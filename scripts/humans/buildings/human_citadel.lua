@@ -29,14 +29,48 @@ local arms = {
 	piece("ArmNW"),
 }
 
+local citadel_body = piece("CitadelBody") --- @type Piece
+
 local runspeed = UnitDefs[unitDefID].speed
-local arm_start = math.rad(0)
-local arm_end = math.rad(45)
-local arm_axis = x_axis
-local leg_start = math.rad(0)
-local leg_end = math.rad(-45)
-local leg_axis = z_axis
-local hangtime = 0.5 --- frames held in air
+
+local arm_start_rot = math.rad(42)
+local arm_end_rot = math.rad(65)
+local leg_start_rot = math.rad(80)
+local leg_end_rot = math.rad(68)
+--- @type table<leg_dirs, {axis: any, arm_start: number, arm_end: number, leg_start: number, leg_end: number}>
+--- The axes and signs of everything changes based on the leg so I hardcoded it into this table
+local directional_info = {
+	{
+		axis = x_axis,
+		arm_start = -arm_start_rot,
+		arm_end = -arm_end_rot,
+		leg_start = leg_start_rot,
+		leg_end = leg_end_rot,
+	},
+	{
+		axis = z_axis,
+		arm_start = -arm_start_rot,
+		arm_end = -arm_end_rot,
+		leg_start = leg_start_rot,
+		leg_end = leg_end_rot,
+	},
+	{
+		axis = x_axis,
+		arm_start = arm_start_rot,
+		arm_end = arm_end_rot,
+		leg_start = -leg_start_rot,
+		leg_end = -leg_end_rot,
+	},
+	{
+		axis = z_axis,
+		arm_start = arm_start_rot,
+		arm_end = arm_end_rot,
+		leg_start = -leg_start_rot,
+		leg_end = -leg_end_rot,
+	},
+}
+
+local hangtime = 30 --- frames held in air
 
 local function GetSpeedMod()
 	-- disallow zero (instant turn instead -> infinite loop)
@@ -44,25 +78,35 @@ local function GetSpeedMod()
 	return 1.0
 end
 
----@param leg Piece
-local function leg_anim(arm, leg)
+---@param dir leg_dirs
+local function leg_anim(dir)
 	local speedmod = GetSpeedMod()
 	local truespeed = runspeed * speedmod
+	local move_speed = truespeed * 0.2
+
+	local arm = arms[dir]
+	local leg = legs[dir]
+	local dir_info = directional_info[dir]
+	local axis = dir_info.axis
+	local arm_start = dir_info.arm_start
+	local arm_end = dir_info.arm_end
+	local leg_start = dir_info.leg_start
+	local leg_end = dir_info.leg_end
 
 	-- Raise
-	Turn(arm, arm_axis, arm_start, truespeed)
-	WaitForTurn(arm, arm_axis)
-	Turn(leg, leg_axis, leg_start, truespeed)
-	WaitForTurn(leg, leg_axis)
+	Turn(arm, axis, arm_end, move_speed)
+	WaitForTurn(arm, axis)
+	Turn(leg, axis, leg_end, move_speed)
+	WaitForTurn(leg, axis)
 
 	-- Hang
 	Sleep(hangtime)
 
 	-- Lower
-	Turn(arm, arm_axis, arm_end, truespeed)
-	WaitForTurn(arm, arm_axis)
-	Turn(leg, leg_axis, leg_end, truespeed)
-	WaitForTurn(leg, leg_axis)
+	Turn(arm, axis, arm_start, move_speed)
+	WaitForTurn(arm, axis)
+	Turn(leg, axis, leg_start, move_speed)
+	WaitForTurn(leg, axis)
 end
 
 local function Walk()
@@ -72,7 +116,7 @@ local function Walk()
 
 	while true do
 		for _, dir in pairs(leg_dirs) do
-			leg_anim(arms[dir], legs[dir])
+			leg_anim(dir)
 		end
 	end
 end
@@ -82,22 +126,30 @@ local function Idle()
 	SetSignalMask(signals.Idle)
 end
 
-local function StopWalk()
+local function rest()
 	local speedmod = GetSpeedMod()
 	local truespeed = runspeed * speedmod
-
-	Signal(signals.Walk)
+	local move_speed = truespeed * 0.2
 
 	for _, dir in pairs(leg_dirs) do
 		local arm = arms[dir]
 		local leg = legs[dir]
+		local dir_info = directional_info[dir]
+		local axis = dir_info.axis
+		local arm_start = dir_info.arm_start
+		local leg_start = dir_info.leg_start
 
-		Turn(arm, arm_axis, arm_start, truespeed)
-		WaitForTurn(arm, arm_axis)
-
-		Turn(leg, leg_axis, leg_start, truespeed)
-		WaitForTurn(leg, leg_axis)
+		Turn(arm, axis, arm_start, move_speed)
+		WaitForTurn(arm, axis)
+		Turn(leg, axis, leg_start, move_speed)
+		WaitForTurn(leg, axis)
 	end
+end
+
+local function StopWalk()
+	Signal(signals.Walk)
+
+	rest()
 
 	StartThread(Idle)
 end
@@ -119,7 +171,22 @@ function script.Deactivate()
 	SetUnitValue(COB.INBUILDSTANCE, 0)
 end
 
-function script.Create() end
+function script.Create()
+	Turn(citadel_body, y_axis, math.rad(45), 0) -- Offset by 45
+	for _, dir in pairs(leg_dirs) do
+		local arm = arms[dir]
+		local leg = legs[dir]
+		local dir_info = directional_info[dir]
+		local axis = dir_info.axis
+		local arm_start = dir_info.arm_start
+		local leg_start = dir_info.leg_start
+
+		Turn(arm, axis, arm_start, 0)
+		WaitForTurn(arm, axis)
+		Turn(leg, axis, leg_start, 0)
+		WaitForTurn(leg, axis)
+	end
+end
 
 function script.QueryBuildInfo()
 	return 0 -- TODO
