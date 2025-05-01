@@ -33,17 +33,22 @@ local stand_up_command_desc = {
 	tooltip = "Pick the building up off the ground",
 }
 
-local can_sit_down = {} --- @type {[UnitDefID]: UnitDefID}
-local can_stand_up = {} --- @type {[UnitDefID]: UnitDefID}
+local is_movable_building = {} --- @type {[UnitDefID]: true}
 
 -- Initialize tables
 for unit_def_id, unit_def in pairs(UnitDefs) do
-	if unit_def.customParams.can_sit_down then
-		can_sit_down[unit_def_id] = UnitDefNames[unit_def.customParams.stationary_form].id
+	if unit_def.customParams.movable_building then
+		is_movable_building[unit_def_id] = true
 	end
+end
 
-	if unit_def.customParams.can_stand_up then
-		can_stand_up[unit_def_id] = UnitDefNames[unit_def.customParams.mobile_form].id
+---@param unit_def_id UnitDefID
+---@return boolean?
+local function is_movable(unit_def_id)
+	if is_movable_building[unit_def_id] then
+		return true
+	else
+		return nil
 	end
 end
 
@@ -53,17 +58,8 @@ if gadgetHandler:IsSyncedCode() then
 	---@param team_id TeamID
 	---@return boolean
 	local function sit_down(unit_id, unit_def_id, team_id)
-		local x, y, z = Spring.GetUnitPosition(unit_id)
-		if x == nil then
-			return false
-		end
-		local facing = Spring.GetUnitBuildFacing(unit_id) --[[@as integer]]
-		-- Create alternative
-		Spring.DestroyUnit(unit_id, false, true)
-		if Spring.CreateUnit(can_sit_down[unit_def_id], x, y, z, facing, team_id) == nil then
-			return false
-		end
-
+		Spring.Echo("Sitting down")
+		Spring.MoveCtrl.Enable(unit_id) --SetGroundMoveTypeData(unit_id, "maxSpeed", 0.0)
 		return true
 	end
 
@@ -72,33 +68,17 @@ if gadgetHandler:IsSyncedCode() then
 	---@param team_id TeamID
 	---@return boolean
 	local function stand_up(unit_id, unit_def_id, team_id)
-		local x, y, z = Spring.GetUnitPosition(unit_id)
-		if x == nil then
-			return false
-		end
-		local facing = Spring.GetUnitBuildFacing(unit_id) --[[@as integer]]
-		-- Create alternative
-		Spring.DestroyUnit(unit_id, false, true)
-		if Spring.CreateUnit(can_stand_up[unit_def_id], x, y, z, facing, team_id) == nil then
-			return false
-		end
-
+		Spring.Echo("Standing up")
+		local def = UnitDefs[unit_def_id]
+		Spring.MoveCtrl.Disable(unit_id) --SetGroundMoveTypeData(unit_id, "maxSpeed", def.speed)
 		return true
 	end
 
 	function gadget:AllowCommand(unit_id, unit_def_id, unit_team, cmd_id, _cmdParams, _cmdOptions, _cmdTag, _synced)
 		if cmd_id == CMD_SIT_DOWN then
-			if can_sit_down[unit_def_id] == nil then
-				return false
-			end
-
-			return sit_down(unit_id, unit_def_id, unit_team)
+			return (not is_movable(unit_def_id)) or sit_down(unit_id, unit_def_id, unit_team)
 		elseif cmd_id == CMD_STAND_UP then
-			if can_stand_up[unit_def_id] == nil then
-				return false
-			end
-
-			return stand_up(unit_id, unit_def_id, unit_team)
+			return (not is_movable(unit_def_id)) or stand_up(unit_id, unit_def_id, unit_team)
 		end
 
 		return true
@@ -110,11 +90,8 @@ if gadgetHandler:IsSyncedCode() then
 	end
 
 	function gadget:UnitCreated(unit_id)
-		if can_sit_down[Spring.GetUnitDefID(unit_id)] ~= nil then
+		if is_movable_building[Spring.GetUnitDefID(unit_id)] ~= nil then
 			Spring.InsertUnitCmdDesc(unit_id, sit_down_command_desc)
-		end
-
-		if can_stand_up[Spring.GetUnitDefID(unit_id)] ~= nil then
 			Spring.InsertUnitCmdDesc(unit_id, stand_up_command_desc)
 		end
 	end

@@ -49,6 +49,7 @@ local function SetupConstructionOptions(unitID, ud)
 
 	while option do
 		local bud = UnitDefNames[option]
+		assert(bud ~= nil, "No unit named " .. option .. " in build menu for " .. ud.humanName)
 		SetupConstruction(unitID, ud, bud)
 		canBuild[bud.id] = true
 		index = index + 1
