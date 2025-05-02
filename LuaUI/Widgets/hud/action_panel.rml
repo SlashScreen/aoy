@@ -42,7 +42,7 @@
 				<span
 					data-for="action: row" 
 					data-visible = "action.visible"
-					data-event-mousedown="button_hook(action.row, action.column)"
+					data-event-mousedown="button_hook(action.id)"
 					class = "action"
 				>{{action.name}}</span>
 			</div>
