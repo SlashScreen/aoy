@@ -1,3 +1,5 @@
 {
-    "stylua.targetReleaseVersion": "latest"
+    "stylua.targetReleaseVersion": "latest",
+    "html.format.wrapAttributes": "force-expand-multiline",
+    "html.format.wrapAttributesIndentSize": null
 }

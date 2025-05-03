@@ -11,6 +11,8 @@
 --- @field visible boolean
 --- @field id integer
 --- @field disabled boolean
+--- @field state -1|integer if -1, no states
+--- @field state_names string[]
 
 -- *heading
 
@@ -40,12 +42,13 @@ local BUTTON_RIGHT_MOUSE = 2
 local MAX_COLUMNS_PER_ROW = 6
 local MAX_ROWS = 5
 local CUT_OUT_HIDDEN = true
+local NO_STATE = -1
 
 -- *members
 
 local document
 local needs_update = false
-local unit_commands --- @type UnitOrder[]
+local unit_commands --- @type CommandDescription[]
 local dm_handle --- @type DatamodelHandle<Model>
 local DATA_MODEL_NAME = "action_panel_model"
 local init_model = { --- @type Model
@@ -63,9 +66,8 @@ local init_model = { --- @type Model
 				Spring.Echo("uh oh sisters")
 				return
 			end
+
 			Spring.Echo("Clicked id " .. id .. " index " .. index)
-			--local x = ev.parameters.mouse_x --- @type integer
-			--local y = ev.parameters.mouse_y --- @type integer
 			local button = ev.parameters.button --- @type integer
 
 			Spring.SetActiveCommand(
@@ -89,7 +91,8 @@ local init_model = { --- @type Model
 for _r = 1, MAX_ROWS do
 	local row = {} --- @type ActionButton[]
 	for _i = 1, MAX_COLUMNS_PER_ROW do
-		local item = { name = "placefolder", visible = true, id = 0, disabled = false }
+		local item =
+			{ name = "placefolder", visible = true, id = -1, disabled = false, state = NO_STATE, state_names = {} } --- @type ActionButton
 		table.insert(row, item)
 	end
 	table.insert(init_model.actions, row)
@@ -119,12 +122,30 @@ local function clear_menu()
 	Spring.Echo("menu cleared")
 end
 
+---@param command CommandDescription
+---@return boolean ok
+---@return integer state 0-indexed
+---@return string[] names
+local function param_info(command)
+	if #command.params < 2 or command.type ~= CMDTYPE.ICON_MODE then
+		return false, NO_STATE, {}
+	end
+
+	local names = {}
+	for i = 2, #command.params do
+		table.insert(names, command.params[i])
+	end
+
+	local state = command.params[1] --[[@as integer]]
+	return true, state, names
+end
+
 ---rerender current commands
 local function rerender()
 	clear_menu()
 
 	-- Gather visible commands
-	local commands = {} --- @type UnitOrder[]
+	local commands = {} --- @type CommandDescription[]
 	for _, command in ipairs(unit_commands) do
 		if
 			(CUT_OUT_HIDDEN and not (command.name == "" or command.hidden))
@@ -154,6 +175,15 @@ local function rerender()
 				entry.visible = not command.hidden
 				entry.disabled = command.disabled
 				entry.id = command.id
+
+				local ok, state, state_names = param_info(command)
+				if ok then
+					entry.state = state
+					entry.state_names = state_names
+				else
+					entry.state = NO_STATE
+					entry.state_names = {}
+				end
 			end
 		end
 	end

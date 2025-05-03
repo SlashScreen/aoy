@@ -1,6 +1,7 @@
 <rml>
+
 	<head>
-		<style> 
+		<style>
 			body {
 				height: 100%;
 				width: 100%;
@@ -32,19 +33,59 @@
 			.action {
 				flex: 1;
 				background: #ff0000;
+				flex-direction: column;
+				justify-content: space-evenly;
+				height: 100%;
+			}
+
+			.state-row {
+				display: flex;
+				flex: 1;
+				gap: 3dp;
+			}
+
+			.inactive {
+				flex: 1;
+				height: 15%;
+				background: #ffff00;
+			}
+
+			.active {
+				background: #00ff00;
 			}
 		</style>
 	</head>
 
 	<body>
-		<div id="widget" data-model="action_panel_model">
-			<div class="row" data-for="row: actions">
-				<span
-					data-for="action: row" 
-					data-visible = "action.visible"
+		<div
+			id="widget"
+			data-model="action_panel_model"
+		>
+			<div
+				class="row"
+				data-for="row: actions"
+			>
+				<div
+					data-for="action: row"
+					data-visible="action.visible"
 					data-event-mousedown="button_hook(action.id, action.disabled)"
-					class = "action"
-				>{{action.name}}</span>
+					class="action"
+				>
+					<span>{{action.name}}</span>
+
+					<div class="state-row">
+						<div
+							data-for="name, i: action.state_names"
+							data-class-active="i == action.state"
+							class="inactive"
+						></div>
+					</div>
+
+					<span
+						data-for="name, i: action.state_names"
+						data-if="i == action.state"
+					>{{name}}</span>
+				</div>
 			</div>
 		</div>
 	</body>
