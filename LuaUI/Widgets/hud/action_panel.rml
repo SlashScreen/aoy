@@ -69,6 +69,8 @@
 					data-for="action: row"
 					data-visible="action.visible"
 					data-event-mousedown="button_hook(action.id, action.disabled)"
+					data-event-mouseover="update_tooltip(action.tooltip)"
+					data-event-mouseout="update_tooltip('')"
 					class="action"
 				> <!-- Each action -->
 					<span data-if="!action.only_img">{{action.name}}</span> <!-- Action name -->

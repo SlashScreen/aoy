@@ -4,6 +4,7 @@
 
 --- @class Model
 --- @field button_hook function
+--- @field update_tooltip function
 --- @field actions ActionButton[][]
 
 --- @class ActionButton
@@ -15,6 +16,7 @@
 --- @field state_names string[]
 --- @field img string
 --- @field only_img boolean
+--- @field tooltip string
 
 -- *heading
 
@@ -50,6 +52,7 @@ local MAX_ROWS = 5
 local CUT_OUT_HIDDEN = true
 
 local NO_STATE = -1
+local DEFAULT_TOOLTIP = "Action menu"
 
 -- *members
 
@@ -57,6 +60,7 @@ local document
 local needs_update = false
 local unit_commands --- @type CommandDescription[]
 local dm_handle --- @type DatamodelHandle<Model>
+local current_tooltip = DEFAULT_TOOLTIP --- @type string?
 local DATA_MODEL_NAME = "action_panel_model"
 local init_model = { --- @type Model
 	---@param ev RmlEvent
@@ -86,15 +90,22 @@ local init_model = { --- @type Model
 			ev.parameters.shift_key == 1
 		)
 	end,
+	update_tooltip = function(ev, text)
+		if #text == 0 then
+			current_tooltip = nil
+			return
+		end
+		current_tooltip = text
+	end,
 	actions = {},
 }
 
 -- *setup
 
 -- populate actions table programmatically
-for _r = 1, MAX_ROWS do
+for r = 1, MAX_ROWS do
 	local row = {} --- @type ActionButton[]
-	for _i = 1, MAX_COLUMNS_PER_ROW do
+	for i = 1, MAX_COLUMNS_PER_ROW do
 		--- @type ActionButton
 		local item = {
 			name = "placeholder",
@@ -105,6 +116,7 @@ for _r = 1, MAX_ROWS do
 			state_names = {},
 			img = "",
 			only_img = false,
+			tooltip = r .. ", " .. i,
 		}
 		table.insert(row, item)
 	end
@@ -218,6 +230,7 @@ local function rerender()
 				end
 
 				entry.only_img = command.onlyTexture
+				entry.tooltip = command.tooltip
 			end
 		end
 	end
@@ -257,9 +270,13 @@ function widget:Update()
 	needs_update = false
 end
 
---[[ function widget:GetTooltip(x, y)
-	return "This is a tooltip"
-end ]]
+function widget:IsAbove(x, y)
+	return widget.rmlContext:IsMouseInteracting()
+end
+
+function widget:GetTooltip(x, y)
+	return current_tooltip or DEFAULT_TOOLTIP
+end
 
 function widget:Shutdown()
 	if document then
