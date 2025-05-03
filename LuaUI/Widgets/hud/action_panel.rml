@@ -60,31 +60,31 @@
 		<div
 			id="widget"
 			data-model="action_panel_model"
-		>
+		> <!-- Action menu -->
 			<div
 				class="row"
 				data-for="row: actions"
-			>
+			><!-- Rows of actions -->
 				<div
 					data-for="action: row"
 					data-visible="action.visible"
 					data-event-mousedown="button_hook(action.id, action.disabled)"
 					class="action"
-				>
-					<span>{{action.name}}</span>
+				> <!-- Each action -->
+					<span>{{action.name}}</span> <!-- Action name -->
 
-					<div class="state-row">
+					<div class="state-row"> <!-- The state bars -->
 						<div
 							data-for="name, i: action.state_names"
 							data-class-active="i == action.state"
 							class="inactive"
-						></div>
+						></div> <!-- Bars for the state buttons, .inactive class if active state -->
 					</div>
 
 					<span
 						data-for="name, i: action.state_names"
 						data-if="i == action.state"
-					>{{name}}</span>
+					>{{name}}</span> <!-- Name of active state -->
 				</div>
 			</div>
 		</div>

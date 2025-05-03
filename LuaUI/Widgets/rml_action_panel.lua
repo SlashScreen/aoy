@@ -11,7 +11,7 @@
 --- @field visible boolean
 --- @field id integer
 --- @field disabled boolean
---- @field state -1|integer if -1, no states
+--- @field state -1|integer if -1, no states. 0 index
 --- @field state_names string[]
 
 -- *heading
@@ -92,7 +92,7 @@ for _r = 1, MAX_ROWS do
 	local row = {} --- @type ActionButton[]
 	for _i = 1, MAX_COLUMNS_PER_ROW do
 		local item =
-			{ name = "placefolder", visible = true, id = -1, disabled = false, state = NO_STATE, state_names = {} } --- @type ActionButton
+			{ name = "placeholder", visible = true, id = -1, disabled = false, state = NO_STATE, state_names = {} } --- @type ActionButton
 		table.insert(row, item)
 	end
 	table.insert(init_model.actions, row)
