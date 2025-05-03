@@ -18,6 +18,8 @@
 
 -- *heading
 
+local widget = widget --- @type Widget
+
 if not RmlUi then
 	Spring.Echo("No RmlUI!")
 	return false
@@ -254,6 +256,10 @@ function widget:Update()
 	rerender()
 	needs_update = false
 end
+
+--[[ function widget:GetTooltip(x, y)
+	return "This is a tooltip"
+end ]]
 
 function widget:Shutdown()
 	if document then
