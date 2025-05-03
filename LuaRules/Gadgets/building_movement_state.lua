@@ -69,7 +69,6 @@ if gadgetHandler:IsSyncedCode() then
 	---@return boolean
 	local function stand_up(unit_id, unit_def_id, team_id)
 		Spring.Echo("Standing up")
-		local def = UnitDefs[unit_def_id]
 		Spring.MoveCtrl.Disable(unit_id) --SetGroundMoveTypeData(unit_id, "maxSpeed", def.speed)
 		return true
 	end

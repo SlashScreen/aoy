@@ -13,6 +13,8 @@
 --- @field disabled boolean
 --- @field state -1|integer if -1, no states. 0 index
 --- @field state_names string[]
+--- @field img string
+--- @field only_img boolean
 
 -- *heading
 
@@ -38,10 +40,13 @@ end
 -- *constants
 
 local BUTTON_LEFT_MOUSE = 0
-local BUTTON_RIGHT_MOUSE = 2
+local BUTTON_RIGHT_MOUSE = 1
+
 local MAX_COLUMNS_PER_ROW = 6
 local MAX_ROWS = 5
+
 local CUT_OUT_HIDDEN = true
+
 local NO_STATE = -1
 
 -- *members
@@ -60,27 +65,24 @@ local init_model = { --- @type Model
 			return
 		end
 
-		if ev.parameters.button == BUTTON_LEFT_MOUSE then
-			local index = Spring.GetCmdDescIndex(id)
-			if index == nil then
-				Spring.Echo("uh oh sisters")
-				return
-			end
-
-			Spring.Echo("Clicked id " .. id .. " index " .. index)
-			local button = ev.parameters.button --- @type integer
-
-			Spring.SetActiveCommand(
-				index,
-				button,
-				button == BUTTON_LEFT_MOUSE,
-				button == BUTTON_RIGHT_MOUSE,
-				ev.parameters.alt_key == 1,
-				ev.parameters.ctrl_key == 1,
-				ev.parameters.meta_key == 1,
-				ev.parameters.shift_key == 1
-			)
+		local index = Spring.GetCmdDescIndex(id)
+		if index == nil then
+			Spring.Echo("uh oh sisters")
+			return
 		end
+
+		local button = ev.parameters.button --- @type integer
+
+		Spring.SetActiveCommand(
+			index,
+			button + 1, -- +1 for spring button codes
+			button == BUTTON_LEFT_MOUSE,
+			button == BUTTON_RIGHT_MOUSE,
+			ev.parameters.alt_key == 1,
+			ev.parameters.ctrl_key == 1,
+			ev.parameters.meta_key == 1,
+			ev.parameters.shift_key == 1
+		)
 	end,
 	actions = {},
 }
@@ -91,8 +93,17 @@ local init_model = { --- @type Model
 for _r = 1, MAX_ROWS do
 	local row = {} --- @type ActionButton[]
 	for _i = 1, MAX_COLUMNS_PER_ROW do
-		local item =
-			{ name = "placeholder", visible = true, id = -1, disabled = false, state = NO_STATE, state_names = {} } --- @type ActionButton
+		--- @type ActionButton
+		local item = {
+			name = "placeholder",
+			visible = true,
+			id = -1,
+			disabled = false,
+			state = NO_STATE,
+			state_names = {},
+			img = "",
+			only_img = false,
+		}
 		table.insert(row, item)
 	end
 	table.insert(init_model.actions, row)
@@ -140,6 +151,22 @@ local function param_info(command)
 	return true, state, names
 end
 
+---@param command CommandDescription
+---@return boolean
+local function should_be_rendered(command)
+	if CUT_OUT_HIDDEN then
+		if command.hidden then
+			return false
+		end
+	end
+
+	if #command.name == 0 and not command.onlyTexture then
+		return false
+	end
+
+	return true
+end
+
 ---rerender current commands
 local function rerender()
 	clear_menu()
@@ -147,10 +174,7 @@ local function rerender()
 	-- Gather visible commands
 	local commands = {} --- @type CommandDescription[]
 	for _, command in ipairs(unit_commands) do
-		if
-			(CUT_OUT_HIDDEN and not (command.name == "" or command.hidden))
-			or ((not CUT_OUT_HIDDEN) and (not command.name == ""))
-		then
+		if should_be_rendered(command) then
 			table.insert(commands, command)
 		end
 	end
@@ -184,6 +208,12 @@ local function rerender()
 					entry.state = NO_STATE
 					entry.state_names = {}
 				end
+
+				if command.texture then
+					entry.img = command.texture
+				end
+
+				entry.only_img = command.onlyTexture
 			end
 		end
 	end

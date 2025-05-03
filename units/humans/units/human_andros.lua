@@ -15,6 +15,7 @@ return lowerkeys({
 		-- allowNonBlockingAim = true,
 		objectName = [[spherebot.s3o]],
 		script = [[cloakraid.lua]],
+		buildPic = [[demon/engineer_placeholder.dds]],
 
 		canmove = 1,
 		canattack = 1,

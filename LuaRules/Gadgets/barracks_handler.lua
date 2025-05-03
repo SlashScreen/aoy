@@ -100,7 +100,7 @@ local function UpdateBarracksQueue(unitID, barracks, index, frame)
 			local value = barracks.queue[i] or 0
 			Spring.SetUnitRulesParam(unitID, "build_queue_" .. i, value)
 		end
-		Script.LuaUI.UpdateBuildQueueUI(unitID)
+		--Script.LuaUI.UpdateBuildQueueUI(unitID)
 	end
 
 	if barracks.queue[1] and not barracks.nextFinishFrame then
@@ -139,7 +139,7 @@ local function HandleConstruction(unitID, unitDefID, teamID, cmdID, cmdOptions)
 	local cost = bud.metalCost
 	if cmdOptions.right then
 		for i = #barracks.queue, 1, -1 do
-			if barracks.queue[i] == buildUnitDefID then
+			if barracks.queue[i] == buildUnitDefID then -- remove most recent queued building
 				table.remove(barracks.queue, i)
 				Spring.AddTeamResource(teamID, "metal", cost)
 				if i == 1 then
@@ -151,7 +151,7 @@ local function HandleConstruction(unitID, unitDefID, teamID, cmdID, cmdOptions)
 				break
 			end
 		end
-	elseif Spring.UseTeamResource(teamID, "metal", cost) then
+	elseif Spring.UseTeamResource(teamID, "metal", cost) or Spring.IsNoCostEnabled() then
 		barracks.queue[#barracks.queue + 1] = buildUnitDefID
 		UpdateBarracksQueue(unitID, barracks)
 		local ux, uy, uz = Spring.GetUnitPosition(unitID)
