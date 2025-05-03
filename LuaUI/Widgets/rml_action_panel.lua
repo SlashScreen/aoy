@@ -209,8 +209,10 @@ local function rerender()
 					entry.state_names = {}
 				end
 
-				if command.texture then
-					entry.img = command.texture
+				if command.texture and #command.texture ~= 0 then
+					entry.img = "/unitpics/" .. command.texture
+				else
+					entry.img = ""
 				end
 
 				entry.only_img = command.onlyTexture

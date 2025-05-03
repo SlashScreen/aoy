@@ -26,6 +26,7 @@ local CMD_BUILD_UNIT_RANGE_UPPER = Spring.Utilities.CMD.BUILD_UNIT_RANGE_UPPER
 local MAX_JOBS = 5
 
 local function SetupConstruction(unitID, ud, bud)
+	--- @type CommandDescription
 	local buildCmd = {
 		id = CMD_BUILD_UNIT_RANGE + bud.id,
 		type = CMDTYPE.ICON,
@@ -38,6 +39,7 @@ local function SetupConstruction(unitID, ud, bud)
 			.. " metal in "
 			.. bud.customParams.build_time
 			.. " seconds",
+		texture = bud.buildPic or "",
 	}
 	Spring.InsertUnitCmdDesc(unitID, buildCmd)
 end
