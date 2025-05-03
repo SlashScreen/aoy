@@ -26,7 +26,7 @@ if not RmlUi then
 	Spring.Echo("No RmlUI!")
 	return false
 end
-widget.rmlContext = nil
+widget.rmlContext = nil --- @type RmlContext
 
 function widget:GetInfo()
 	return {

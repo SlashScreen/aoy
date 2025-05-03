@@ -144,3 +144,26 @@
 --- @field [any] any
 
 --- @class Gadget : Addon
+
+--- @class RmlContext
+--- @field OpenDataModel fun(self: RmlContext, model: any): DatamodelHandle
+--- @field LoadDocument fun(self: RmlContext, path: string, widget: Widget): RmlDocument
+--- @field IsMouseInteracting fun(): boolean
+
+--- @class RmlDocument
+
+--- @class RmlUi
+RmlUi = {}
+
+--- Create a new context
+--- @param name string
+--- @return RmlContext
+function RmlUi.CreateContext(name) end
+
+--- Set which context the debug inspector is meant to inspect
+--- @param name string
+function RmlUi.SetDebugContext(name) end
+
+--- Remove a context
+--- @param name string
+function RmlUi.RemoveContext(name) end
