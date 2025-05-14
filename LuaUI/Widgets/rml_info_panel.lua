@@ -10,7 +10,6 @@
 --- @field unit_desc string
 --- @field unit_stats UnitStat[]
 
-
 if not RmlUi then
 	Spring.Echo("No RmlUI!")
 	return false
@@ -22,7 +21,7 @@ local DATA_MODEL_NAME = "info_panel_model"
 
 function widget:GetInfo()
 	return {
-		name = "RML Info Panel",
+		name = "AOY Info Panel",
 		desc = "Info Panel",
 		author = "Vileblood",
 		date = "Present Day, Present Time",
@@ -33,6 +32,8 @@ function widget:GetInfo()
 	}
 end
 
+local document --- @type RmlUi.Document
+local dm_handle --- @type RmlUi.SolLuaDataModel<InfoModel>
 --- @type InfoModel
 local init_model = {
 	unit_name = "Test",
@@ -47,7 +48,7 @@ local init_model = {
 }
 
 function widget:Initialize()
-	widget.rmlContext = RmlUi.GetContext("shared") --[[@as RmlContext]]
+	widget.rmlContext = RmlUi.GetContext("shared")
 
 	dm_handle = widget.rmlContext:OpenDataModel(DATA_MODEL_NAME, init_model)
 	assert(dm_handle ~= nil, "RmlUi: Failed to open data model " .. DATA_MODEL_NAME)

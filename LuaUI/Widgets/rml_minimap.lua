@@ -9,7 +9,7 @@ local DATA_MODEL_NAME = "minimap_model"
 
 function widget:GetInfo()
 	return {
-		name = "RML Minimap Panel",
+		name = "AOY Minimap Panel",
 		desc = "Minimap Panel",
 		author = "Vileblood",
 		date = "Present Day, Present Time",
@@ -20,10 +20,12 @@ function widget:GetInfo()
 	}
 end
 
+local document --- @type RmlUi.Document
+local dm_handle --- @type RmlUi.SolLuaDataModel<table>
 local init_model = {}
 
 function widget:Initialize()
-	widget.rmlContext = RmlUi.GetContext("shared") --[[@as RmlContext]]
+	widget.rmlContext = RmlUi.GetContext("shared")
 
 	dm_handle = widget.rmlContext:OpenDataModel(DATA_MODEL_NAME, init_model)
 	assert(dm_handle ~= nil, "RmlUi: Failed to open data model " .. DATA_MODEL_NAME)
