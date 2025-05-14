@@ -58,11 +58,11 @@ local DEFAULT_TOOLTIP = "Action menu"
 
 local document
 local needs_update = false
-local unit_commands --- @type CommandDescription[]
-local dm_handle --- @type DatamodelHandle<Model>
+local unit_commands                     --- @type CommandDescription[]
+local dm_handle                         --- @type RmlDatamodelHandle<Model>
 local current_tooltip = DEFAULT_TOOLTIP --- @type string?
 local DATA_MODEL_NAME = "action_panel_model"
-local init_model = { --- @type Model
+local init_model = {                    --- @type Model
 	---@param ev RmlEvent
 	---@param id CommandID
 	---@param disabled boolean
@@ -243,7 +243,7 @@ end
 -- *widget override
 
 function widget:Initialize()
-	widget.rmlContext = RmlUi.CreateContext(widget.whInfo.name)
+	widget.rmlContext = RmlUi.GetContext("shared") --[[@as RmlContext]]
 
 	dm_handle = widget.rmlContext:OpenDataModel(DATA_MODEL_NAME, init_model)
 	assert(dm_handle ~= nil, "RmlUi: Failed to open data model " .. DATA_MODEL_NAME)
@@ -256,6 +256,8 @@ function widget:Initialize()
 	RmlUi.SetDebugContext(widget.whInfo.name)
 	document:ReloadStyleSheet()
 	document:Show()
+
+	Spring.Echo("Initialized Action Panel")
 end
 
 function widget:CommandsChanged()

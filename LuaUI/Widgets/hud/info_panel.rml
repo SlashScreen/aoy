@@ -1,0 +1,37 @@
+<rml>
+    <head>
+        <style>
+            body {
+				height: 100%;
+				width: 100%;
+				font-family: "Josefin Sans";
+				font-size: 16dp;
+				pointer-events: none;
+			}
+
+			#widget {
+				position: absolute;
+				background: #000000;
+				bottom: 0;
+				left: 43vh;
+				right: 43vh;
+				pointer-events: auto;
+				padding: 3dp;
+				display: flex;
+				flex-direction: column;
+				height: 20vh;
+				gap: 3dp;
+			}
+        </style>
+    </head>
+    <body>
+        <div id="widget" data-model="info_panel_model">
+            <h2>{{unit_name}}</h2>
+            <p>{{unit_desc}}</p>
+            <hr>
+            <div data-for="stat: unit_stats">
+                <p>{{stat.stat_name}}: <progress value="stat.value" max="stat.max"></progress></p>
+            </div>
+        </div>
+    </body>
+</rml>
