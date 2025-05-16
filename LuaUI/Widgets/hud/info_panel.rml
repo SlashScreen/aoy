@@ -28,7 +28,6 @@
         <div id="widget" data-model="info_panel_model">
             <h2>{{unit_name}}</h2>
             <p>{{unit_desc}}</p>
-            <hr>
             <div data-for="stat: unit_stats">
                 <p>{{stat.stat_name}}: <progress value="stat.value" max="stat.max"></progress></p>
             </div>
