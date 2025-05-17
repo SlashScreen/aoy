@@ -59,9 +59,13 @@ end
 --  the gadgetHandler object
 --
 
+--- @class GadgetHandler
+--- @field gadgets Gadget[]
+--- @field gadget_callin_map table<string, Gadget[]>
 gadgetHandler = {
 
 	gadgets = {},
+	gadget_callin_map = {},
 
 	orderList = {},
 
@@ -95,6 +99,14 @@ end
 local isSyncedCode = (SendToUnsynced ~= nil)
 local function IsSyncedCode()
 	return isSyncedCode
+end
+
+for fn_name, func in pairs(CALLIN_LIST) do
+	local function run_loop(...)
+		local gadgets_list = gadgetHandler[fn_name] or {}
+		return func(fn_name, gadgets_list, ...)
+	end
+	_G[fn_name] = run_loop
 end
 
 --------------------------------------------------------------------------------

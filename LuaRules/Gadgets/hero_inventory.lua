@@ -77,11 +77,11 @@ if gadgetHandler:IsSyncedCode() then
 			return true, true
 		end
 
-		local fx, _, fz = Spring.GetFeaturePosition(item)
+		local fx, fy, fz = Spring.GetFeaturePosition(item)
 		local ux, _, uz = Spring.GetUnitPosition(unit_id)
 		local distSq = (ux - fx) * (ux - fx) + (uz - fz) * (uz - fz)
 		if distSq > PICKUP_DIST * PICKUP_DIST then
-			Spring.SetUnitMoveGoal(unit_id, fx, 0, fz, PICKUP_DIST)
+			Spring.SetUnitMoveGoal(unit_id, fx, fy, fz, PICKUP_DIST)
 		else
 			table.insert(inventory[unit_id], item)
 			Spring.DestroyFeature(item)
@@ -106,7 +106,9 @@ if gadgetHandler:IsSyncedCode() then
 	end
 
 	function gadget:UnitCreated(unitID)
-		Spring.InsertUnitCmdDesc(unitID, pick_up_item_command_desc)
+		if is_hero[Spring.GetUnitDefID(unitID)] then
+			Spring.InsertUnitCmdDesc(unitID, pick_up_item_command_desc)
+		end
 	end
 
 	function gadget:Initialize()
