@@ -37,9 +37,9 @@ end
 local function do_nothing(_, _, _, _) end
 
 --- @type table<string, integer>
-CALLIN_MAP = {}
+GADGET_CALLIN_MAP = {}
 --- @type table<string, function>
-CALLIN_LIST = {
+GADGET_CALLIN_LIST = {
 	Save = default_loop,
 	Load = default_loop,
 	Pong = default_loop,
@@ -448,6 +448,6 @@ CALLIN_LIST = {
 	DownloadProgress = default_loop,
 }
 
-for callinIdx, callinName in ipairs(CALLIN_LIST) do
-	CALLIN_MAP[callinName] = callinIdx
+for callinIdx, callinName in ipairs(GADGET_CALLIN_LIST) do
+	GADGET_CALLIN_MAP[callinName] = callinIdx
 end

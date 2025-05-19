@@ -14,11 +14,10 @@
 --- | 2 # always enabled
 local SAFEWRAP = 0
 
-local HANDLER_DIR = "LuaGadgets/"
+local HANDLER_DIR = "LuaRules/"
 local GADGETS_DIR = Script.GetName():gsub("US$", "") .. "/Gadgets/"
 local SCRIPT_DIR = Script.GetName() .. "/"
 local LOG_SECTION = "" -- FIXME: "LuaRules" section is not registered anywhere
-local DEBUG_CALLINS = true
 
 local VFSMODE = VFS.ZIP_FIRST
 if Spring.IsDevLuaEnabled() then
@@ -101,14 +100,14 @@ local function IsSyncedCode()
 	return isSyncedCode
 end
 
-for fn_name, func in pairs(CALLIN_LIST) do
+for fn_name, func in pairs(GADGET_CALLIN_LIST) do
 	gadgetHandler.gadget_callin_map[fn_name] = {}
 	local function run_loop(...)
-		Spring.Echo("Calling callin" .. fn_name)
 		local gadgets_list = gadgetHandler.gadget_callin_map[fn_name]
 		return func(gadgetHandler, fn_name, gadgets_list, ...)
 	end
 	_G[fn_name] = run_loop
+	Script.UpdateCallIn(fn_name)
 end
 
 --- @private
@@ -413,7 +412,7 @@ function gadgetHandler:InsertGadget(gadget)
 
 	self.gadget_implemented_callins[gadget] = {}
 	local implemented_list = self.gadget_implemented_callins[gadget]
-	for listname, _ in pairs(CALLIN_LIST) do
+	for listname, _ in pairs(GADGET_CALLIN_LIST) do
 		local func = gadget[listname]
 		if func ~= nil and type(func) == "function" then
 			table.insert(implemented_list, listname)
@@ -585,7 +584,7 @@ function gadgetHandler:RaiseGadget(gadget)
 
 	Raise(self.gadgets, gadget)
 
-	for _, listname in ipairs(CALLIN_LIST) do
+	for _, listname in ipairs(GADGET_CALLIN_LIST) do
 		if gadget[listname] ~= nil then
 			Raise(self[listname .. "List"], gadget)
 		end
@@ -627,7 +626,7 @@ function gadgetHandler:LowerGadget(gadget)
 
 	Lower(self.gadgets, gadget)
 
-	for _, listname in ipairs(CALLIN_LIST) do
+	for _, listname in ipairs(GADGET_CALLIN_LIST) do
 		if gadget[listname] ~= nil then
 			Lower(self[listname .. "List"], gadget)
 		end
@@ -659,7 +658,7 @@ function gadgetHandler:RegisterGlobal(owner, name, value)
 	if self.globals[name] ~= nil then
 		return false
 	end
-	if CALLIN_MAP[name] ~= nil then
+	if GADGET_CALLIN_MAP[name] ~= nil then
 		return false
 	end
 

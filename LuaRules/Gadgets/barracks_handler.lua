@@ -70,6 +70,7 @@ local function SetupConstructionOptions(unitID, ud)
 end
 
 function gadget:UnitCreated(unitID, unitDefID)
+	Spring.Echo(unitID, unitDefID)
 	local ud = UnitDefs[unitDefID]
 	if ud.customParams.build_1 then
 		SetupConstructionOptions(unitID, ud)
