@@ -127,5 +127,3 @@
 
 --- @class Widget : Addon
 --- @field [any] any
-
---- @class Gadget : Addon

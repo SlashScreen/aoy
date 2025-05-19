@@ -1,3 +1,5 @@
+local gadget = NewGadget()
+
 function gadget:GetInfo()
 	return {
 		name = "Barracks Handler",
@@ -11,7 +13,7 @@ function gadget:GetInfo()
 end
 
 if not gadgetHandler:IsSyncedCode() then
-	return
+	return gadget
 end
 
 local IterableMap = VFS.Include("LuaRules/Gadgets/Include/IterableMap.lua")
@@ -179,3 +181,5 @@ function gadget:AllowCommand(unitID, unitDefID, teamID, cmdID, cmdParams, cmdOpt
 	end
 	return true
 end
+
+return gadget

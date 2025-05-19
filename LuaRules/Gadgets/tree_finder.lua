@@ -1,6 +1,8 @@
 local INITIAL_FIND_RADIUS = 500
 local SEARCH_RADIUS_INCREMENT = 300
 
+local gadget = NewGadget()
+
 --[[
 We make the following assumptions: 
 1. The unit is probably already pretty close to a tree
@@ -112,3 +114,5 @@ local function find_tree_for_unit(unit_id)
 
 	return tree_id
 end
+
+return gadget

@@ -1,4 +1,4 @@
-local gadget = gadget --- @type Gadget
+local gadget = NewGadget()
 
 function gadget:GetInfo()
 	return {
@@ -145,3 +145,5 @@ TODO:
 - Since Heroes do not drop iems when they die, do I just keep the items in the inventory until the game ends?
 - Add item definitions and effects
 ]]
+
+return gadget

@@ -1,5 +1,7 @@
 ---@alias ResourceType "gold" | "lumber"
 
+local gadget = NewGadget()
+
 function gadget:GetInfo()
 	return {
 		name = "Unit Resources",
@@ -20,3 +22,5 @@ if gadgetHandler:IsSyncedCode() then
 else
 	-- Unsynced Code
 end
+
+return gadget

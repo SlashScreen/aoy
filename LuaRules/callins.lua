@@ -1,13 +1,13 @@
 --  Copyright (C) 2007, 2025 Dave Rodgers, SlashScreen..
 --  Licensed under the terms of the GNU GPL, v2 or later.
 
-local function default_loop(fn_name, gadgets, ...)
+local function default_loop(_, fn_name, gadgets, ...)
 	for _, gadget in ipairs(gadgets) do
 		gadget[fn_name](...)
 	end
 end
 
-local function default_return_false(fn_name, gadgets, ...)
+local function default_return_false(_, fn_name, gadgets, ...)
 	for _, gadget in ipairs(gadgets) do
 		if gadget[fn_name](...) then
 			return true
@@ -16,7 +16,7 @@ local function default_return_false(fn_name, gadgets, ...)
 	return false
 end
 
-local function default_return_true(fn_name, gadgets, ...)
+local function default_return_true(_, fn_name, gadgets, ...)
 	for _, gadget in ipairs(gadgets) do
 		if not gadget[fn_name](...) then
 			return false
@@ -25,7 +25,7 @@ local function default_return_true(fn_name, gadgets, ...)
 	return true
 end
 
-local function default_if_value(fn_name, gadgets, ...)
+local function default_if_value(_, fn_name, gadgets, ...)
 	for _, gadget in ipairs(gadgets) do
 		local value = gadget[fn_name](...)
 		if value then
@@ -34,8 +34,9 @@ local function default_if_value(fn_name, gadgets, ...)
 	end
 end
 
-local function do_nothing(_, _, _) end
+local function do_nothing(_, _, _, _) end
 
+--- @type table<string, integer>
 CALLIN_MAP = {}
 --- @type table<string, function>
 CALLIN_LIST = {
@@ -43,7 +44,7 @@ CALLIN_LIST = {
 	Load = default_loop,
 	Pong = default_loop,
 	Shutdown = default_loop,
-	GameSetup = function(gadgets, state, ready, playerStates)
+	GameSetup = function(_, _, gadgets, state, ready, playerStates)
 		local success, newReady = false, ready
 		for _, g in ipairs(gadgets) do
 			success, newReady = g.GameSetup(state, ready, playerStates)
@@ -74,6 +75,8 @@ CALLIN_LIST = {
 	UnitIdle = default_loop,
 	UnitCmdDone = default_loop,
 	UnitPreDamaged = function(
+		_,
+		_,
 		gadgets,
 		unitID,
 		unitDefID,
@@ -142,6 +145,7 @@ CALLIN_LIST = {
 	FeatureMoved = do_nothing, -- TODO
 	FeaturePreDamaged = function(
 		_,
+		_,
 		gadgets,
 		featureID,
 		featureDefID,
@@ -181,7 +185,7 @@ CALLIN_LIST = {
 	ShieldPreDamaged = default_loop,
 	AllowCommand = default_return_true,
 	AllowStartPosition = default_return_true,
-	AllowUnitCreation = function(_, gadgets, unitDefID, builderID, builderTeam, x, y, z, facing)
+	AllowUnitCreation = function(_, _, gadgets, unitDefID, builderID, builderTeam, x, y, z, facing)
 		for _, g in ipairs(gadgets) do
 			local allow, drop = g.AllowUnitCreation(unitDefID, builderID, builderTeam, x, y, z, facing)
 			if not allow then
@@ -205,7 +209,7 @@ CALLIN_LIST = {
 	AllowResourceTransfer = default_return_true,
 	AllowDirectUnitControl = default_return_true,
 	AllowBuilderHoldFire = default_return_true,
-	AllowWeaponTargetCheck = function(_, gadgets, attackerID, attackerWeaponNum, attackerWeaponDefID)
+	AllowWeaponTargetCheck = function(_, _, gadgets, attackerID, attackerWeaponNum, attackerWeaponDefID)
 		local ignore = true
 		for _, g in ipairs(gadgets) do
 			local allowCheck, ignoreCheck = g.AllowWeaponTargetCheck(attackerID, attackerWeaponNum, attackerWeaponDefID)
@@ -218,7 +222,16 @@ CALLIN_LIST = {
 		end
 		return ((ignore and -1) or 1)
 	end,
-	AllowWeaponTarget = function(_, gadgets, attackerID, targetID, attackerWeaponNum, attackerWeaponDefID, defPriority)
+	AllowWeaponTarget = function(
+		_,
+		_,
+		gadgets,
+		attackerID,
+		targetID,
+		attackerWeaponNum,
+		attackerWeaponDefID,
+		defPriority
+	)
 		local allowed = true
 		local priority = 1.0
 		for _, g in ipairs(gadgets) do
@@ -233,7 +246,7 @@ CALLIN_LIST = {
 		return allowed, priority
 	end,
 	AllowWeaponInterceptTarget = default_return_true,
-	Explosion = function(_, gadgets, weaponID, px, py, pz, ownerID, projectileID)
+	Explosion = function(_, _, gadgets, weaponID, px, py, pz, ownerID, projectileID)
 		for _, g in ipairs(gadgets) do
 			if g.Explosion(weaponID, px, py, pz, ownerID, projectileID) then
 				return true
@@ -241,7 +254,7 @@ CALLIN_LIST = {
 		end
 		return false
 	end,
-	CommandFallback = function(_, gadgets, unitID, unitDefID, unitTeam, cmdID, cmdParams, cmdOptions, cmdTag)
+	CommandFallback = function(_, _, gadgets, unitID, unitDefID, unitTeam, cmdID, cmdParams, cmdOptions, cmdTag)
 		for _, g in ipairs(gadgets) do
 			local used, remove = g.CommandFallback(unitID, unitDefID, unitTeam, cmdID, cmdParams, cmdOptions, cmdTag)
 			if used then
@@ -250,7 +263,7 @@ CALLIN_LIST = {
 		end
 		return true -- remove the command
 	end,
-	MoveCtrlNotify = function(_, gadgets, unitID, unitDefID, unitTeam, data)
+	MoveCtrlNotify = function(_, _, gadgets, unitID, unitDefID, unitTeam, data)
 		local state = false
 		for _, g in ipairs(gadgets) do
 			if g.MoveCtrlNotify(unitID, unitDefID, unitTeam, data) then
@@ -259,7 +272,17 @@ CALLIN_LIST = {
 		end
 		return state
 	end,
-	TerraformComplete = function(_, gadgets, unitID, unitDefID, unitTeam, buildUnitID, buildUnitDefID, buildUnitTeam)
+	TerraformComplete = function(
+		_,
+		_,
+		gadgets,
+		unitID,
+		unitDefID,
+		unitTeam,
+		buildUnitID,
+		buildUnitDefID,
+		buildUnitTeam
+	)
 		for _, g in ipairs(gadgets) do
 			if g.TerraformComplete(unitID, unitDefID, unitTeam, buildUnitID, buildUnitDefID, buildUnitTeam) then
 				return true
@@ -269,7 +292,7 @@ CALLIN_LIST = {
 	end,
 	RecvLuaMsg = default_return_false,
 	Update = default_loop,
-	UnsyncedHeightMapUpdate = function(_, gadgets, ...)
+	UnsyncedHeightMapUpdate = function(_, _, gadgets, ...)
 		for _, gadget in ipairs(gadgets) do
 			local x1, y1, x2, y2 = gadget:UnsyncedHeightMapUpdate()
 			if x1 ~= nil then
@@ -322,18 +345,80 @@ CALLIN_LIST = {
 	ConfigureLayout = do_nothing,
 	AddConsoleLine = do_nothing,
 	GroupChanged = do_nothing,
+	GotChatMsg = function(gadget_handler, _, gadgets, msg, player)
+		if (player == 0) and Spring.IsCheatingEnabled() then
+			local sp = "^%s*" -- start pattern
+			local ep = "%s+(.*)" -- end pattern
+			local s, e, match
+			s, e, match = string.find(msg, sp .. "togglegadget" .. ep)
+			if match then
+				gadget_handler:ToggleGadget(match)
+				return true
+			end
+			s, e, match = string.find(msg, sp .. "enablegadget" .. ep)
+			if match then
+				gadget_handler:EnableGadget(match)
+				return true
+			end
+			s, e, match = string.find(msg, sp .. "disablegadget" .. ep)
+			if match then
+				gadget_handler:DisableGadget(match)
+				return true
+			end
+		end
+
+		if gadget_handler.actionHandler.GotChatMsg(msg, player) then
+			return true
+		end
+
+		for _, g in ipairs(gadgets) do
+			if g:GotChatMsg(msg, player) then
+				return true
+			end
+		end
+
+		return false
+	end,
 	KeyPress = default_return_false,
 	KeyRelease = default_return_false,
-	TextInput = default_return_false,
+	TextInput = function(gadget_handler, _, gadgets, utf8, ...)
+		if gadget_handler.tweakMode then
+			return true
+		end
+
+		for _, g in ipairs(gadgets) do
+			if g:TextInput(utf8, ...) then
+				return true
+			end
+		end
+		return false
+	end,
 	TextEditing = do_nothing,
-	MousePress = default_return_false,
-	MouseRelease = function(_, gadgets, x, y, button, mouseOwner, setMouseOwner)
-		local mo = mouseOwner and mouseOwner()
+	MousePress = function(gadget_handler, _, gadgets, x, y, button)
+		local mo = gadget_handler.mouseOwner
+		if mo then
+			mo:MousePress(x, y, button)
+			return true --  already have an active press
+		end
+		for _, g in ipairs(gadgets) do
+			if g:MousePress(x, y, button) then
+				gadget_handler.mouseOwner = g
+				return true
+			end
+		end
+		return false
+	end,
+	MouseMove = function(gadget_handler, _, gadgets, x, y, dx, dy, button)
+		local mo = gadget_handler.mouseOwner
+		if mo and mo.MouseMove then
+			return mo:MouseMove(x, y, dx, dy, button)
+		end
+	end,
+	MouseRelease = function(gadget_handler, _, gadgets, x, y, button)
+		local mo = gadget_handler.mouseOwner
 		local mx, my, lmb, mmb, rmb = Spring.GetMouseState()
 		if not (lmb or mmb or rmb) then
-			if setMouseOwner then
-				setMouseOwner(nil)
-			end
+			gadget_handler.mouseOwner = nil
 		end
 		if mo and mo.MouseRelease then
 			return mo.MouseRelease(x, y, button)
@@ -342,7 +427,7 @@ CALLIN_LIST = {
 	end,
 	MouseWheel = default_return_false,
 	IsAbove = default_return_false,
-	GetTooltip = function(_, gadgets, x, y)
+	GetTooltip = function(_, _, gadgets, x, y)
 		for _, g in ipairs(gadgets) do
 			if g.IsAbove(x, y) then
 				local tip = g.GetTooltip(x, y)

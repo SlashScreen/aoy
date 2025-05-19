@@ -7,35 +7,22 @@
 --
 --  Copyright (C) 2007.
 --  Licensed under the terms of the GNU GPL, v2 or later.
---
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---
---  TODO:  - get rid of the ':'/self referencing, it's a waste of cycles
---         - (De)RegisterCOBCallback(data) + callin?
---
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
 
---- @alias UnitID integer
---- @alias UnitDefID integer
---- @alias FeatureID integer
---- @alias FeatureDefID integer
---- @alias TeamID integer
-
+--- @type
+--- | 0 # disabled
+--- | 1 # enabled, but can be overridden by gadget.GetInfo().unsafe
+--- | 2 # always enabled
 local SAFEWRAP = 0
--- 0: disabled
--- 1: enabled, but can be overridden by gadget.GetInfo().unsafe
--- 2: always enabled
 
 local HANDLER_DIR = "LuaGadgets/"
 local GADGETS_DIR = Script.GetName():gsub("US$", "") .. "/Gadgets/"
 local SCRIPT_DIR = Script.GetName() .. "/"
 local LOG_SECTION = "" -- FIXME: "LuaRules" section is not registered anywhere
+local DEBUG_CALLINS = true
 
-local VFSMODE = VFS.ZIP_ONLY -- FIXME: ZIP_FIRST ?
+local VFSMODE = VFS.ZIP_FIRST
 if Spring.IsDevLuaEnabled() then
-	VFSMODE = VFS.RAW_ONLY
+	VFSMODE = VFS.RAW_FIRST
 end
 
 VFS.Include(HANDLER_DIR .. "setupdefs.lua", nil, VFSMODE)
@@ -59,13 +46,31 @@ end
 --  the gadgetHandler object
 --
 
+--- @class ActionHandler
+
 --- @class GadgetHandler
 --- @field gadgets Gadget[]
 --- @field gadget_callin_map table<string, Gadget[]>
+--- @field gadget_implemented_callins table<Gadget, string[]>
+--- @field orderlist any[]
+--- @field knownGadgets string[]
+--- @field knownCount integer
+--- @field knownChanged boolean
+--- @field GG table
+--- @field globals table
+--- @field CMDIDs table
+--- @field xViewSize integer
+--- @field yViewSize integer
+--- @field xViewSizeOld integer
+--- @field yViewSizeOld integer
+--- @field actionHandler ActionHandler
+--- @field mouseOwner Gadget?
+--- @field suppress_sort boolean
 gadgetHandler = {
 
 	gadgets = {},
 	gadget_callin_map = {},
+	gadget_implemented_callins = {},
 
 	orderList = {},
 
@@ -86,14 +91,9 @@ gadgetHandler = {
 
 	actionHandler = actionHandler,
 	mouseOwner = nil,
-}
 
--- initialize the call-in lists
-do
-	for _, listname in ipairs(CALLIN_LIST) do
-		gadgetHandler[listname .. "List"] = {}
-	end
-end
+	suppress_sort = false,
+}
 
 -- Utility call
 local isSyncedCode = (SendToUnsynced ~= nil)
@@ -102,43 +102,19 @@ local function IsSyncedCode()
 end
 
 for fn_name, func in pairs(CALLIN_LIST) do
+	gadgetHandler.gadget_callin_map[fn_name] = {}
 	local function run_loop(...)
-		local gadgets_list = gadgetHandler[fn_name] or {}
-		return func(fn_name, gadgets_list, ...)
+		Spring.Echo("Calling callin" .. fn_name)
+		local gadgets_list = gadgetHandler.gadget_callin_map[fn_name]
+		return func(gadgetHandler, fn_name, gadgets_list, ...)
 	end
 	_G[fn_name] = run_loop
 end
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---
---  array-table reverse iterator
---
---  all callin handlers use this so that gadgets can
---  RemoveGadget() themselves (during iteration over
---  a callin list) without causing a miscount
---
---  c.f. Array{Insert,Remove}
---
-local function r_ipairs(tbl)
-	local function r_iter(tbl, key)
-		if key <= 1 then
-			return nil
-		end
-
-		-- next idx, next val
-		return (key - 1), tbl[key - 1]
-	end
-
-	return r_iter, tbl, (1 + #tbl)
-end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---
---  returns:  basename, dirname
---
-
+--- @private
+--- @param fullpath string
+--- @return string? basename
+--- @return string dirname
 local function Basename(fullpath)
 	local _, _, base = string.find(fullpath, "([^\\/:]*)$")
 	local _, _, path = string.find(fullpath, "(.*[\\/:])[^\\/:]*$")
@@ -148,32 +124,14 @@ local function Basename(fullpath)
 	return base, path
 end
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-function gadgetHandler:Initialize()
-	local syncedHandler = Script.GetSynced()
-
-	local unsortedGadgets = {}
-	-- get the gadget names
-	local gadgetFiles = VFS.DirList(GADGETS_DIR, "*.lua", VFSMODE)
-	--  table.sort(gadgetFiles)
-
-	--  for k,gf in ipairs(gadgetFiles) do
-	--    Spring.Echo('gf1 = ' .. gf) -- FIXME
-	--  end
-
-	-- stuff the gadgets into unsortedGadgets
-	for k, gf in ipairs(gadgetFiles) do
-		--    Spring.Echo('gf2 = ' .. gf) -- FIXME
-		local gadget = self:LoadGadget(gf)
-		if gadget then
-			table.insert(unsortedGadgets, gadget)
-		end
+--- Sort the Gadget list, if suppression isn't off
+--- @private
+function gadgetHandler:SortGadgets()
+	if self.suppress_sort then
+		return
 	end
 
-	-- sort the gadgets
-	table.sort(unsortedGadgets, function(g1, g2)
+	local sort_fun = function(g1, g2)
 		local l1 = g1.ghInfo.layer
 		local l2 = g2.ghInfo.layer
 		if l1 ~= l2 then
@@ -188,20 +146,53 @@ function gadgetHandler:Initialize()
 		else
 			return (n1 < n2)
 		end
-	end)
+	end
 
-	-- add the gadgets
-	for _, g in ipairs(unsortedGadgets) do
-		gadgetHandler:InsertGadget(g)
-
-		local gtype = ((syncedHandler and "SYNCED") or "UNSYNCED")
-		local gname = g.ghInfo.name
-		local gbasename = g.ghInfo.basename
-
-		Spring.Log(LOG_SECTION, LOG.INFO, string.format("Loaded %s gadget:  %-18s  <%s>", gtype, gname, gbasename))
+	-- sort main list
+	table.sort(self.gadgets, sort_fun)
+	-- sort all callin maps
+	for _, list in pairs(self.gadget_callin_map) do
+		table.sort(list, sort_fun)
 	end
 end
 
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+function gadgetHandler:Initialize()
+	local syncedHandler = Script.GetSynced()
+
+	-- get the gadget names
+	local gadgetFiles = VFS.DirList(GADGETS_DIR, "*.lua", VFSMODE)
+
+	-- locad gadgets
+	self.suppress_sort = true -- stop sorting until all are done so we only do it once
+	for _, gf in ipairs(gadgetFiles) do
+		local gadget = self:LoadGadget(gf)
+		if gadget then
+			self:InsertGadget(gadget)
+			local gtype = ((syncedHandler and "SYNCED") or "UNSYNCED")
+			local gname = gadget.ghInfo.name
+			local gbasename = gadget.ghInfo.basename
+			self.knownGadgets[gname] = gf
+			Spring.Log(LOG_SECTION, LOG.INFO, string.format("Loaded %s gadget:  %-18s  <%s>", gtype, gname, gbasename))
+		end
+	end
+	self.suppress_sort = false
+	self:SortGadgets()
+end
+
+--- Create a new Gadget
+--- @return Gadget
+function gadgetHandler:NewGadget()
+	---@diagnostic disable-next-line: missing-fields
+	local gadget = {} --- @type Gadget
+
+	return gadget
+end
+
+--- Load a Gadget from a file
+--- @param filename string
 function gadgetHandler:LoadGadget(filename)
 	local basename = Basename(filename)
 	local text = VFS.LoadFile(filename, VFSMODE)
@@ -215,21 +206,44 @@ function gadgetHandler:LoadGadget(filename)
 		return nil
 	end
 
-	local gadget = gadgetHandler:NewGadget()
+	local env = {
+		_G = _G,
+		GG = self.GG,
+	}
+	env.include = function(f)
+		return VFS.Include(f, env, VFSMODE)
+	end
+	--- @return Gadget
+	env.NewGadget = function()
+		---@diagnostic disable-next-line: missing-fields
+		local gadget = {} --- @type Gadget
+		env.gadgetHandler = self:WrapGadgetHandler(gadget)
+		return gadget
+	end
 
-	setfenv(chunk, gadget)
-	local success, err = pcall(chunk)
+	-- load the system calls into the gadget table
+	for k, v in pairs(System) do
+		env[k] = v
+	end
+
+	setfenv(chunk, env)
+	local success, res = pcall(chunk)
 	if not success then
-		Spring.Log(LOG_SECTION, LOG.ERROR, "Failed to load: " .. basename .. "  (" .. tostring(err) .. ")")
+		Spring.Log(LOG_SECTION, LOG.ERROR, "Failed to load: " .. basename .. "  (" .. tostring(res) .. ")")
 		return nil
 	end
-	if err == false then -- note that all "normal" gadgets return `nil` implicitly at EOF, so don't do "if not err"
+	if res == false then -- note that all "normal" gadgets return `nil` implicitly at EOF, so don't do "if not err"
 		return nil -- gadget asked for a quiet death
 	end
+	if res == nil then
+		Spring.Log(LOG_SECTION, LOG.ERROR, "Failed to load: " .. basename .. " (Did not return a gadget object)")
+		return nil
+	end
+	local gadget = res --[[@as Gadget]]
 
 	-- raw access to gadgetHandler
 	if gadget.GetInfo and gadget:GetInfo().handler then
-		gadget.gadgetHandler = self
+		env.rawGadgetHandler = self
 	end
 
 	self:FinalizeGadget(gadget, filename, basename)
@@ -278,96 +292,76 @@ function gadgetHandler:LoadGadget(filename)
 	return gadget
 end
 
-function gadgetHandler:NewGadget()
-	local gadget = {}
-	-- load the system calls into the gadget table
-	for k, v in pairs(System) do
-		gadget[k] = v
-	end
-	gadget._G = _G -- the global table
-	gadget.GG = self.GG -- the shared table
-	gadget.gadget = gadget -- easy self referencing
-
-	-- wrapped calls (closures)
-	gadget.gadgetHandler = {}
-	local gh = gadget.gadgetHandler
-	local self = self
-
-	gadget.include = function(f)
-		return VFS.Include(f, gadget, VFSMODE)
-	end
-
-	gh.RaiseGadget = function(_)
-		self:RaiseGadget(gadget)
-	end
-	gh.LowerGadget = function(_)
-		self:LowerGadget(gadget)
-	end
-	gh.RemoveGadget = function(_)
-		self:RemoveGadget(gadget)
-	end
-	gh.GetViewSizes = function(_)
-		return self:GetViewSizes()
-	end
-	gh.GetHourTimer = function(_)
-		return self:GetHourTimer()
-	end
-	gh.IsSyncedCode = function(_)
-		return IsSyncedCode()
-	end
-
-	gh.UpdateCallIn = function(_, name)
-		self:UpdateGadgetCallIn(name, gadget)
-	end
-	gh.RemoveCallIn = function(_, name)
-		self:RemoveGadgetCallIn(name, gadget)
-	end
-
-	gh.RegisterCMDID = function(_, id)
-		self:RegisterCMDID(gadget, id)
-	end
-
-	gh.RegisterGlobal = function(_, name, value)
-		return self:RegisterGlobal(gadget, name, value)
-	end
-	gh.DeregisterGlobal = function(_, name)
-		return self:DeregisterGlobal(gadget, name)
-	end
-	gh.SetGlobal = function(_, name, value)
-		return self:SetGlobal(gadget, name, value)
-	end
-
-	gh.AddChatAction = function(_, cmd, func, help)
-		return actionHandler.AddChatAction(gadget, cmd, func, help)
-	end
-	gh.RemoveChatAction = function(_, cmd)
-		return actionHandler.RemoveChatAction(gadget, cmd)
-	end
-
-	if not IsSyncedCode() then
-		gh.AddSyncAction = function(_, cmd, func, help)
+--- @param gadget Gadget
+--- @return GadgetHandlerProxy
+function gadgetHandler:WrapGadgetHandler(gadget)
+	return {
+		RaiseGadget = function(_)
+			self:RaiseGadget(gadget)
+		end,
+		LowerGadget = function(_)
+			self:LowerGadget(gadget)
+		end,
+		RemoveGadget = function(_)
+			self:RemoveGadget(gadget)
+		end,
+		GetViewSizes = function(_)
+			return self:GetViewSizes()
+		end,
+		GetHourTimer = function(_)
+			return self:GetHourTimer()
+		end,
+		IsSyncedCode = function(_)
+			return IsSyncedCode()
+		end,
+		RegisterCMDID = function(_, id)
+			self:RegisterCMDID(gadget, id)
+		end,
+		RegisterGlobal = function(_, name, value)
+			return self:RegisterGlobal(gadget, name, value)
+		end,
+		DeregisterGlobal = function(_, name)
+			return self:DeregisterGlobal(gadget, name)
+		end,
+		SetGlobal = function(_, name, value)
+			return self:SetGlobal(gadget, name, value)
+		end,
+		AddChatAction = function(_, cmd, func, help)
+			return actionHandler.AddChatAction(gadget, cmd, func, help)
+		end,
+		RemoveChatAction = function(_, cmd)
+			return actionHandler.RemoveChatAction(gadget, cmd)
+		end,
+		IsMouseOwner = function(_)
+			return (self.mouseOwner == gadget)
+		end,
+		DisownMouse = function(_)
+			if self.mouseOwner == gadget then
+				self.mouseOwner = nil
+			end
+		end,
+		AddSyncAction = function(_, cmd, func, help)
+			if IsSyncedCode() then
+				return nil
+			end
 			return actionHandler.AddSyncAction(gadget, cmd, func, help)
-		end
-		gh.RemoveSyncAction = function(_, cmd)
+		end,
+		RemoveSyncAction = function(_, cmd)
+			if IsSyncedCode() then
+				return nil
+			end
 			return actionHandler.RemoveSyncAction(gadget, cmd)
-		end
-	end
-
-	-- for proxied call-ins
-	gh.IsMouseOwner = function(_)
-		return (self.mouseOwner == gadget)
-	end
-	gh.DisownMouse = function(_)
-		if self.mouseOwner == gadget then
-			self.mouseOwner = nil
-		end
-	end
-
-	return gadget
+		end,
+	}
 end
 
+--- Setup gadget metainfo
+--- @param gadget Gadget
+--- @param filename string
+--- @param basename string
 function gadgetHandler:FinalizeGadget(gadget, filename, basename)
-	local gi = {}
+	---@diagnostic disable-next-line: missing-fields
+	local gi = {} --- @type GadgetInfo
 
 	gi.filename = filename
 	gi.basename = basename
@@ -384,7 +378,8 @@ function gadgetHandler:FinalizeGadget(gadget, filename, basename)
 		gi.enabled = info.enabled or false
 	end
 
-	gadget.ghInfo = {} --  a proxy table
+	--- @class info: GadgetInfo
+	local gh_info = {} --  a proxy table
 	local mt = {
 		__index = gi,
 		__newindex = function()
@@ -392,9 +387,13 @@ function gadgetHandler:FinalizeGadget(gadget, filename, basename)
 		end,
 		__metatable = "protected",
 	}
-	setmetatable(gadget.ghInfo, mt)
+	setmetatable(gh_info, mt)
+	gadget.ghInfo = gh_info
 end
 
+--- Validate a Gadget
+--- @param gadget Gadget
+--- @return string? error_message
 function gadgetHandler:ValidateGadget(gadget)
 	if gadget.GetTooltip and not gadget.IsAbove then
 		return "Gadget has GetTooltip() but not IsAbove()"
@@ -405,118 +404,65 @@ function gadgetHandler:ValidateGadget(gadget)
 	return nil
 end
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-local function SafeWrap(func, funcName)
-	local gh = gadgetHandler
-	return function(g, ...)
-		local r = { pcall(func, g, ...) }
-		if r[1] then
-			table.remove(r, 1)
-			return unpack(r)
-		else
-			if funcName ~= "Shutdown" then
-				gadgetHandler:RemoveGadget(g)
-			else
-				Spring.Log(LOG_SECTION, LOG.ERROR, "Error in Shutdown")
-			end
-			local name = g.ghInfo.name
-			Spring.Log(LOG_SECTION, LOG.INFO, r[2])
-			Spring.Log(LOG_SECTION, LOG.INFO, "Removed gadget: " .. name)
-			return nil
-		end
-	end
-end
-
-local function SafeWrapGadget(gadget)
-	if SAFEWRAP <= 0 then
-		return
-	elseif SAFEWRAP == 1 then
-		if gadget.GetInfo and gadget.GetInfo().unsafe then
-			Spring.Log(LOG_SECTION, LOG.ERROR, "LuaUI: loaded unsafe gadget: " .. gadget.ghInfo.name)
-			return
-		end
-	end
-
-	for _, ciName in ipairs(CALLIN_LIST) do
-		if gadget[ciName] then
-			gadget[ciName] = SafeWrap(gadget[ciName], ciName)
-		end
-		if gadget.Initialize then
-			gadget.Initialize = SafeWrap(gadget.Initialize, "Initialize")
-		end
-	end
-end
-
---------------------------------------------------------------------------------
-
-local function ArrayInsert(t, g)
-	local layer = g.ghInfo.layer
-	local index = 1
-
-	for i, v in ipairs(t) do
-		if v == g then
-			return -- already in the table
-		end
-
-		-- insert-sort the gadget based on its layer
-		-- note: reversed value ordering, highest to lowest
-		-- iteration over the callin lists is also reversed
-		if layer < v.ghInfo.layer then
-			index = i + 1
-		end
-	end
-
-	table.insert(t, index, g)
-end
-
-local function ArrayRemove(t, g)
-	for k, v in ipairs(t) do
-		if v == g then
-			table.remove(t, k)
-			-- break
-		end
-	end
-end
-
+--- Add a Gadget
+--- @param gadget Gadget
 function gadgetHandler:InsertGadget(gadget)
 	if gadget == nil then
 		return
 	end
 
-	ArrayInsert(self.gadgets, gadget)
-	for _, listname in ipairs(CALLIN_LIST) do
+	self.gadget_implemented_callins[gadget] = {}
+	local implemented_list = self.gadget_implemented_callins[gadget]
+	for listname, _ in pairs(CALLIN_LIST) do
 		local func = gadget[listname]
 		if func ~= nil and type(func) == "function" then
-			ArrayInsert(self[listname .. "List"], gadget)
+			table.insert(implemented_list, listname)
 		end
 	end
 
-	self:UpdateCallIns()
+	for _, callin in ipairs(implemented_list) do
+		local callin_map_list = self.gadget_callin_map[callin]
+		if callin_map_list ~= nil then
+			table.insert(callin_map_list, gadget)
+		end
+	end
+
 	if gadget.Initialize then
 		gadget:Initialize()
 	end
-	self:UpdateCallIns()
+
+	self:SortGadgets()
 end
 
+--- Remove a Gadget
+--- @param gadget Gadget
 function gadgetHandler:RemoveGadget(gadget)
 	if gadget == nil then
 		return
 	end
 
-	local name = gadget.ghInfo.name
-	self.knownGadgets[name].active = false
+	for index, value in ipairs(self.gadgets) do
+		if value == gadget then
+			table.remove(self.gadgets, index)
+			break
+		end
+	end
+	-- remove from gadget lists
+	for _, callin in ipairs(self.gadget_implemented_callins[gadget]) do
+		local callin_map = self.gadget_callin_map[callin]
+		for i, g in ipairs(callin_map) do
+			if g == gadget then
+				table.remove(callin_map, i)
+				break
+			end
+		end
+	end
+
 	if gadget.Shutdown then
 		gadget:Shutdown()
 	end
 
-	ArrayRemove(self.gadgets, gadget)
 	self:RemoveGadgetGlobals(gadget)
-	actionHandler.RemoveGadgetActions(gadget)
-	for _, listname in ipairs(CALLIN_LIST) do
-		ArrayRemove(self[listname .. "List"], gadget)
-	end
 
 	for id, g in pairs(self.CMDIDs) do
 		if g == gadget then
@@ -524,68 +470,12 @@ function gadgetHandler:RemoveGadget(gadget)
 		end
 	end
 
-	self:UpdateCallIns()
+	self:SortGadgets()
 end
 
---------------------------------------------------------------------------------
-
-function gadgetHandler:UpdateCallIn(name)
-	local listName = name .. "List"
-	local forceUpdate = (name == "GotChatMsg" or name == "RecvFromSynced") -- redundant?
-
-	_G[name] = nil
-
-	if forceUpdate or #self[listName] > 0 then
-		local selffunc = self[name]
-
-		if selffunc ~= nil then
-			_G[name] = function(...)
-				return selffunc(self, ...)
-			end
-		else
-			Spring.Log(LOG_SECTION, LOG.ERROR, "UpdateCallIn: " .. name .. " is not implemented")
-		end
-	end
-
-	Script.UpdateCallIn(name)
-end
-
-function gadgetHandler:UpdateGadgetCallIn(name, g)
-	local listName = name .. "List"
-	local ciList = self[listName]
-	if ciList then
-		local func = g[name]
-		if func ~= nil and type(func) == "function" then
-			ArrayInsert(ciList, g)
-		else
-			ArrayRemove(ciList, g)
-		end
-		self:UpdateCallIn(name)
-	else
-		Spring.Log(LOG_SECTION, LOG.ERROR, "UpdateGadgetCallIn: bad name: " .. name)
-	end
-end
-
-function gadgetHandler:RemoveGadgetCallIn(name, g)
-	local listName = name .. "List"
-	local ciList = self[listName]
-	if ciList then
-		ArrayRemove(ciList, g)
-		self:UpdateCallIn(name)
-	else
-		Spring.Log(LOG_SECTION, LOG.ERROR, "RemoveGadgetCallIn: bad name: " .. name)
-	end
-end
-
-function gadgetHandler:UpdateCallIns()
-	for _, name in ipairs(CALLIN_LIST) do
-		self:UpdateCallIn(name)
-	end
-end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
+--- Enable a Gadget
+--- @param name string
+--- @return boolean success
 function gadgetHandler:EnableGadget(name)
 	local ki = self.knownGadgets[name]
 	if not ki then
@@ -607,6 +497,9 @@ function gadgetHandler:EnableGadget(name)
 	return true
 end
 
+--- Disable a Gadget
+--- @param name string
+--- @return boolean success
 function gadgetHandler:DisableGadget(name)
 	local ki = self.knownGadgets[name]
 	if not ki then
@@ -625,11 +518,14 @@ function gadgetHandler:DisableGadget(name)
 	return true
 end
 
+--- Toggle a Gadget's enabled state
+--- @param name string
+--- @return boolean success
 function gadgetHandler:ToggleGadget(name)
 	local ki = self.knownGadgets[name]
 	if not ki then
 		Spring.Log(LOG_SECTION, LOG.ERROR, "ToggleGadget(), could not find gadget: " .. tostring(name))
-		return
+		return false
 	end
 	if ki.active then
 		return self:DisableGadget(name)
@@ -751,10 +647,7 @@ function gadgetHandler:FindGadget(name)
 end
 
 --------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---
 --  Global var/func management
---
 
 function gadgetHandler:RegisterGlobal(owner, name, value)
 	if name == nil then
@@ -775,7 +668,7 @@ function gadgetHandler:RegisterGlobal(owner, name, value)
 	return true
 end
 
-function gadgetHandler:DeregisterGlobal(owner, name)
+function gadgetHandler:DeregisterGlobal(_, name)
 	if name == nil then
 		return false
 	end
@@ -805,10 +698,7 @@ function gadgetHandler:RemoveGadgetGlobals(owner)
 end
 
 --------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---
 --  Helper facilities
---
 
 local hourTimer = 0
 
@@ -842,1388 +732,16 @@ function gadgetHandler:RegisterCMDID(gadget, id)
 	self.CMDIDs[id] = gadget
 end
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---
---  The call-in distribution routines
---
-function gadgetHandler:Shutdown()
-	for _, g in r_ipairs(self.ShutdownList) do
-		g:Shutdown()
-	end
-end
-
-function gadgetHandler:GameSetup(state, ready, playerStates)
-	local success, newReady = false, ready
-	for _, g in r_ipairs(self.GameSetupList) do
-		success, newReady = g:GameSetup(state, ready, playerStates)
-	end
-	return success, newReady
-end
-
-function gadgetHandler:GamePreload()
-	for _, g in r_ipairs(self.GamePreloadList) do
-		g:GamePreload()
-	end
-end
-
-function gadgetHandler:GameStart()
-	for _, g in r_ipairs(self.GameStartList) do
-		g:GameStart()
-	end
-end
-
-function gadgetHandler:GameOver(winningAllyTeams)
-	for _, g in r_ipairs(self.GameOverList) do
-		g:GameOver(winningAllyTeams)
-	end
-end
-
-function gadgetHandler:GameFrame(frameNum)
-	for _, g in r_ipairs(self.GameFrameList) do
-		g:GameFrame(frameNum)
-	end
-end
-
-function gadgetHandler:GameFramePost(frameNum)
-	for _, g in r_ipairs(self.GameFramePostList) do
-		g:GameFramePost(frameNum)
-	end
-end
-
-function gadgetHandler:GamePaused(playerID, paused)
-	for _, g in r_ipairs(self.GamePausedList) do
-		g:GamePaused(playerID, paused)
-	end
-end
-
-function gadgetHandler:GameProgress(serverFrameNum)
-	for _, g in r_ipairs(self.GameProgressList) do
-		g:GameProgress(serverFrameNum)
-	end
-end
-
-function gadgetHandler:GameID(gameID)
-	for _, g in r_ipairs(self.GameIDList) do
-		g:GameID(gameID)
-	end
-end
-
-function gadgetHandler:RecvFromSynced(...)
-	if actionHandler.RecvFromSynced(...) then
-		return
-	end
-	for _, g in r_ipairs(self.RecvFromSyncedList) do
-		if g:RecvFromSynced(...) then
-			return
-		end
-	end
-end
-
-function gadgetHandler:GotChatMsg(msg, player)
-	if (player == 0) and Spring.IsCheatingEnabled() then
-		local sp = "^%s*" -- start pattern
-		local ep = "%s+(.*)" -- end pattern
-		local s, e, match
-		s, e, match = string.find(msg, sp .. "togglegadget" .. ep)
-		if match then
-			self:ToggleGadget(match)
-			return true
-		end
-		s, e, match = string.find(msg, sp .. "enablegadget" .. ep)
-		if match then
-			self:EnableGadget(match)
-			return true
-		end
-		s, e, match = string.find(msg, sp .. "disablegadget" .. ep)
-		if match then
-			self:DisableGadget(match)
-			return true
-		end
-	end
-
-	if actionHandler.GotChatMsg(msg, player) then
-		return true
-	end
-
-	for _, g in r_ipairs(self.GotChatMsgList) do
-		if g:GotChatMsg(msg, player) then
-			return true
-		end
-	end
-
-	return false
-end
-
-function gadgetHandler:RecvLuaMsg(msg, player)
-	for _, g in r_ipairs(self.RecvLuaMsgList) do
-		if g:RecvLuaMsg(msg, player) then
-			return true
-		end
-	end
-	return false
-end
-
---------------------------------------------------------------------------------
---
---  Drawing call-ins
---
-
--- generates ViewResize() calls for the gadgets
 function gadgetHandler:SetViewSize(vsx, vsy)
 	self.xViewSize = vsx
 	self.yViewSize = vsy
 	if (self.xViewSizeOld ~= vsx) or (self.yViewSizeOld ~= vsy) then
-		gadgetHandler:ViewResize(vsx, vsy)
+		_G["ViewResize"](vsx, vsy)
 		self.xViewSizeOld = vsx
 		self.yViewSizeOld = vsy
 	end
 end
 
-function gadgetHandler:ViewResize(vsx, vsy)
-	for _, g in r_ipairs(self.ViewResizeList) do
-		g:ViewResize(vsx, vsy)
-	end
-end
-
---------------------------------------------------------------------------------
---
---  Team and player call-ins
---
-
-function gadgetHandler:TeamDied(teamID)
-	for _, g in r_ipairs(self.TeamDiedList) do
-		g:TeamDied(teamID)
-	end
-end
-
-function gadgetHandler:TeamChanged(teamID)
-	for _, g in r_ipairs(self.TeamChangedList) do
-		g:TeamChanged(teamID)
-	end
-end
-
-function gadgetHandler:PlayerChanged(playerID)
-	for _, g in r_ipairs(self.PlayerChangedList) do
-		g:PlayerChanged(playerID)
-	end
-end
-
-function gadgetHandler:PlayerAdded(playerID)
-	for _, g in r_ipairs(self.PlayerAddedList) do
-		g:PlayerAdded(playerID)
-	end
-end
-
-function gadgetHandler:PlayerRemoved(playerID, reason)
-	for _, g in r_ipairs(self.PlayerRemovedList) do
-		g:PlayerRemoved(playerID, reason)
-	end
-end
-
---------------------------------------------------------------------------------
---
---  LuaRules Game call-ins
---
-
-function gadgetHandler:DrawUnit(unitID, drawMode)
-	for _, g in r_ipairs(self.DrawUnitList) do
-		if g:DrawUnit(unitID, drawMode) then
-			return true
-		end
-	end
-	return false
-end
-
-function gadgetHandler:DrawFeature(featureID, drawMode)
-	for _, g in r_ipairs(self.DrawFeatureList) do
-		if g:DrawFeature(featureID, drawMode) then
-			return true
-		end
-	end
-	return false
-end
-
-function gadgetHandler:DrawShield(unitID, weaponID, drawMode)
-	for _, g in r_ipairs(self.DrawShieldList) do
-		if g:DrawShield(unitID, weaponID, drawMode) then
-			return true
-		end
-	end
-	return false
-end
-
-function gadgetHandler:DrawProjectile(projectileID, drawMode)
-	for _, g in r_ipairs(self.DrawProjectileList) do
-		if g:DrawProjectile(projectileID, drawMode) then
-			return true
-		end
-	end
-	return false
-end
-
-function gadgetHandler:DrawMaterial(materialID, drawMode)
-	for _, g in r_ipairs(self.DrawMaterialList) do
-		if g:DrawMaterial(materialID, drawMode) then
-			return true
-		end
-	end
-	return false
-end
-
-function gadgetHandler:RecvSkirmishAIMessage(aiTeam, dataStr)
-	for _, g in r_ipairs(self.RecvSkirmishAIMessageList) do
-		local dataRet = g:RecvSkirmishAIMessage(aiTeam, dataStr)
-		if dataRet then
-			return dataRet
-		end
-	end
-end
-
-function gadgetHandler:CommandFallback(unitID, unitDefID, unitTeam, cmdID, cmdParams, cmdOptions, cmdTag)
-	for _, g in r_ipairs(self.CommandFallbackList) do
-		local used, remove = g:CommandFallback(unitID, unitDefID, unitTeam, cmdID, cmdParams, cmdOptions, cmdTag)
-		if used then
-			return remove
-		end
-	end
-	return true -- remove the command
-end
-
-function gadgetHandler:AllowCommand(
-	unitID,
-	unitDefID,
-	unitTeam,
-	cmdID,
-	cmdParams,
-	cmdOptions,
-	cmdTag,
-	playerID,
-	fromSynced,
-	fromLua
-)
-	for _, g in r_ipairs(self.AllowCommandList) do
-		if
-			not g:AllowCommand(
-				unitID,
-				unitDefID,
-				unitTeam,
-				cmdID,
-				cmdParams,
-				cmdOptions,
-				cmdTag,
-				playerID,
-				fromSynced,
-				fromLua
-			)
-		then
-			return false
-		end
-	end
-	return true
-end
-
-function gadgetHandler:AllowStartPosition(playerID, teamID, readyState, cx, cy, cz, rx, ry, rz)
-	for _, g in r_ipairs(self.AllowStartPositionList) do
-		if not g:AllowStartPosition(playerID, teamID, readyState, cx, cy, cz, rx, ry, rz) then
-			return false
-		end
-	end
-	return true
-end
-
-function gadgetHandler:AllowUnitCreation(unitDefID, builderID, builderTeam, x, y, z, facing)
-	for _, g in r_ipairs(self.AllowUnitCreationList) do
-		local allow, drop = g:AllowUnitCreation(unitDefID, builderID, builderTeam, x, y, z, facing)
-		if not allow then
-			return false, drop
-		end
-	end
-	return true, true
-end
-
-function gadgetHandler:AllowUnitTransfer(unitID, unitDefID, oldTeam, newTeam, capture)
-	for _, g in r_ipairs(self.AllowUnitTransferList) do
-		if not g:AllowUnitTransfer(unitID, unitDefID, oldTeam, newTeam, capture) then
-			return false
-		end
-	end
-	return true
-end
-
-function gadgetHandler:AllowUnitBuildStep(builderID, builderTeam, unitID, unitDefID, part)
-	for _, g in r_ipairs(self.AllowUnitBuildStepList) do
-		if not g:AllowUnitBuildStep(builderID, builderTeam, unitID, unitDefID, part) then
-			return false
-		end
-	end
-	return true
-end
-
-function gadgetHandler:AllowUnitCaptureStep(builderID, builderTeam, unitID, unitDefID, part)
-	for _, g in r_ipairs(self.AllowUnitCaptureStepList) do
-		if not g:AllowUnitCaptureStep(builderID, builderTeam, unitID, unitDefID, part) then
-			return false
-		end
-	end
-	return true
-end
-
-function gadgetHandler:AllowUnitTransport(
-	transporterID,
-	transporterUnitDefID,
-	transporterTeam,
-	transporteeID,
-	transporteeUnitDefID,
-	transporteeTeam
-)
-	for _, g in r_ipairs(self.AllowUnitTransportList) do
-		if
-			not g:AllowUnitTransport(
-				transporterID,
-				transporterUnitDefID,
-				transporterTeam,
-				transporteeID,
-				transporteeUnitDefID,
-				transporteeTeam
-			)
-		then
-			return false
-		end
-	end
-	return true
-end
-
-function gadgetHandler:AllowUnitTransportLoad(
-	transporterID,
-	transporterUnitDefID,
-	transporterTeam,
-	transporteeID,
-	transporteeUnitDefID,
-	transporteeTeam,
-	loadPosX,
-	loadPosY,
-	loadPosZ
-)
-	for _, g in r_ipairs(self.AllowUnitTransportLoadList) do
-		if
-			not g:AllowUnitTransportLoad(
-				transporterID,
-				transporterUnitDefID,
-				transporterTeam,
-				transporteeID,
-				transporteeUnitDefID,
-				transporteeTeam,
-				loadPosX,
-				loadPosY,
-				loadPosZ
-			)
-		then
-			return false
-		end
-	end
-	return true
-end
-
-function gadgetHandler:AllowUnitTransportUnload(
-	transporterID,
-	transporterUnitDefID,
-	transporterTeam,
-	transporteeID,
-	transporteeUnitDefID,
-	transporteeTeam,
-	unloadPosX,
-	unloadPosY,
-	unloadPosZ
-)
-	for _, g in r_ipairs(self.AllowUnitTransportUnloadList) do
-		if
-			not g:AllowUnitTransportUnload(
-				transporterID,
-				transporterUnitDefID,
-				transporterTeam,
-				transporteeID,
-				transporteeUnitDefID,
-				transporteeTeam,
-				unloadPosX,
-				unloadPosY,
-				unloadPosZ
-			)
-		then
-			return false
-		end
-	end
-	return true
-end
-
-function gadgetHandler:AllowUnitCloak(unitID, enemyID)
-	for _, g in r_ipairs(self.AllowUnitCloakList) do
-		if not g:AllowUnitCloak(unitID, enemyID) then
-			return false
-		end
-	end
-
-	return true
-end
-
-function gadgetHandler:AllowUnitDecloak(unitID, objectID, weaponID)
-	for _, g in r_ipairs(self.AllowUnitDecloakList) do
-		if not g:AllowUnitDecloak(unitID, objectID, weaponID) then
-			return false
-		end
-	end
-
-	return true
-end
-
-function gadgetHandler:AllowUnitKamikaze(unitID, targetID)
-	for _, g in r_ipairs(self.AllowUnitKamikazeList) do
-		if not g:AllowUnitKamikaze(unitID, targetID) then
-			return false
-		end
-	end
-
-	return true
-end
-
-function gadgetHandler:AllowFeatureBuildStep(builderID, builderTeam, featureID, featureDefID, part)
-	for _, g in r_ipairs(self.AllowFeatureBuildStepList) do
-		if not g:AllowFeatureBuildStep(builderID, builderTeam, featureID, featureDefID, part) then
-			return false
-		end
-	end
-	return true
-end
-
-function gadgetHandler:AllowFeatureCreation(featureDefID, teamID, x, y, z)
-	for _, g in r_ipairs(self.AllowFeatureCreationList) do
-		if not g:AllowFeatureCreation(featureDefID, teamID, x, y, z) then
-			return false
-		end
-	end
-	return true
-end
-
-function gadgetHandler:AllowResourceLevel(teamID, res, level)
-	for _, g in r_ipairs(self.AllowResourceLevelList) do
-		if not g:AllowResourceLevel(teamID, res, level) then
-			return false
-		end
-	end
-	return true
-end
-
-function gadgetHandler:AllowResourceTransfer(oldTeamID, newTeamID, res, amount)
-	for _, g in r_ipairs(self.AllowResourceTransferList) do
-		if not g:AllowResourceTransfer(oldTeamID, newTeamID, res, amount) then
-			return false
-		end
-	end
-	return true
-end
-
-function gadgetHandler:AllowDirectUnitControl(unitID, unitDefID, unitTeam, playerID)
-	for _, g in r_ipairs(self.AllowDirectUnitControlList) do
-		if not g:AllowDirectUnitControl(unitID, unitDefID, unitTeam, playerID) then
-			return false
-		end
-	end
-	return true
-end
-
-function gadgetHandler:AllowBuilderHoldFire(unitID, unitDefID, action)
-	for _, g in r_ipairs(self.AllowBuilderHoldFireList) do
-		if not g:AllowBuilderHoldFire(unitID, unitDefID, action) then
-			return false
-		end
-	end
-	return true
-end
-
-function gadgetHandler:MoveCtrlNotify(unitID, unitDefID, unitTeam, data)
-	local state = false
-	for _, g in r_ipairs(self.MoveCtrlNotifyList) do
-		if g:MoveCtrlNotify(unitID, unitDefID, unitTeam, data) then
-			state = true
-		end
-	end
-	return state
-end
-
-function gadgetHandler:TerraformComplete(unitID, unitDefID, unitTeam, buildUnitID, buildUnitDefID, buildUnitTeam)
-	for _, g in r_ipairs(self.TerraformCompleteList) do
-		if g:TerraformComplete(unitID, unitDefID, unitTeam, buildUnitID, buildUnitDefID, buildUnitTeam) then
-			return true
-		end
-	end
-	return false
-end
-
-function gadgetHandler:AllowWeaponTargetCheck(attackerID, attackerWeaponNum, attackerWeaponDefID)
-	local ignore = true
-	for _, g in r_ipairs(self.AllowWeaponTargetCheckList) do
-		local allowCheck, ignoreCheck = g:AllowWeaponTargetCheck(attackerID, attackerWeaponNum, attackerWeaponDefID)
-		if not ignoreCheck then
-			ignore = false
-			if not allowCheck then
-				return 0
-			end
-		end
-	end
-
-	return ((ignore and -1) or 1)
-end
-
-function gadgetHandler:AllowWeaponTarget(attackerID, targetID, attackerWeaponNum, attackerWeaponDefID, defPriority)
-	local allowed = true
-	local priority = 1.0
-
-	for _, g in r_ipairs(self.AllowWeaponTargetList) do
-		local targetAllowed, targetPriority =
-			g:AllowWeaponTarget(attackerID, targetID, attackerWeaponNum, attackerWeaponDefID, defPriority)
-
-		if not targetAllowed then
-			allowed = false
-			break
-		end
-
-		priority = math.max(priority, targetPriority)
-	end
-
-	return allowed, priority
-end
-
-function gadgetHandler:AllowWeaponInterceptTarget(interceptorUnitID, interceptorWeaponNum, interceptorTargetID)
-	for _, g in r_ipairs(self.AllowWeaponInterceptTargetList) do
-		if not g:AllowWeaponInterceptTarget(interceptorUnitID, interceptorWeaponNum, interceptorTargetID) then
-			return false
-		end
-	end
-
-	return true
-end
-
---------------------------------------------------------------------------------
---
---  Unit call-ins
---
-
-function gadgetHandler:UnitCreated(unitID, unitDefID, unitTeam, builderID)
-	for _, g in r_ipairs(self.UnitCreatedList) do
-		g:UnitCreated(unitID, unitDefID, unitTeam, builderID)
-	end
-end
-
-function gadgetHandler:UnitFinished(unitID, unitDefID, unitTeam)
-	for _, g in r_ipairs(self.UnitFinishedList) do
-		g:UnitFinished(unitID, unitDefID, unitTeam)
-	end
-end
-
-function gadgetHandler:UnitFromFactory(unitID, unitDefID, unitTeam, factID, factDefID, userOrders)
-	for _, g in r_ipairs(self.UnitFromFactoryList) do
-		g:UnitFromFactory(unitID, unitDefID, unitTeam, factID, factDefID, userOrders)
-	end
-end
-
-function gadgetHandler:UnitReverseBuilt(unitID, unitDefID, unitTeam)
-	for _, g in r_ipairs(self.UnitReverseBuiltList) do
-		g:UnitReverseBuilt(unitID, unitDefID, unitTeam)
-	end
-end
-
-function gadgetHandler:UnitConstructionDecayed(unitID, unitDefID, unitTeam, timeSinceLastBuild, iterationPeriod, part)
-	for _, g in r_ipairs(self.UnitConstructionDecayedList) do
-		g:UnitConstructionDecayed(unitID, unitDefID, unitTeam, timeSinceLastBuild, iterationPeriod, part)
-	end
-end
-
-function gadgetHandler:UnitDestroyed(unitID, unitDefID, unitTeam, attackerID, attackerDefID, attackerTeam, weaponDefID)
-	for _, g in r_ipairs(self.UnitDestroyedList) do
-		g:UnitDestroyed(unitID, unitDefID, unitTeam, attackerID, attackerDefID, attackerTeam, weaponDefID)
-	end
-end
-
-function gadgetHandler:RenderUnitDestroyed(unitID, unitDefID, unitTeam)
-	for _, g in r_ipairs(self.RenderUnitDestroyedList) do
-		g:RenderUnitDestroyed(unitID, unitDefID, unitTeam)
-	end
-end
-
-function gadgetHandler:UnitExperience(unitID, unitDefID, unitTeam, experience, oldExperience)
-	for _, g in r_ipairs(self.UnitExperienceList) do
-		g:UnitExperience(unitID, unitDefID, unitTeam, experience, oldExperience)
-	end
-end
-
-function gadgetHandler:UnitIdle(unitID, unitDefID, unitTeam)
-	for _, g in r_ipairs(self.UnitIdleList) do
-		g:UnitIdle(unitID, unitDefID, unitTeam)
-	end
-end
-
-function gadgetHandler:UnitCmdDone(unitID, unitDefID, unitTeam, cmdID, cmdParams, cmdOpts, cmdTag)
-	for _, g in r_ipairs(self.UnitCmdDoneList) do
-		g:UnitCmdDone(unitID, unitDefID, unitTeam, cmdID, cmdParams, cmdOpts, cmdTag)
-	end
-end
-
-function gadgetHandler:UnitCommand(
-	unitID,
-	unitDefID,
-	unitTeam,
-	cmdID,
-	cmdParams,
-	cmdOpts,
-	cmdTag,
-	playerID,
-	fromSynced,
-	fromLua
-)
-	for _, g in r_ipairs(self.UnitCommandList) do
-		g:UnitCommand(unitID, unitDefID, unitTeam, cmdID, cmdParams, cmdOpts, cmdTag, playerID, fromSynced, fromLua)
-	end
-end
-
-function gadgetHandler:UnitPreDamaged(
-	unitID,
-	unitDefID,
-	unitTeam,
-	damage,
-	paralyzer,
-	weaponDefID,
-	projectileID,
-	attackerID,
-	attackerDefID,
-	attackerTeam
-)
-	local retDamage = damage
-	local retImpulse = 1.0
-
-	for _, g in r_ipairs(self.UnitPreDamagedList) do
-		dmg, imp = g:UnitPreDamaged(
-			unitID,
-			unitDefID,
-			unitTeam,
-			retDamage,
-			paralyzer,
-			weaponDefID,
-			projectileID,
-			attackerID,
-			attackerDefID,
-			attackerTeam
-		)
-
-		if dmg ~= nil then
-			retDamage = dmg
-		end
-		if imp ~= nil then
-			retImpulse = imp
-		end
-	end
-
-	return retDamage, retImpulse
-end
-
-function gadgetHandler:UnitDamaged(
-	unitID,
-	unitDefID,
-	unitTeam,
-	damage,
-	paralyzer,
-	weaponDefID,
-	projectileID,
-	attackerID,
-	attackerDefID,
-	attackerTeam
-)
-	for _, g in r_ipairs(self.UnitDamagedList) do
-		g:UnitDamaged(
-			unitID,
-			unitDefID,
-			unitTeam,
-			damage,
-			paralyzer,
-			weaponDefID,
-			projectileID,
-			attackerID,
-			attackerDefID,
-			attackerTeam
-		)
-	end
-end
-
-function gadgetHandler:UnitStunned(unitID, unitDefID, unitTeam, stunned)
-	for _, g in r_ipairs(self.UnitStunnedList) do
-		g:UnitStunned(unitID, unitDefID, unitTeam, stunned)
-	end
-end
-
-function gadgetHandler:UnitTaken(unitID, unitDefID, unitTeam, newTeam)
-	for _, g in r_ipairs(self.UnitTakenList) do
-		g:UnitTaken(unitID, unitDefID, unitTeam, newTeam)
-	end
-end
-
-function gadgetHandler:UnitGiven(unitID, unitDefID, unitTeam, oldTeam)
-	for _, g in r_ipairs(self.UnitGivenList) do
-		g:UnitGiven(unitID, unitDefID, unitTeam, oldTeam)
-	end
-end
-
-function gadgetHandler:UnitEnteredRadar(unitID, unitTeam, allyTeam, unitDefID)
-	for _, g in r_ipairs(self.UnitEnteredRadarList) do
-		g:UnitEnteredRadar(unitID, unitTeam, allyTeam, unitDefID)
-	end
-end
-
-function gadgetHandler:UnitEnteredLos(unitID, unitTeam, allyTeam, unitDefID)
-	for _, g in r_ipairs(self.UnitEnteredLosList) do
-		g:UnitEnteredLos(unitID, unitTeam, allyTeam, unitDefID)
-	end
-end
-
-function gadgetHandler:UnitLeftRadar(unitID, unitTeam, allyTeam, unitDefID)
-	for _, g in r_ipairs(self.UnitLeftRadarList) do
-		g:UnitLeftRadar(unitID, unitTeam, allyTeam, unitDefID)
-	end
-end
-
-function gadgetHandler:UnitLeftLos(unitID, unitTeam, allyTeam, unitDefID)
-	for _, g in r_ipairs(self.UnitLeftLosList) do
-		g:UnitLeftLos(unitID, unitTeam, allyTeam, unitDefID)
-	end
-end
-
-function gadgetHandler:UnitEnteredWater(unitID, unitDefID, unitTeam)
-	for _, g in r_ipairs(self.UnitEnteredWaterList) do
-		g:UnitEnteredWater(unitID, unitDefID, unitTeam)
-	end
-end
-
-function gadgetHandler:UnitLeftWater(unitID, unitDefID, unitTeam)
-	for _, g in r_ipairs(self.UnitLeftWaterList) do
-		g:UnitLeftWater(unitID, unitDefID, unitTeam)
-	end
-end
-
-function gadgetHandler:UnitEnteredUnderwater(unitID, unitDefID, unitTeam)
-	for _, g in r_ipairs(self.UnitEnteredUnderwaterList) do
-		g:UnitEnteredUnderwater(unitID, unitDefID, unitTeam)
-	end
-end
-
-function gadgetHandler:UnitLeftUnderwater(unitID, unitDefID, unitTeam)
-	for _, g in r_ipairs(self.UnitLeftUnderwaterList) do
-		g:UnitLeftUnderwater(unitID, unitDefID, unitTeam)
-	end
-end
-
-function gadgetHandler:UnitEnteredAir(unitID, unitDefID, unitTeam)
-	for _, g in r_ipairs(self.UnitEnteredAirList) do
-		g:UnitEnteredAir(unitID, unitDefID, unitTeam)
-	end
-end
-
-function gadgetHandler:UnitLeftAir(unitID, unitDefID, unitTeam)
-	for _, g in r_ipairs(self.UnitLeftAirList) do
-		g:UnitLeftAir(unitID, unitDefID, unitTeam)
-	end
-end
-
-function gadgetHandler:UnitSeismicPing(x, y, z, strength, allyTeam, unitID, unitDefID)
-	for _, g in r_ipairs(self.UnitSeismicPingList) do
-		g:UnitSeismicPing(x, y, z, strength, allyTeam, unitID, unitDefID)
-	end
-end
-
-function gadgetHandler:UnitLoaded(unitID, unitDefID, unitTeam, transportID, transportTeam)
-	for _, g in r_ipairs(self.UnitLoadedList) do
-		g:UnitLoaded(unitID, unitDefID, unitTeam, transportID, transportTeam)
-	end
-end
-
-function gadgetHandler:UnitUnloaded(unitID, unitDefID, unitTeam, transportID, transportTeam)
-	for _, g in r_ipairs(self.UnitUnloadedList) do
-		g:UnitUnloaded(unitID, unitDefID, unitTeam, transportID, transportTeam)
-	end
-end
-
-function gadgetHandler:UnitCloaked(unitID, unitDefID, unitTeam)
-	for _, g in r_ipairs(self.UnitCloakedList) do
-		g:UnitCloaked(unitID, unitDefID, unitTeam)
-	end
-end
-
-function gadgetHandler:UnitDecloaked(unitID, unitDefID, unitTeam)
-	for _, g in r_ipairs(self.UnitDecloakedList) do
-		g:UnitDecloaked(unitID, unitDefID, unitTeam)
-	end
-end
-
-function gadgetHandler:UnitUnitCollision(colliderID, collideeID)
-	for _, g in r_ipairs(self.UnitUnitCollisionList) do
-		if g:UnitUnitCollision(colliderID, collideeID) then
-			return true
-		end
-	end
-
-	return false
-end
-
-function gadgetHandler:UnitFeatureCollision(colliderID, collideeID)
-	for _, g in r_ipairs(self.UnitFeatureCollisionList) do
-		if g:UnitFeatureCollision(colliderID, collideeID) then
-			return true
-		end
-	end
-
-	return false
-end
-
-function gadgetHandler:StockpileChanged(unitID, unitDefID, unitTeam, weaponNum, oldCount, newCount)
-	for _, g in r_ipairs(self.StockpileChangedList) do
-		g:StockpileChanged(unitID, unitDefID, unitTeam, weaponNum, oldCount, newCount)
-	end
-end
-
-function gadgetHandler:UnitHarvestStorageFull(unitID, unitDefID, unitTeam)
-	for _, g in r_ipairs(self.UnitHarvestStorageFullList) do
-		g:UnitHarvestStorageFull(unitID, unitDefID, unitTeam)
-	end
-end
-
---------------------------------------------------------------------------------
---
---  Feature call-ins
---
-
-function gadgetHandler:FeatureCreated(featureID, allyTeam)
-	for _, g in r_ipairs(self.FeatureCreatedList) do
-		g:FeatureCreated(featureID, allyTeam)
-	end
-end
-
-function gadgetHandler:FeatureDestroyed(featureID, allyTeam)
-	for _, g in r_ipairs(self.FeatureDestroyedList) do
-		g:FeatureDestroyed(featureID, allyTeam)
-	end
-end
-
-function gadgetHandler:FeatureDamaged(
-	featureID,
-	featureDefID,
-	featureTeam,
-	damage,
-	weaponDefID,
-	projectileID,
-	attackerID,
-	attackerDefID,
-	attackerTeam
-)
-	for _, g in r_ipairs(self.FeatureDamagedList) do
-		g:FeatureDamaged(
-			featureID,
-			featureDefID,
-			featureTeam,
-			damage,
-			weaponDefID,
-			projectileID,
-			attackerID,
-			attackerDefID,
-			attackerTeam
-		)
-	end
-end
-
-function gadgetHandler:FeaturePreDamaged(
-	featureID,
-	featureDefID,
-	featureTeam,
-	damage,
-	weaponDefID,
-	projectileID,
-	attackerID,
-	attackerDefID,
-	attackerTeam
-)
-	local retDamage = damage
-	local retImpulse = 1.0
-
-	for _, g in r_ipairs(self.FeaturePreDamagedList) do
-		dmg, imp = g:FeaturePreDamaged(
-			featureID,
-			featureDefID,
-			featureTeam,
-			retDamage,
-			weaponDefID,
-			projectileID,
-			attackerID,
-			attackerDefID,
-			attackerTeam
-		)
-
-		if dmg ~= nil then
-			retDamage = dmg
-		end
-		if imp ~= nil then
-			retImpulse = imp
-		end
-	end
-
-	return retDamage, retImpulse
-end
-
---------------------------------------------------------------------------------
---
---  Projectile call-ins
---
-
-function gadgetHandler:ProjectileCreated(proID, proOwnerID, proWeaponDefID)
-	for _, g in r_ipairs(self.ProjectileCreatedList) do
-		g:ProjectileCreated(proID, proOwnerID, proWeaponDefID)
-	end
-end
-
-function gadgetHandler:ProjectileDestroyed(proID)
-	for _, g in r_ipairs(self.ProjectileDestroyedList) do
-		g:ProjectileDestroyed(proID)
-	end
-end
-
---------------------------------------------------------------------------------
---
---  Shield call-ins
---
-
-function gadgetHandler:ShieldPreDamaged(
-	proID,
-	proOwnerID,
-	shieldEmitterWeapNum,
-	shieldCarrierUnitID,
-	bounceProj,
-	beamEmitterWeapNum,
-	beamEmitterUnitID,
-	spx,
-	spy,
-	spz,
-	hpx,
-	hpy,
-	hpz
-)
-	for _, g in r_ipairs(self.ShieldPreDamagedList) do
-		-- first gadget to handle this consumes the event
-		if
-			g:ShieldPreDamaged(
-				proID,
-				proOwnerID,
-				shieldEmitterWeapNum,
-				shieldCarrierUnitID,
-				bounceProj,
-				beamEmitterWeapNum,
-				beamEmitterUnitID,
-				spx,
-				spy,
-				spz,
-				hpx,
-				hpy,
-				hpz
-			)
-		then
-			return true
-		end
-	end
-
-	return false
-end
-
---------------------------------------------------------------------------------
---
---  Misc call-ins
---
-
-function gadgetHandler:Explosion(weaponID, px, py, pz, ownerID, projectileID)
-	-- "noGfx = noGfx or ..." short-circuits, so equivalent to this
-	for _, g in r_ipairs(self.ExplosionList) do
-		if g:Explosion(weaponID, px, py, pz, ownerID, projectileID) then
-			return true
-		end
-	end
-
-	return false
-end
-
---------------------------------------------------------------------------------
---
---  Draw call-ins
---
-
-function gadgetHandler:Update()
-	for _, g in r_ipairs(self.UpdateList) do
-		g:Update()
-	end
-end
-
-function gadgetHandler:DefaultCommand(type, id, cmd)
-	for _, g in r_ipairs(self.DefaultCommandList) do
-		local id = g:DefaultCommand(type, id, cmd)
-		if id then
-			return id
-		end
-	end
-end
-
-function gadgetHandler:ActiveCommandChanged(id, cmdType)
-	for _, g in r_ipairs(self.ActiveCommandChangedList) do
-		g:ActiveCommandChanged(id, cmdType)
-	end
-end
-
-function gadgetHandler:CommandNotify(id, params, options)
-	for _, g in r_ipairs(self.CommandNotifyList) do
-		if g:CommandNotify(id, params, options) then
-			return true
-		end
-	end
-	return false
-end
-
-function gadgetHandler:DrawGenesis()
-	for _, g in r_ipairs(self.DrawGenesisList) do
-		g:DrawGenesis()
-	end
-end
-
-function gadgetHandler:DrawWorld()
-	for _, g in r_ipairs(self.DrawWorldList) do
-		g:DrawWorld()
-	end
-end
-
-function gadgetHandler:DrawWorldPreUnit()
-	for _, g in r_ipairs(self.DrawWorldPreUnitList) do
-		g:DrawWorldPreUnit()
-	end
-end
-
-function gadgetHandler:DrawPreDecals()
-	for _, g in r_ipairs(self.DrawPreDecalsList) do
-		g:DrawPreDecals()
-	end
-end
-
-function gadgetHandler:DrawWorldPreParticles()
-	for _, g in r_ipairs(self.DrawWorldPreParticlesList) do
-		g:DrawWorldPreParticles()
-	end
-end
-
-function gadgetHandler:DrawOpaqueUnitsLua(deferredPass, drawReflection, drawRefraction)
-	for _, w in r_ipairs(self.DrawOpaqueUnitsLuaList) do
-		w:DrawOpaqueUnitsLua(deferredPass, drawReflection, drawRefraction)
-	end
-	return
-end
-
-function gadgetHandler:DrawOpaqueFeaturesLua(deferredPass, drawReflection, drawRefraction)
-	for _, w in r_ipairs(self.DrawOpaqueFeaturesLuaList) do
-		w:DrawOpaqueFeaturesLua(deferredPass, drawReflection, drawRefraction)
-	end
-	return
-end
-
-function gadgetHandler:DrawAlphaUnitsLua(drawReflection, drawRefraction)
-	for _, w in r_ipairs(self.DrawAlphaUnitsLuaList) do
-		w:DrawAlphaUnitsLua(drawReflection, drawRefraction)
-	end
-	return
-end
-
-function gadgetHandler:DrawAlphaFeaturesLua(drawReflection, drawRefraction)
-	for _, w in r_ipairs(self.DrawAlphaFeaturesLuaList) do
-		w:DrawAlphaFeaturesLua(drawReflection, drawRefraction)
-	end
-	return
-end
-
-function gadgetHandler:DrawShadowUnitsLua()
-	for _, w in r_ipairs(self.DrawShadowUnitsLuaList) do
-		w:DrawShadowUnitsLua()
-	end
-	return
-end
-
-function gadgetHandler:DrawShadowFeaturesLua()
-	for _, w in r_ipairs(self.DrawShadowFeaturesLuaList) do
-		w:DrawShadowFeaturesLua()
-	end
-	return
-end
-
-function gadgetHandler:DrawWorldShadow()
-	for _, g in r_ipairs(self.DrawWorldShadowList) do
-		g:DrawWorldShadow()
-	end
-end
-
-function gadgetHandler:DrawWorldReflection()
-	for _, g in r_ipairs(self.DrawWorldReflectionList) do
-		g:DrawWorldReflection()
-	end
-end
-
-function gadgetHandler:DrawWorldRefraction()
-	for _, g in r_ipairs(self.DrawWorldRefractionList) do
-		g:DrawWorldRefraction()
-	end
-end
-
-function gadgetHandler:DrawGroundPreForward()
-	for _, g in r_ipairs(self.DrawGroundPreForwardList) do
-		g:DrawGroundPreForward()
-	end
-end
-
-function gadgetHandler:DrawGroundPostForward()
-	for _, g in r_ipairs(self.DrawGroundPostForwardList) do
-		g:DrawGroundPostForward()
-	end
-end
-
-function gadgetHandler:DrawGroundPreDeferred()
-	for _, g in r_ipairs(self.DrawGroundPreDeferredList) do
-		g:DrawGroundPreDeferred()
-	end
-end
-
-function gadgetHandler:DrawGroundDeferred()
-	for _, g in r_ipairs(self.DrawGroundDeferredList) do
-		g:DrawGroundDeferred()
-	end
-end
-
-function gadgetHandler:DrawGroundPostDeferred()
-	for _, g in r_ipairs(self.DrawGroundPostDeferredList) do
-		g:DrawGroundPostDeferred()
-	end
-end
-
-function gadgetHandler:DrawUnitsPostDeferred()
-	for _, g in r_ipairs(self.DrawUnitsPostDeferredList) do
-		g:DrawUnitsPostDeferred()
-	end
-end
-
-function gadgetHandler:DrawFeaturesPostDeferred()
-	for _, g in r_ipairs(self.DrawFeaturesPostDeferredList) do
-		g:DrawFeaturesPostDeferred()
-	end
-end
-
-function gadgetHandler:DrawScreenEffects(vsx, vsy)
-	for _, g in r_ipairs(self.DrawScreenEffectsList) do
-		g:DrawScreenEffects(vsx, vsy)
-	end
-end
-
-function gadgetHandler:DrawScreenPost(vsx, vsy)
-	for _, g in r_ipairs(self.DrawScreenPostList) do
-		g:DrawScreenPost(vsx, vsy)
-	end
-end
-
-function gadgetHandler:DrawScreen(vsx, vsy)
-	for _, g in r_ipairs(self.DrawScreenList) do
-		g:DrawScreen(vsx, vsy)
-	end
-end
-
-function gadgetHandler:DrawInMiniMap(mmsx, mmsy)
-	for _, g in r_ipairs(self.DrawInMiniMapList) do
-		g:DrawInMiniMap(mmsx, mmsy)
-	end
-end
-
-function gadgetHandler:SunChanged()
-	for _, g in r_ipairs(self.SunChangedList) do
-		g:SunChanged()
-	end
-end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-function gadgetHandler:KeyPress(key, mods, isRepeat, label, unicode, scanCode)
-	for _, g in r_ipairs(self.KeyPressList) do
-		if g:KeyPress(key, mods, isRepeat, label, unicode, scanCode) then
-			return true
-		end
-	end
-	return false
-end
-
-function gadgetHandler:KeyRelease(key, mods, label, unicode, scanCode)
-	for _, g in r_ipairs(self.KeyReleaseList) do
-		if g:KeyRelease(key, mods, label, unicode, scanCode) then
-			return true
-		end
-	end
-	return false
-end
-
-function gadgetHandler:TextInput(utf8, ...)
-	if self.tweakMode then
-		return true
-	end
-
-	for _, g in r_ipairs(self.TextInputList) do
-		if g:TextInput(utf8, ...) then
-			return true
-		end
-	end
-	return false
-end
-
-function gadgetHandler:MousePress(x, y, button)
-	local mo = self.mouseOwner
-	if mo then
-		mo:MousePress(x, y, button)
-		return true --  already have an active press
-	end
-	for _, g in r_ipairs(self.MousePressList) do
-		if g:MousePress(x, y, button) then
-			self.mouseOwner = g
-			return true
-		end
-	end
-	return false
-end
-
-function gadgetHandler:MouseMove(x, y, dx, dy, button)
-	local mo = self.mouseOwner
-	if mo and mo.MouseMove then
-		return mo:MouseMove(x, y, dx, dy, button)
-	end
-end
-
-function gadgetHandler:MouseRelease(x, y, button)
-	local mo = self.mouseOwner
-	local mx, my, lmb, mmb, rmb = Spring.GetMouseState()
-	if not (lmb or mmb or rmb) then
-		self.mouseOwner = nil
-	end
-	if mo and mo.MouseRelease then
-		return mo:MouseRelease(x, y, button)
-	end
-	return -1
-end
-
-function gadgetHandler:MouseWheel(up, value)
-	for _, g in r_ipairs(self.MouseWheelList) do
-		if g:MouseWheel(up, value) then
-			return true
-		end
-	end
-	return false
-end
-
-function gadgetHandler:IsAbove(x, y)
-	for _, g in r_ipairs(self.IsAboveList) do
-		if g:IsAbove(x, y) then
-			return true
-		end
-	end
-	return false
-end
-
-function gadgetHandler:GetTooltip(x, y)
-	for _, g in r_ipairs(self.GetTooltipList) do
-		if g:IsAbove(x, y) then
-			local tip = g:GetTooltip(x, y)
-			if string.len(tip) > 0 then
-				return tip
-			end
-		end
-	end
-	return ""
-end
-
-function gadgetHandler:MapDrawCmd(playerID, cmdType, px, py, pz, labelText)
-	for _, g in r_ipairs(self.MapDrawCmdList) do
-		if g:MapDrawCmd(playerID, cmdType, px, py, pz, labelText) then
-			return true
-		end
-	end
-	return false
-end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-function gadgetHandler:DownloadStarted(id)
-	for _, g in r_ipairs(self.DownloadStartedList) do
-		g:DownloadStarted(id)
-	end
-end
-
-function gadgetHandler:DownloadQueued(id)
-	for _, g in r_ipairs(self.DownloadQueuedList) do
-		g:DownloadQueued(id)
-	end
-end
-
-function gadgetHandler:DownloadFinished(id)
-	for _, g in r_ipairs(self.DownloadFinishedList) do
-		g:DownloadFinished(id)
-	end
-end
-
-function gadgetHandler:DownloadFailed(id, errorid)
-	for _, g in r_ipairs(self.DownloadFailedList) do
-		g:DownloadFailed(id, errorid)
-	end
-end
-
-function gadgetHandler:DownloadProgress(id, downloaded, total)
-	for _, g in r_ipairs(self.DownloadProgressList) do
-		g:DownloadProgress(id, downloaded, total)
-	end
-end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-function gadgetHandler:Save(zip)
-	for _, g in r_ipairs(self.SaveList) do
-		g:Save(zip)
-	end
-end
-
-function gadgetHandler:Load(zip)
-	for _, g in r_ipairs(self.LoadList) do
-		g:Load(zip)
-	end
-end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-function gadgetHandler:Pong(pingTag, pktSendTime, pktRecvTime)
-	for _, g in r_ipairs(self.PongList) do
-		g:Pong(pingTag, pktSendTime, pktRecvTime)
-	end
-end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-function gadgetHandler:FontsChanged()
-	for _, g in r_ipairs(self.FontsChangedList) do
-		g:FontsChanged()
-	end
-end
-
---------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 Spring.Echo("SCRIPT_DIRSCRIPT_DIRSCRIPT_DIRSCRIPT_DIRSCRIPT_DIR", Spring.Utilities.CMD)
@@ -2233,5 +751,200 @@ Spring.Echo(
 	"InitializeInitializeInitializeInitializeInitializeInitializeInitializeInitializeInitializeInitializeInitialize",
 	Spring.Utilities.CMD
 )
+
 --------------------------------------------------------------------------------
---------------------------------------------------------------------------------
+-- Type Definitions
+
+--- @class GadgetHandlerProxy
+--- @field RaiseGadget fun(self: GadgetHandlerProxy) Raises the gadget.
+--- @field LowerGadget fun(self: GadgetHandlerProxy) Lowers the gadget.
+--- @field RemoveGadget fun(self: GadgetHandlerProxy) Removes the gadget.
+--- @field GetViewSizes fun(self: GadgetHandlerProxy):number, number Returns the view sizes.
+--- @field GetHourTimer fun(self: GadgetHandlerProxy):number Returns the hour timer.
+--- @field IsSyncedCode fun(self: GadgetHandlerProxy):boolean Returns whether the code is synced.
+--- @field RegisterCMDID fun(self: GadgetHandlerProxy, id: number) Registers a command ID for the gadget.
+--- @field RegisterGlobal fun(self: GadgetHandlerProxy, name: string, value: any):any Registers a global variable for the gadget.
+--- @field DeregisterGlobal fun(self: GadgetHandlerProxy, name: string):any Deregisters a global variable for the gadget.
+--- @field SetGlobal fun(self: GadgetHandlerProxy, name: string, value: any):any Sets a global variable for the gadget.
+--- @field AddChatAction fun(self: GadgetHandlerProxy, cmd: string, func: function, help: string):any Adds a chat action for the gadget.
+--- @field RemoveChatAction fun(self: GadgetHandlerProxy, cmd: string):any Removes a chat action for the gadget.
+--- @field IsMouseOwner fun(self: GadgetHandlerProxy):boolean Returns whether the gadget is the mouse owner.
+--- @field DisownMouse fun(self: GadgetHandlerProxy) Disowns the mouse if the gadget is the owner.
+--- @field AddSyncAction fun(self: GadgetHandlerProxy, cmd: string, func: function, help: string):any Adds a sync action for the gadget.
+--- @field RemoveSyncAction fun(self: GadgetHandlerProxy, cmd: string):any Removes a sync action for the gadget.
+
+--- @class GadgetInfo
+--- @field name string
+--- @field desc string Short description of the gadget.
+--- @field author string Author of the gadget.
+--- @field date string Date of creation or last update.
+--- @field license string License information.
+--- @field layer integer Determines the order in which gadgets are called.
+--- @field enabled boolean Whether the gadget is enabled by default.
+--- @field handler boolean If true, gadget has access to the handler.
+--- @field basename string Autogenerated.
+--- @field filename string Autogenerated.
+
+--- @class GadgetInfoPacket
+--- @field name string
+--- @field desc string? Short description of the gadget.
+--- @field author string Author of the gadget.
+--- @field date string? Date of creation or last update.
+--- @field license string? License information.
+--- @field layer integer Determines the order in which gadgets are called.
+--- @field enabled boolean Whether the gadget is enabled by default.
+--- @field handler boolean? If true, gadget has access to the handler.
+
+--- @class Gadget
+--- @field ghInfo GadgetInfo
+--- @field GetInfo (fun(self: Gadget): GadgetInfoPacket)?
+--- @field Initialize fun(self: Gadget)?
+--- @field Shutdown fun(self: Gadget)?
+--- @field Save fun(self: Gadget, zip: table)? Called when the game is saved.
+--- @field Load fun(self: Gadget, zip: table)? Called after GamePreload and before GameStart.
+--- @field Pong fun(self: Gadget, pingTag: integer, pktSendTime: number, pktRecvTime: number)? Called when a pong response is received.
+--- @field GameSetup (fun(self: Gadget, state: string, ready: boolean, playerStates: table): boolean, boolean)? Called to set up the game before it starts.
+--- @field GamePreload fun(self: Gadget)? Called before the 0 gameframe.
+--- @field GameStart fun(self: Gadget)? Called upon the start of the game.
+--- @field GameOver fun(self: Gadget, winningAllyTeams: integer[])? Called when the game ends.
+--- @field GameFrame fun(self: Gadget, frameNum: integer)? Called for every game simulation frame (30 per second).
+--- @field GameFramePost fun(self: Gadget, frameNum: integer)? Called at the end of every game simulation frame.
+--- @field GamePaused fun(self: Gadget, playerID: integer, paused: boolean)? Called when the game is paused.
+--- @field GameProgress fun(self: Gadget, serverFrameNum: integer)? Called every 60 frames, calculating delta between GameFrame and GameProgress.
+--- @field GameID fun(self: Gadget, gameID: string)? Called once to deliver the gameID.
+--- @field PlayerChanged fun(self: Gadget, playerID: integer)? Called whenever a player's status changes.
+--- @field PlayerAdded fun(self: Gadget, playerID: integer)? Called whenever a new player joins the game.
+--- @field PlayerRemoved fun(self: Gadget, playerID: integer, reason: string)? Called whenever a player is removed from the game.
+--- @field TeamDied fun(self: Gadget, teamID: integer)? Called when a team dies.
+--- @field TeamChanged fun(self: Gadget, teamID: integer)? Called when a team changes.
+--- @field UnitCreated fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, builderID: integer?)? Called at the moment the unit is created.
+--- @field UnitFinished fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer)? Called at the moment the unit is completed.
+--- @field UnitFromFactory fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, factID: integer, factDefID: integer, userOrders: boolean)? Called when a factory finishes construction of a unit.
+--- @field UnitReverseBuilt fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer)? Called when a living unit becomes a nanoframe again.
+--- @field UnitConstructionDecayed fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, timeSinceLastBuild: number, iterationPeriod: number, part: number)? Called when a unit being built starts decaying.
+--- @field UnitDestroyed fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, attackerID: integer, attackerDefID: integer, attackerTeam: integer, weaponDefID: integer)? Called when a unit is destroyed.
+--- @field RenderUnitDestroyed fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer)? Called just before a unit is invalid, after it finishes its death animation.
+--- @field UnitExperience fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, experience: number, oldExperience: number)? Called when a unit gains experience.
+--- @field UnitIdle fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer)? Called when a unit is idle (empty command queue).
+--- @field UnitCmdDone fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, cmdID: integer, cmdParams: table, options: table, cmdTag: integer)? Called when a unit completes a command.
+--- @field UnitPreDamaged (fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, damage: number, paralyzer: number, weaponDefID: integer, projectileID: integer, attackerID: integer, attackerDefID: integer, attackerTeam: integer): number, number)? Called before a unit is damaged.
+--- @field UnitDamaged fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, damage: number, paralyzer: number, weaponDefID: integer, projectileID: integer, attackerID: integer, attackerDefID: integer, attackerTeam: integer)? Called when a unit is damaged (after UnitPreDamaged).
+--- @field UnitStunned fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, stunned: boolean)? Called when a unit changes its stun status.
+--- @field UnitTaken fun(self: Gadget, unitID: integer, unitDefID: integer, oldTeam: integer, newTeam: integer)? Called when a unit is transferred between teams (before UnitGiven).
+--- @field UnitGiven fun(self: Gadget, unitID: integer, unitDefID: integer, newTeam: integer, oldTeam: integer)? Called when a unit is transferred between teams (after UnitTaken).
+--- @field UnitEnteredRadar fun(self: Gadget, unitID: integer, unitTeam: integer, allyTeam: integer, unitDefID: integer)? Called when a unit enters radar of an allyteam.
+--- @field UnitEnteredLos fun(self: Gadget, unitID: integer, unitTeam: integer, allyTeam: integer, unitDefID: integer)? Called when a unit enters LOS of an allyteam.
+--- @field UnitLeftRadar fun(self: Gadget, unitID: integer, unitTeam: integer, allyTeam: integer, unitDefID: integer)? Called when a unit leaves radar of an allyteam.
+--- @field UnitLeftLos fun(self: Gadget, unitID: integer, unitTeam: integer, allyTeam: integer, unitDefID: integer)? Called when a unit leaves LOS of an allyteam.
+--- @field UnitSeismicPing fun(self: Gadget, x: number, y: number, z: number, strength: number, allyTeam: integer, unitID: integer, unitDefID: integer)? Called when a unit emits a seismic ping.
+--- @field UnitLoaded fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, transportID: integer, transportTeam: integer)? Called when a unit is loaded by a transport.
+--- @field UnitUnloaded fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, transportID: integer, transportTeam: integer)? Called when a unit is unloaded by a transport.
+--- @field UnitCloaked fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer)? Called when a unit cloaks.
+--- @field UnitDecloaked fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer)? Called when a unit decloaks.
+--- @field UnitUnitCollision fun(self: Gadget, colliderID: integer, collideeID: integer): boolean?? Called when two units collide.
+--- @field UnitFeatureCollision fun(self: Gadget, colliderID: integer, collideeID: integer): boolean?? Called when a unit collides with a feature.
+--- @field UnitMoveFailed fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer)? Called when a unit move fails.
+--- @field UnitMoved fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer)? Called when a unit moves.
+--- @field UnitEnteredAir fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer)? Called when a unit enters air.
+--- @field UnitLeftAir fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer)? Called when a unit leaves air.
+--- @field UnitEnteredWater fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer)? Called when a unit enters water.
+--- @field UnitLeftWater fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer)? Called when a unit leaves water.
+--- @field UnitEnteredUnderwater fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer)? Called when a unit enters underwater.
+--- @field UnitLeftUnderwater fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer)? Called when a unit leaves underwater.
+--- @field UnitCommand fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, cmdID: integer, cmdParams: table, options: table, cmdTag: integer)? Called after a unit accepts a command.
+--- @field UnitHarvestStorageFull fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer)? Called when a unit's harvestStorage is full.
+--- @field StockpileChanged fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, weaponNum: integer, oldCount: integer, newCount: integer)? Called when a unit's stockpile of weapons changes.
+--- @field FeatureCreated fun(self: Gadget, featureID: integer, allyTeamID: integer)? Called when a feature is created.
+--- @field FeatureDestroyed fun(self: Gadget, featureID: integer, allyTeamID: integer)? Called when a feature is destroyed.
+--- @field FeatureDamaged fun(self: Gadget, featureID: integer, featureDefID: integer, featureTeam: integer, damage: number, weaponDefID: integer, projectileID: integer, attackerID: integer, attackerDefID: integer, attackerTeam: integer)? Called when a feature is damaged.
+--- @field FeatureMoved fun(self: Gadget, featureID: integer, featureDefID: integer, featureTeam: integer)? Called when a feature moves.
+--- @field FeaturePreDamaged (fun(self: Gadget, featureID: integer, featureDefID: integer, featureTeam: integer, damage: number, weaponDefID: integer, projectileID: integer, attackerID: integer, attackerDefID: integer, attackerTeam: integer): number, number)? Called before a feature is damaged.
+--- @field ProjectileCreated fun(self: Gadget, proID: integer, proOwnerID: integer, weaponDefID: integer)? Called when a projectile is created.
+--- @field ProjectileDestroyed fun(self: Gadget, proID: integer, ownerID: integer, proWeaponDefID: integer)? Called when a projectile is destroyed.
+--- @field ShieldPreDamaged (fun(self: Gadget, proID: integer, proOwnerID: integer, shieldEmitterWeapNum: integer, shieldCarrierUnitID: integer, bounceProj: boolean, beamEmitterWeapNum: integer, beamEmitterUnitID: integer, spx: number, spy: number, spz: number, hpx: number, hpy: number, hpz: number): boolean?)? Called before a shield is damaged.
+--- @field AllowCommand fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, cmdID: integer, cmdParams: table, options: table, cmdTag: integer, playerID: integer, fromSynced: boolean, fromLua: boolean): boolean? Called to determine if a command is allowed.
+--- @field AllowStartPosition fun(self: Gadget, playerID: integer, teamID: integer, readyState: integer, cx: number, cy: number, cz: number, rx: number, ry: number, rz: number): boolean? Called to determine if a start position is allowed.
+--- @field AllowUnitCreation fun(self: Gadget, unitDefID: integer, builderID: integer, builderTeam: integer, x: number, y: number, z: number, facing: integer): boolean, boolean? Called to determine if a unit creation is allowed.
+--- @field AllowUnitTransfer fun(self: Gadget, unitID: integer, unitDefID: integer, oldTeam: integer, newTeam: integer, capture: boolean): boolean? Called to determine if a unit transfer is allowed.
+--- @field AllowUnitBuildStep fun(self: Gadget, builderID: integer, builderTeam: integer, unitID: integer, unitDefID: integer, part: number): boolean? Called to determine if a unit build step is allowed.
+--- @field AllowUnitCaptureStep fun(self: Gadget, builderID: integer, builderTeam: integer, unitID: integer, unitDefID: integer, part: number): boolean? Called to determine if a unit capture step is allowed.
+--- @field AllowUnitTransport fun(self: Gadget, transporterID: integer, transporterUnitDefID: integer, transporterTeam: integer, transporteeID: integer, transporteeUnitDefID: integer, transporteeTeam: integer): boolean? Called to determine if a unit transport is allowed.
+--- @field AllowUnitTransportLoad (fun(self: Gadget, transporterID: integer, transporterUnitDefID: integer, transporterTeam: integer, transporteeID: integer, transporteeUnitDefID: integer, transporteeTeam: integer, loadPosX: number, loadPosY: number, loadPosZ: number): boolean)? Called to determine if a unit transport load is allowed.
+--- @field AllowUnitTransportUnload (fun(self: Gadget, transporterID: integer, transporterUnitDefID: integer, transporterTeam: integer, transporteeID: integer, transporteeUnitDefID: integer, transporteeTeam: integer, unloadPosX: number, unloadPosY: number, unloadPosZ: number): boolean)? Called to determine if a unit transport unload is allowed.
+--- @field AllowUnitCloak fun(self: Gadget, unitID: integer, enemyID: integer): boolean? Called to determine if a unit can cloak.
+--- @field AllowUnitDecloak (fun(self: Gadget, unitID: integer, objectID: integer, weaponID: integer): boolean)? Called to determine if a unit can decloak.
+--- @field AllowUnitKamikaze (fun(self: Gadget, unitID: integer, targetID: integer): boolean)? Called to determine if a unit can kamikaze.
+--- @field AllowFeatureBuildStep (fun(self: Gadget, builderID: integer, builderTeam: integer, featureID: integer, featureDefID: integer, part: number): boolean)? Called to determine if a feature build step is allowed.
+--- @field AllowFeatureCreation (fun(self: Gadget, featureDefID: integer, teamID: integer, x: number, y: number, z: number): boolean)? Called to determine if a feature creation is allowed.
+--- @field AllowResourceLevel (fun(self: Gadget, teamID: integer, res: string, level: number): boolean)? Called to determine if a resource level is allowed.
+--- @field AllowResourceTransfer (fun(self: Gadget, oldTeamID: integer, newTeamID: integer, res: string, amount: number): boolean)? Called to determine if a resource transfer is allowed.
+--- @field AllowDirectUnitControl (fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, playerID: integer): boolean)? Called to determine if direct unit control is allowed.
+--- @field AllowBuilderHoldFire (fun(self: Gadget, unitID: integer, unitDefID: integer, action: string): boolean)? Called to determine if builder hold fire is allowed.
+--- @field AllowWeaponTargetCheck (fun(self: Gadget, attackerID: integer, attackerWeaponNum: integer, attackerWeaponDefID: integer): boolean, boolean)? Called to determine if a weapon target check is allowed.
+--- @field AllowWeaponTarget (fun(self: Gadget, attackerID: integer, targetID: integer, attackerWeaponNum: integer, attackerWeaponDefID: integer, defPriority: number): boolean, number)? Called to determine if a weapon target is allowed.
+--- @field AllowWeaponInterceptTarget (fun(self: Gadget, interceptorUnitID: integer, interceptorWeaponNum: integer, interceptorTargetID: integer): boolean)? Called to determine if a weapon intercept target is allowed.
+--- @field Explosion (fun(self: Gadget, weaponDefID: integer, px: number, py: number, pz: number, attackerID: integer, projectileID: integer): boolean?)? Called when an explosion occurs.
+--- @field CommandFallback (fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, cmdID: integer, cmdParams: table, cmdOptions: table, cmdTag: integer): boolean, boolean)? Called when a command fallback is needed.
+--- @field MoveCtrlNotify (fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, data: any): boolean)? Called when a move control notification is received.
+--- @field TerraformComplete (fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, buildUnitID: integer, buildUnitDefID: integer, buildUnitTeam: integer): boolean)? Called when terraforming is complete.
+--- @field GotChatMsg (fun(self: Gadget, msg: string, playerID: integer): boolean)? Called when a player issues a UI command.
+--- @field RecvLuaMsg (fun(self: Gadget, msg: string, playerID: integer): boolean)? Receives messages from unsynced sent via Spring.SendLuaRulesMsg or Spring.SendLuaUIMsg.
+--- @field Update fun(self: Gadget, dt: number)? Called for every draw frame and at least once per sim frame except when catching up.
+--- @field UnsyncedHeightMapUpdate (fun(self: Gadget): number, number, number, number)? Called when the unsynced copy of the height-map is altered.
+--- @field DrawGenesis fun(self: Gadget)? Use this callin to update textures, shaders, etc.
+--- @field DrawWorld fun(self: Gadget)? Spring draws command queues, 'map stuff', and map marks.
+--- @field DrawWorldPreUnit fun(self: Gadget)? Spring draws units, features, some water types, cloaked units, and the sun.
+--- @field DrawOpaqueUnitsLua fun(self: Gadget, deferredPass: boolean, drawReflection: boolean, drawRefraction: boolean)? Called for opaque unit drawing.
+--- @field DrawOpaqueFeaturesLua fun(self: Gadget, deferredPass: boolean, drawReflection: boolean, drawRefraction: boolean)? Called for opaque feature drawing.
+--- @field DrawAlphaUnitsLua fun(self: Gadget, drawReflection: boolean, drawRefraction: boolean)? Called for alpha unit drawing.
+--- @field DrawAlphaFeaturesLua fun(self: Gadget, drawReflection: boolean, drawRefraction: boolean)? Called for alpha feature drawing.
+--- @field DrawShadowUnitsLua fun(self: Gadget)? Called for shadow unit drawing.
+--- @field DrawShadowFeaturesLua fun(self: Gadget)? Called for shadow feature drawing.
+--- @field DrawPreDecals fun(self: Gadget)? Called before decals are drawn.
+--- @field DrawWorldPreParticles fun(self: Gadget, drawAboveWater: boolean, drawBelowWater: boolean, drawReflection: boolean, drawRefraction: boolean)? Called multiple times per draw frame for different permutations.
+--- @field DrawWorldShadow fun(self: Gadget)? Called for world shadow drawing.
+--- @field DrawWorldReflection fun(self: Gadget)? Called for world reflection drawing.
+--- @field DrawWorldRefraction fun(self: Gadget)? Called for world refraction drawing.
+--- @field DrawGroundPreForward fun(self: Gadget)? Runs at the start of the forward pass.
+--- @field DrawGroundPostForward fun(self: Gadget)? Runs at the end of the forward pass.
+--- @field DrawGroundPreDeferred fun(self: Gadget)? Runs at the start of the deferred pass.
+--- @field DrawGroundDeferred fun(self: Gadget)? Runs during the deferred pass.
+--- @field DrawGroundPostDeferred fun(self: Gadget)? Runs at the end of the deferred pass.
+--- @field DrawUnitsPostDeferred fun(self: Gadget)? Runs at the end of the unit deferred pass.
+--- @field DrawFeaturesPostDeferred fun(self: Gadget)? Runs at the end of the feature deferred pass.
+--- @field DrawScreenEffects fun(self: Gadget, viewSizeX: number, viewSizeY: number)? Called for screen effects.
+--- @field DrawScreenPost fun(self: Gadget, viewSizeX: number, viewSizeY: number)? Called after the frame is completely rendered.
+--- @field DrawScreen fun(self: Gadget, viewSizeX: number, viewSizeY: number)? Called for screen drawing.
+--- @field DrawInMiniMap fun(self: Gadget, sx: number, sy: number)? Called for minimap drawing.
+--- @field FontsChanged fun(self: Gadget)? Called whenever fonts are updated.
+--- @field SunChanged fun(self: Gadget)? Called when the sun changes.
+--- @field RecvFromSynced fun(self: Gadget, ...)? Receives messages from synced code.
+--- @field RecvSkirmishAIMessage fun(self: Gadget, aiTeam: integer, dataStr: string): any? Called when a message is received from a Skirmish AI.
+--- @field DefaultCommand fun(self: Gadget, type: string, id: integer): any? Used to set the default command when a unit is selected.
+--- @field ActiveCommandChanged fun(self: Gadget, cmdId: integer, cmdType: integer)? Called when a command is issued.
+--- @field CameraRotationChanged fun(self: Gadget, rotX: number, rotY: number, rotZ: number)? Called whenever the camera rotation changes.
+--- @field CameraPositionChanged fun(self: Gadget, posX: number, posY: number, posZ: number)? Called whenever the camera position changes.
+--- @field CommandNotify fun(self: Gadget, cmdID: integer, cmdParams: table, options: table): boolean? Called when a command is issued.
+--- @field ViewResize fun(self: Gadget, viewSizeX: number, viewSizeY: number)? Called whenever the window is resized.
+--- @field LayoutButtons fun(self: Gadget, ...)? Called to layout buttons.
+--- @field ConfigureLayout fun(self: Gadget, ...)? Called to configure layout.
+--- @field AddConsoleLine fun(self: Gadget, msg: string, priority: integer)? Called when text is entered into the console.
+--- @field GroupChanged fun(self: Gadget, groupID: integer)? Called when a unit is added to or removed from a control group.
+--- @field KeyPress (fun(self: Gadget, keyCode: number, mods: table, isRepeat: boolean, label: boolean, utf32char: number, scanCode: number, actionList: table): boolean)? Called repeatedly when a key is pressed down.
+--- @field KeyRelease (fun(self: Gadget, keyCode: number, mods: table, label: boolean, utf32char: number, scanCode: number, actionList: table): boolean)? Called when the key is released.
+--- @field TextInput (fun(self: Gadget, utf8char: string): boolean)? Called whenever a key press results in text input.
+--- @field TextEditing (fun(self: Gadget, utf8: string, start: number, length: number))? Called when text is being edited.
+--- @field MousePress (fun(self: Gadget, x: number, y: number, button: number): boolean)? Called when a mouse button is pressed.
+--- @field MouseRelease (fun(self: Gadget, x: number, y: number, button: number): boolean)? Called when a mouse button is released.
+--- @field MouseMove fun(self: Gadget, x: number, y: number, dx: number, dy: number, button: number)? Called when the mouse is moved.
+--- @field MouseWheel fun(self: Gadget, up: boolean, value: number)? Called when the mouse wheel is moved.
+--- @field IsAbove (fun(self: Gadget, x: number, y: number): boolean)? Called every Update. Must return true for Mouse* events and Spring.GetToolTip to be called.
+--- @field GetTooltip (fun(self: Gadget, x: number, y: number): string)? Called when Spring.IsAbove returns true.
+--- @field WorldTooltip fun(self: Gadget, ...)? Called to provide a world tooltip.
+--- @field MapDrawCmd (fun(self: Gadget, playerID: integer, type: string, posX: number, posY: number, posZ: number, label: string): boolean)? Called when a map draw command is issued.
+--- @field ShockFront fun(self: Gadget, ...)? Called for shock front events.
+--- @field DownloadQueued fun(self: Gadget, id: integer, name: string, type: string)? Called when a download is queued.
+--- @field DownloadStarted fun(self: Gadget, id: integer)? Called when a download is started.
+--- @field DownloadFinished fun(self: Gadget, id: integer)? Called when a download finishes successfully.
+--- @field DownloadFailed fun(self: Gadget, id: integer, errorID: integer)? Called when a download fails to complete.
+--- @field DownloadProgress fun(self: Gadget, id: integer, downloaded: integer, total: integer)? Called incrementally during a download.

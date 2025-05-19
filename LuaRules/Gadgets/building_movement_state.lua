@@ -1,5 +1,5 @@
 --- @module "Include/types"
-local gadget = gadget --- @type Gadget
+local gadget = NewGadget()
 
 function gadget:GetInfo()
 	return {
@@ -106,3 +106,5 @@ else
 		Spring.AssignMouseCursor("Stand Up", "cursorfight", true, true)
 	end
 end
+
+return gadget

@@ -1,7 +1,9 @@
+local gadget = NewGadget()
+
 function gadget:GetInfo()
 	return {
-		name = "Unit Posession",
-		desc = "Handles units being posessed",
+		name = "Unit Possession",
+		desc = "Handles units being possessed",
 		author = "Slashscreen",
 		date = "Present Day, Present TIme",
 		license = "GPL v3",
@@ -12,6 +14,7 @@ end
 
 local CMD_POSSESS_UNIT = Spring.Utilities.CMD.POSSESS_UNIT
 local POSSESS_DIST = 25
+local SIM_FRAMES_PER_SECOND = 30
 
 local command_desc = {
 	is = CMD_POSSESS_UNIT,
@@ -108,3 +111,5 @@ if gadgetHandler:IsSyncedCode() then
 	end
 else
 end
+
+return gadget
