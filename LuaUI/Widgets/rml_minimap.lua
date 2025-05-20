@@ -61,8 +61,13 @@ function widget:Initialize()
 	match_minimap_to_element(minimap_element)
 
 	--gl.DrawMiniMap()
+	--gl.SlaveMiniMap(true)
 
 	Spring.Echo("Initialized Minimap")
+end
+
+function widget.DrawScreenPost()
+	--gl.DrawMiniMap(false)
 end
 
 function widget:IsAbove(x, y)
