@@ -21,11 +21,17 @@
 				width: 40vh;
 				gap: 3dp;
 			}
+
+			#map-panel {
+				height: 100%;
+				width: 100%;
+			}
 		</style>
 	</head>
 
 	<body>
 		<div id="widget" data-model="info_panel_model">
+			<div id="map-panel"></div>
 		</div>
 	</body>
 </rml>

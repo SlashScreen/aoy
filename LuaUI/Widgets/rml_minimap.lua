@@ -6,7 +6,7 @@ end
 local widget = widget --- @type Widget
 
 local DATA_MODEL_NAME = "minimap_model"
-local MINIMAP_ELEMENT_ID = "widget"
+local MINIMAP_ELEMENT_ID = "map-panel"
 
 function widget:GetInfo()
 	return {
@@ -80,7 +80,7 @@ function widget:GetTooltip(x, y)
 end
 
 function widget:DrawScreenPost()
-	Spring.Echo("Draw post " .. os.clock())
+	--Spring.Echo("Draw post " .. os.clock())
 	gl.DrawMiniMap()
 end
 
