@@ -38,10 +38,11 @@ end
 
 --- @param element RmlUi.Element
 local function match_minimap_to_element(element)
+	local x_offset = (element.client_width - element.client_height) / 2 -- Used to keep it centered
 	set_minimap_geo(
-		element.absolute_left,
+		element.absolute_left + x_offset,
 		document.client_height - element.absolute_top - element.client_height,
-		element.client_width,
+		element.client_height,
 		element.client_height
 	)
 end
@@ -65,18 +66,11 @@ function widget:Initialize()
 
 	local minimap_element = document:GetElementById(MINIMAP_ELEMENT_ID)
 	match_minimap_to_element(minimap_element)
+	Spring.SetConfigInt("HardwareCursor", 1)
 
 	--gl.DrawMiniMap()
 
 	Spring.Echo("Initialized Minimap")
-end
-
-function widget:IsAbove(x, y)
-	return widget.rmlContext:IsMouseInteracting()
-end
-
-function widget:GetTooltip(x, y)
-	return "Minimap"
 end
 
 function widget:DrawScreenPost()
