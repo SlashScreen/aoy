@@ -69,8 +69,8 @@ local function SetupConstructionOptions(unitID, ud)
 	IterableMap.Add(barrackUnits, unitID, barracks)
 end
 
-function gadget:UnitCreated(unitID, unitDefID)
-	Spring.Echo(unitID, unitDefID)
+function gadget:UnitCreated(unitID, unitDefID, ...)
+	Spring.Echo("on unit created", unitID, unitDefID, ...)
 	local ud = UnitDefs[unitDefID]
 	if ud.customParams.build_1 then
 		SetupConstructionOptions(unitID, ud)

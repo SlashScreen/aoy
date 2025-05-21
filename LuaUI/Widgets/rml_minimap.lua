@@ -30,15 +30,20 @@ local init_model = {}
 --- @param width integer
 --- @param height integer
 local function set_minimap_geo(x, y, width, height)
-	Spring.SendCommands(
+	--[[Spring.SendCommands(
 		"minimap geo " .. tostring(x) .. " " .. tostring(y) .. " " .. tostring(width) .. " " .. tostring(height)
-	)
-	--gl.ConfigMiniMap(x, y, width, height)
+	)]]
+	gl.ConfigMiniMap(x, y, width, height)
 end
 
 --- @param element RmlUi.Element
 local function match_minimap_to_element(element)
-	set_minimap_geo(element.absolute_left, element.absolute_top, element.client_width, element.client_height)
+	set_minimap_geo(
+		element.absolute_left,
+		document.client_height - element.absolute_top - element.client_height,
+		element.client_width,
+		element.client_height
+	)
 end
 
 function widget:Initialize()
@@ -56,6 +61,7 @@ function widget:Initialize()
 	document:Show()
 
 	--gl.SetSlaveMode(true)
+	gl.SlaveMiniMap(true)
 
 	local minimap_element = document:GetElementById(MINIMAP_ELEMENT_ID)
 	match_minimap_to_element(minimap_element)
@@ -71,6 +77,11 @@ end
 
 function widget:GetTooltip(x, y)
 	return "Minimap"
+end
+
+function widget:DrawScreenPost()
+	Spring.Echo("Draw post " .. os.clock())
+	gl.DrawMiniMap()
 end
 
 function widget:Shutdown()

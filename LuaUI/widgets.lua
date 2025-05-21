@@ -154,6 +154,8 @@ local flexCallIns = {
 	"DrawFeaturesPostDeferred",
 	"DrawScreenEffects",
 	"DrawInMiniMap",
+	"DrawScreen",
+	"DrawScreenPost",
 	"SunChanged",
 	"RecvSkirmishAIMessage",
 }
@@ -2021,6 +2023,12 @@ end
 function widgetHandler:DownloadProgress(id, downloaded, total)
 	for _, w in ipairs(self.DownloadProgressList) do
 		w:DownloadProgress(id, downloaded, total)
+	end
+end
+
+function widgetHandler:DrawScreenPost()
+	for _, w in ipairs(self.DrawScreenPostList) do
+		w:DrawScreenPost()
 	end
 end
 

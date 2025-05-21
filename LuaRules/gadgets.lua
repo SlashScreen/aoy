@@ -883,7 +883,7 @@ Spring.Echo(
 --- @field AllowWeaponTarget (fun(self: Gadget, attackerID: integer, targetID: integer, attackerWeaponNum: integer, attackerWeaponDefID: integer, defPriority: number): boolean, number)? Called to determine if a weapon target is allowed.
 --- @field AllowWeaponInterceptTarget (fun(self: Gadget, interceptorUnitID: integer, interceptorWeaponNum: integer, interceptorTargetID: integer): boolean)? Called to determine if a weapon intercept target is allowed.
 --- @field Explosion (fun(self: Gadget, weaponDefID: integer, px: number, py: number, pz: number, attackerID: integer, projectileID: integer): boolean?)? Called when an explosion occurs.
---- @field CommandFallback (fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, cmdID: integer, cmdParams: table, cmdOptions: table, cmdTag: integer): boolean, boolean)? Called when a command fallback is needed.
+--- @field CommandFallback (fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, cmdID: integer, cmdParams: table, cmdOptions: table, cmdTag: integer): boolean?, boolean?)? Called when a command fallback is needed.
 --- @field MoveCtrlNotify (fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, data: any): boolean)? Called when a move control notification is received.
 --- @field TerraformComplete (fun(self: Gadget, unitID: integer, unitDefID: integer, unitTeam: integer, buildUnitID: integer, buildUnitDefID: integer, buildUnitTeam: integer): boolean)? Called when terraforming is complete.
 --- @field GotChatMsg (fun(self: Gadget, msg: string, playerID: integer): boolean)? Called when a player issues a UI command.

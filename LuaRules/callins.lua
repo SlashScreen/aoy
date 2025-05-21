@@ -3,13 +3,13 @@
 
 local function default_loop(_, fn_name, gadgets, ...)
 	for _, gadget in ipairs(gadgets) do
-		gadget[fn_name](...)
+		gadget[fn_name](gadget, ...)
 	end
 end
 
 local function default_return_false(_, fn_name, gadgets, ...)
 	for _, gadget in ipairs(gadgets) do
-		if gadget[fn_name](...) then
+		if gadget[fn_name](gadget, ...) then
 			return true
 		end
 	end
@@ -18,7 +18,7 @@ end
 
 local function default_return_true(_, fn_name, gadgets, ...)
 	for _, gadget in ipairs(gadgets) do
-		if not gadget[fn_name](...) then
+		if not gadget[fn_name](gadget, ...) then
 			return false
 		end
 	end
@@ -27,7 +27,7 @@ end
 
 local function default_if_value(_, fn_name, gadgets, ...)
 	for _, gadget in ipairs(gadgets) do
-		local value = gadget[fn_name](...)
+		local value = gadget[fn_name](gadget, ...)
 		if value then
 			return value
 		end
@@ -47,7 +47,7 @@ GADGET_CALLIN_LIST = {
 	GameSetup = function(_, _, gadgets, state, ready, playerStates)
 		local success, newReady = false, ready
 		for _, g in ipairs(gadgets) do
-			success, newReady = g.GameSetup(state, ready, playerStates)
+			success, newReady = g:GameSetup(state, ready, playerStates)
 		end
 		return success, newReady
 	end,
@@ -92,7 +92,7 @@ GADGET_CALLIN_LIST = {
 		local retDamage = damage
 		local retImpulse = 1.0
 		for _, g in ipairs(gadgets) do
-			local dmg, imp = g.UnitPreDamaged(
+			local dmg, imp = g:UnitPreDamaged(
 				unitID,
 				unitDefID,
 				unitTeam,
@@ -160,7 +160,7 @@ GADGET_CALLIN_LIST = {
 		local retDamage = damage
 		local retImpulse = 1.0
 		for _, g in ipairs(gadgets) do
-			local dmg, imp = g.FeaturePreDamaged(
+			local dmg, imp = g:FeaturePreDamaged(
 				featureID,
 				featureDefID,
 				featureTeam,
@@ -187,7 +187,7 @@ GADGET_CALLIN_LIST = {
 	AllowStartPosition = default_return_true,
 	AllowUnitCreation = function(_, _, gadgets, unitDefID, builderID, builderTeam, x, y, z, facing)
 		for _, g in ipairs(gadgets) do
-			local allow, drop = g.AllowUnitCreation(unitDefID, builderID, builderTeam, x, y, z, facing)
+			local allow, drop = g:AllowUnitCreation(unitDefID, builderID, builderTeam, x, y, z, facing)
 			if not allow then
 				return false, drop
 			end
@@ -212,7 +212,7 @@ GADGET_CALLIN_LIST = {
 	AllowWeaponTargetCheck = function(_, _, gadgets, attackerID, attackerWeaponNum, attackerWeaponDefID)
 		local ignore = true
 		for _, g in ipairs(gadgets) do
-			local allowCheck, ignoreCheck = g.AllowWeaponTargetCheck(attackerID, attackerWeaponNum, attackerWeaponDefID)
+			local allowCheck, ignoreCheck = g:AllowWeaponTargetCheck(attackerID, attackerWeaponNum, attackerWeaponDefID)
 			if not ignoreCheck then
 				ignore = false
 				if not allowCheck then
@@ -236,7 +236,7 @@ GADGET_CALLIN_LIST = {
 		local priority = 1.0
 		for _, g in ipairs(gadgets) do
 			local targetAllowed, targetPriority =
-				g.AllowWeaponTarget(attackerID, targetID, attackerWeaponNum, attackerWeaponDefID, defPriority)
+				g:AllowWeaponTarget(attackerID, targetID, attackerWeaponNum, attackerWeaponDefID, defPriority)
 			if not targetAllowed then
 				allowed = false
 				break
@@ -248,7 +248,7 @@ GADGET_CALLIN_LIST = {
 	AllowWeaponInterceptTarget = default_return_true,
 	Explosion = function(_, _, gadgets, weaponID, px, py, pz, ownerID, projectileID)
 		for _, g in ipairs(gadgets) do
-			if g.Explosion(weaponID, px, py, pz, ownerID, projectileID) then
+			if g:Explosion(weaponID, px, py, pz, ownerID, projectileID) then
 				return true
 			end
 		end
@@ -256,7 +256,7 @@ GADGET_CALLIN_LIST = {
 	end,
 	CommandFallback = function(_, _, gadgets, unitID, unitDefID, unitTeam, cmdID, cmdParams, cmdOptions, cmdTag)
 		for _, g in ipairs(gadgets) do
-			local used, remove = g.CommandFallback(unitID, unitDefID, unitTeam, cmdID, cmdParams, cmdOptions, cmdTag)
+			local used, remove = g:CommandFallback(unitID, unitDefID, unitTeam, cmdID, cmdParams, cmdOptions, cmdTag)
 			if used then
 				return remove
 			end
@@ -266,7 +266,7 @@ GADGET_CALLIN_LIST = {
 	MoveCtrlNotify = function(_, _, gadgets, unitID, unitDefID, unitTeam, data)
 		local state = false
 		for _, g in ipairs(gadgets) do
-			if g.MoveCtrlNotify(unitID, unitDefID, unitTeam, data) then
+			if g:MoveCtrlNotify(unitID, unitDefID, unitTeam, data) then
 				state = true
 			end
 		end
@@ -284,7 +284,7 @@ GADGET_CALLIN_LIST = {
 		buildUnitTeam
 	)
 		for _, g in ipairs(gadgets) do
-			if g.TerraformComplete(unitID, unitDefID, unitTeam, buildUnitID, buildUnitDefID, buildUnitTeam) then
+			if g:TerraformComplete(unitID, unitDefID, unitTeam, buildUnitID, buildUnitDefID, buildUnitTeam) then
 				return true
 			end
 		end
@@ -421,7 +421,7 @@ GADGET_CALLIN_LIST = {
 			gadget_handler.mouseOwner = nil
 		end
 		if mo and mo.MouseRelease then
-			return mo.MouseRelease(x, y, button)
+			return mo:MouseRelease(x, y, button)
 		end
 		return -1
 	end,
@@ -430,7 +430,7 @@ GADGET_CALLIN_LIST = {
 	GetTooltip = function(_, _, gadgets, x, y)
 		for _, g in ipairs(gadgets) do
 			if g.IsAbove(x, y) then
-				local tip = g.GetTooltip(x, y)
+				local tip = g:GetTooltip(x, y)
 				if string.len(tip) > 0 then
 					return tip
 				end
