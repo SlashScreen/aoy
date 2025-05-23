@@ -12,7 +12,7 @@ function widget:GetInfo()
 	return {
 		name = "AOY Minimap Panel",
 		desc = "Minimap Panel",
-		author = "Vileblood",
+		author = "Slashscreen",
 		date = "Present Day, Present Time",
 		license = "https://unlicense.org/",
 		layer = -828888,
