@@ -1,5 +1,5 @@
---  Copyright (C) 2007, 2025 Dave Rodgers, SlashScreen..
---  Licensed under the terms of the GNU GPL, v2 or later.
+--  Copyright (C) 2007, 2025 Dave Rodgers, SlashScreen.
+--  Licensed under the terms of the GNU GPL, v3 or later.
 
 local function default_loop(_, fn_name, gadgets, ...)
 	for _, gadget in ipairs(gadgets) do
@@ -36,10 +36,8 @@ end
 
 local function do_nothing(_, _, _, _) end
 
---- @type table<string, integer>
-GADGET_CALLIN_MAP = {}
 --- @type table<string, function>
-GADGET_CALLIN_LIST = {
+local callins = {
 	Save = default_loop,
 	Load = default_loop,
 	Pong = default_loop,
@@ -448,6 +446,4 @@ GADGET_CALLIN_LIST = {
 	DownloadProgress = default_loop,
 }
 
-for callinIdx, callinName in ipairs(GADGET_CALLIN_LIST) do
-	GADGET_CALLIN_MAP[callinName] = callinIdx
-end
+return callins
