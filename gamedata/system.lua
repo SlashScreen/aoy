@@ -19,131 +19,131 @@
 local lowerkeys
 
 do
-  local lowerMap = {}
+	local lowerMap = {}
 
-  local function lowerkeys2(t)
-    if (lowerMap[t]) then
-      return  -- avoid recursion / repetition
-    end
+	local function lowerkeys2(t)
+		if lowerMap[t] then
+			return -- avoid recursion / repetition
+		end
 
-    lowerMap[t] = true
+		lowerMap[t] = true
 
-    local changes = {}
-    for k, v in pairs(t) do
-      if (type(k) == 'string') then
-        local l = string.lower(k)
-        if (l ~= k) then
-          if (t[l] == nil) then
-            changes[l] = v
-          end
-          t[k] = nil
-        end
-      end
-      if (type(v) == 'table') then
-        lowerkeys2(v)
-      end
-    end
+		local changes = {}
+		for k, v in pairs(t) do
+			if type(k) == "string" then
+				local l = string.lower(k)
+				if l ~= k then
+					if t[l] == nil then
+						changes[l] = v
+					end
+					t[k] = nil
+				end
+			end
+			if type(v) == "table" then
+				lowerkeys2(v)
+			end
+		end
 
-    -- insert new keys outside of the pairs() loop
-    for k, v in pairs(changes) do
-      t[k] = v
-    end
-  end
+		-- insert new keys outside of the pairs() loop
+		for k, v in pairs(changes) do
+			t[k] = v
+		end
+	end
 
-  lowerkeys = function(t)
-    lowerMap = {}
-    lowerkeys2(t)
-    return t  -- convenience, do not mistake this for a copy
-  end
+	lowerkeys = function(t)
+		lowerMap = {}
+		lowerkeys2(t)
+		return t -- convenience, do not mistake this for a copy
+	end
 end
-
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 -- no metatable protection
 local function reftable(ref, tbl)
-  tbl = tbl or {}
-  setmetatable(tbl, { __index = ref })
-  return tbl
+	tbl = tbl or {}
+	setmetatable(tbl, { __index = ref })
+	return tbl
 end
-
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 local system = {
 
-  --  Custom packages
-  VFS = VFS,
-  Spring = Spring,
+	--  Custom packages
+	VFS = VFS,
+	Spring = Spring,
 
-  --  Custom functions
-  lowerkeys = lowerkeys,
-  reftable = reftable,
+	--  Custom functions
+	lowerkeys = lowerkeys,
+	reftable = reftable,
 
-  --  Custom tables
-  DEFS = DEFS,
+	--  Custom tables
+	DEFS = DEFS,
 
-  --  Standard packages
-  math = math,
-  table = table,
-  string = string,
-  coroutine = coroutine,
-  
-  --  
-  --  Standard functions and variables
-  --
-  assert         = assert,
-  error          = error,
+	--  Standard packages
+	math = math,
+	table = table,
+	string = string,
+	coroutine = coroutine,
 
-  print          = print,
-  
-  next           = next,
-  pairs          = pairs,
-  ipairs         = ipairs,
+	--
+	--  Standard functions and variables
+	--
+	assert = assert,
+	error = error,
 
-  tonumber       = tonumber,
-  tostring       = tostring,
-  type           = type,
+	print = print,
 
-  --collectgarbage = collectgarbage,
-  --gcinfo         = gcinfo,
+	next = next,
+	pairs = pairs,
+	ipairs = ipairs,
 
-  unpack         = unpack,
-  select         = select,
+	tonumber = tonumber,
+	tostring = tostring,
+	type = type,
 
-  --dofile         = dofile,
-  --loadfile       = loadfile,
-  --loadlib        = loadlib,
-  loadstring     = loadstring,
-  --require        = require,
+	--collectgarbage = collectgarbage,
+	--gcinfo         = gcinfo,
 
-  getmetatable   = getmetatable,
-  setmetatable   = setmetatable,
+	unpack = unpack,
+	select = select,
 
-  rawequal       = rawequal,
-  rawget         = rawget,
-  rawset         = rawset,
+	--dofile         = dofile,
+	--loadfile       = loadfile,
+	--loadlib        = loadlib,
+	loadstring = loadstring,
+	--require        = require,
 
-  getfenv        = getfenv,
-  setfenv        = setfenv,
+	getmetatable = getmetatable,
+	setmetatable = setmetatable,
 
-  pcall          = pcall,
-  xpcall         = xpcall,
+	rawequal = rawequal,
+	rawget = rawget,
+	rawset = rawset,
 
-  _VERSION       = _VERSION
+	getfenv = getfenv,
+	setfenv = setfenv,
+
+	pcall = pcall,
+	xpcall = xpcall,
+
+	_VERSION = _VERSION,
 }
-
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
 setmetatable(system, {
-  __newindex  = function() error('Attempt to write to system') end,
-  __metatable = function() error('Attempt to access system metatable') end,
+	__newindex = function()
+		error("Attempt to write to system")
+	end,
+	__metatable = function()
+		error("Attempt to access system metatable")
+	end,
 })
-
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------

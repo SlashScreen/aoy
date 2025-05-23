@@ -27,7 +27,6 @@ local Sounds = {
 		},
 		--]]
 
-
 		ExampleSound = {
 			--- some things you can do with this file
 

@@ -2,18 +2,18 @@
 --------------------------------------------------------------------------------
 
 for name, ud in pairs(UnitDefs) do
-	if (ud.description) then
+	if ud.description then
 		-- Fix the EE unit descriptions
-		ud.description = string.gsub(ud.description, '^: ', '')
+		ud.description = string.gsub(ud.description, "^: ", "")
 	end
 
 	-- convert from the pre-0.83 representation (pieceTrailCEGTag, pieceTrailCEGRange)
-	if (ud.piecetrailcegtag ~= nil) then
-		if (ud.sfxtypes == nil) then
+	if ud.piecetrailcegtag ~= nil then
+		if ud.sfxtypes == nil then
 			ud.sfxtypes = {}
 		end
 
-		if (ud.piecetrailcegrange == nil) then
+		if ud.piecetrailcegrange == nil then
 			ud.piecetrailcegrange = 1
 		end
 

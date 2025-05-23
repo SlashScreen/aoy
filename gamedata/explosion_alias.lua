@@ -18,56 +18,54 @@
 
 --    Syntax:  <alias> = <real name>
 
+local TDF = VFS.Include("gamedata/parse_tdf.lua")
 
-local TDF = VFS.Include('gamedata/parse_tdf.lua')
-
-local aliases, err = TDF.Parse('gamedata/explosion_alias.tdf')
+local aliases, err = TDF.Parse("gamedata/explosion_alias.tdf")
 
 --------------------------------------------------------------------------------
 
-
-if (aliases == nil) then
-  -- load the defaults
-  aliases = {
-    generators = {
-      std    = 'CStdExplosionGenerator',
-      custom = 'CCustomExplosionGenerator',
-    },
-    projectiles = {
-      beamlaser             = 'CBeamLaserProjectile',
-      bitmapmuzzleflame     = 'CBitmapMuzzleFlame',
-      bubble                = 'CBubbleProjectile',
-      delayspawner          = 'CExpGenSpawner',
-      dirt                  = 'CDirtProjectile',
-      emg                   = 'CEmgProjectile',
-      expl                  = 'CExplosiveProjectile',
-      explsphere            = 'CSpherePartSpawner',
-      explspike             = 'CExploSpikeProjectile',
-      fireball              = 'CFireBallProjectile',
-      fire                  = 'CFireProjectile',
-      flame                 = 'CFlameProjectile',
-      flare                 = 'CFlareProjectile',
-      geosquare             = 'CGeoSquareProjectile',
-      gfx                   = 'CGfxProjectile',
-      heatcloud             = 'CHeatCloudProjectile',
-      lighting              = 'CLightingProjectile',
-      missile               = 'CMissileProjectile',
-      muzzleflame           = 'CMuzzleFlame',
-      piece                 = 'CPieceProjectile',
-      shieldpart            = 'CShieldPartProjectile',
-      simplegroundflash     = 'CSimpleGroundFlash',
-      simpleparticlespawner = 'CSphereParticleSpawner',
-      simpleparticlesystem  = 'CSimpleParticleSystem',
-      smoke                 = 'CSmokeProjectile',
-      smoke2                = 'CSmokeProjectile2',
-      smoketrail            = 'CSmokeTrailProjectile',
-      spherepart            = 'CSpherePartProjectile',
-      starburst             = 'CStarburstProjectile',
-      torpedo               = 'CTorpedoProjectile',
-      tracer                = 'CTracerProjectile',
-      wake                  = 'CWakeProjectile',
-    },
-  }
+if aliases == nil then
+	-- load the defaults
+	aliases = {
+		generators = {
+			std = "CStdExplosionGenerator",
+			custom = "CCustomExplosionGenerator",
+		},
+		projectiles = {
+			beamlaser = "CBeamLaserProjectile",
+			bitmapmuzzleflame = "CBitmapMuzzleFlame",
+			bubble = "CBubbleProjectile",
+			delayspawner = "CExpGenSpawner",
+			dirt = "CDirtProjectile",
+			emg = "CEmgProjectile",
+			expl = "CExplosiveProjectile",
+			explsphere = "CSpherePartSpawner",
+			explspike = "CExploSpikeProjectile",
+			fireball = "CFireBallProjectile",
+			fire = "CFireProjectile",
+			flame = "CFlameProjectile",
+			flare = "CFlareProjectile",
+			geosquare = "CGeoSquareProjectile",
+			gfx = "CGfxProjectile",
+			heatcloud = "CHeatCloudProjectile",
+			lighting = "CLightingProjectile",
+			missile = "CMissileProjectile",
+			muzzleflame = "CMuzzleFlame",
+			piece = "CPieceProjectile",
+			shieldpart = "CShieldPartProjectile",
+			simplegroundflash = "CSimpleGroundFlash",
+			simpleparticlespawner = "CSphereParticleSpawner",
+			simpleparticlesystem = "CSimpleParticleSystem",
+			smoke = "CSmokeProjectile",
+			smoke2 = "CSmokeProjectile2",
+			smoketrail = "CSmokeTrailProjectile",
+			spherepart = "CSpherePartProjectile",
+			starburst = "CStarburstProjectile",
+			torpedo = "CTorpedoProjectile",
+			tracer = "CTracerProjectile",
+			wake = "CWakeProjectile",
+		},
+	}
 end
 
 --------------------------------------------------------------------------------

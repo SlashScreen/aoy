@@ -11,18 +11,18 @@
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-if (not VFS.FileExists('gamedata/resources_map.tdf')) then
-  return {}
+if not VFS.FileExists("gamedata/resources_map.tdf") then
+	return {}
 end
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-local TDF = VFS.Include('gamedata/parse_tdf.lua')
+local TDF = VFS.Include("gamedata/parse_tdf.lua")
 
-local resources, err = TDF.Parse('gamedata/resources_map.tdf')
-if (resources == nil) then
-  error('Error parsing resources.tdf: ' .. err)
+local resources, err = TDF.Parse("gamedata/resources_map.tdf")
+if resources == nil then
+	error("Error parsing resources.tdf: " .. err)
 end
 
 --------------------------------------------------------------------------------

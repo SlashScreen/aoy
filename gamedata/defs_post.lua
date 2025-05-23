@@ -1,7 +1,7 @@
 -- filter out unused movedefs
 
 local usedMovedefs = {}
-for name, def in pairs (DEFS.unitDefs) do
+for name, def in pairs(DEFS.unitDefs) do
 	local movedef = def.movementclass
 	if movedef then
 		usedMovedefs[movedef] = true
@@ -19,4 +19,3 @@ while i <= #DEFS.moveDefs do
 end
 
 return {}
-
