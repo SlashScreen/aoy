@@ -1,6 +1,6 @@
-local gadget = NewGadget()
+local gadget = handler:NewGadget()
 
-if gadgetHandler:IsSyncedCode() then
+if handler:IsSyncedCode() then
 	local GetAllFeatures = Spring.GetAllFeatures
 	local GetFeatureAllyTeam = Spring.GetFeatureAllyTeam
 
@@ -245,19 +245,19 @@ else
 		callinHandlers["FeatureDestroyed"] = ___FeatureDestroyed
 
 		-- listen to "/luarules show*"
-		gadgetHandler:AddChatAction(
+		handler:AddChatAction(
 			"showhealthbars",
 			___ToggleDrawUnitStatusBars,
 			"toggle whether unit status-bars are drawn"
 		)
-		gadgetHandler:AddChatAction(
+		handler:AddChatAction(
 			"showrezbars",
 			___ToggleDrawFeatureStatusBars,
 			"toggle whether feature status-bars are drawn"
 		)
 
 		for funcName, func in pairs(callinHandlers) do
-			gadgetHandler:AddSyncAction(funcName, func, "")
+			handler:AddSyncAction(funcName, func, "")
 		end
 
 		Spring.SendCommands({ "showhealthbars 0", "showrezbars 0" })
@@ -268,7 +268,7 @@ else
 		SetConfigInt("ShowRezBars", (drawFeatureStatusBars and 1) or 0)
 
 		for funcName, func in pairs(callinHandlers) do
-			gadgetHandler:RemoveSyncAction(funcName)
+			handler:RemoveSyncAction(funcName)
 		end
 	end
 

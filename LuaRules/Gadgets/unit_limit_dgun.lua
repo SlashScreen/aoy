@@ -10,7 +10,7 @@
 --
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
-local gadget = NewGadget()
+local gadget = handler:NewGadget()
 function gadget:GetInfo()
 	return {
 		name = "Limit Dgun",
@@ -35,7 +35,7 @@ local dgunMapFraction = 3 -- use the modoption to define it instead?
 local dgunRadiusSquared = (Game.mapSizeX * Game.mapSizeZ) / (dgunMapFraction * dgunMapFraction)
 local dgunRadius = math.sqrt(dgunRadiusSquared)
 
-if not gadgetHandler:IsSyncedCode() then --begin unsynced section
+if not handler:IsSyncedCode() then --begin unsynced section
 	local glColor = gl.Color
 	local glDrawGroundCircle = gl.DrawGroundCircle
 	local glPushMatrix = gl.PushMatrix

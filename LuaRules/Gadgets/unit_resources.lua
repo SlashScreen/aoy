@@ -1,6 +1,6 @@
 ---@alias ResourceType "gold" | "lumber"
 
-local gadget = NewGadget()
+local gadget = handler:NewGadget()
 
 function gadget:GetInfo()
 	return {
@@ -17,7 +17,7 @@ end
 ---@type table<UnitID, table<ResourceType, number>>
 local unit_resources = {}
 
-if gadgetHandler:IsSyncedCode() then
+if handler:IsSyncedCode() then
 	-- Synced Code
 else
 	-- Unsynced Code

@@ -1,4 +1,4 @@
-local gadget = NewGadget()
+local gadget = handler:NewGadget()
 
 function gadget:GetInfo()
 	return {
@@ -61,7 +61,7 @@ local function IsItem(featureID)
 	return featureDefID and is_item[featureDefID]
 end
 
-if gadgetHandler:IsSyncedCode() then
+if handler:IsSyncedCode() then
 	--- @type table<UnitID, integer[]>
 	local inventory = {}
 
@@ -112,11 +112,12 @@ if gadgetHandler:IsSyncedCode() then
 	end
 
 	function gadget:Initialize()
-		gadgetHandler:RegisterCMDID(CMD_PICK_UP_ITEM)
+		Spring.Echo("Initialized hero inventory")
+		handler:RegisterCMDID(CMD_PICK_UP_ITEM)
 	end
 else
 	function gadget:Initialize()
-		gadgetHandler:RegisterCMDID(CMD_PICK_UP_ITEM)
+		handler:RegisterCMDID(CMD_PICK_UP_ITEM)
 		Spring.SetCustomCommandDrawData(CMD_PICK_UP_ITEM, CMD.FIGHT)
 		Spring.AssignMouseCursor("Pick Up Item", "cursorfight", true, true)
 	end

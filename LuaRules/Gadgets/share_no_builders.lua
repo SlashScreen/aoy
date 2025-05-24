@@ -10,7 +10,7 @@
 --
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
-local gadget = NewGadget()
+local gadget = handler:NewGadget()
 
 function gadget:GetInfo()
 	return {
@@ -70,8 +70,8 @@ local function ChatControl(cmd, line, words, playerID)
 end
 
 function gadget:Initialize()
-	if not gadgetHandler:IsSyncedCode() then
-		gadgetHandler:RemoveGadget()
+	if not handler:IsSyncedCode() then
+		handler:RemoveGadget()
 		return
 	end
 	local cmd, help
@@ -85,12 +85,12 @@ function gadget:Initialize()
 	h = h .. "  e: enemy mode\n"
 
 	help = h
-	gadgetHandler:AddChatAction(cmd, ChatControl, help)
+	handler:AddChatAction(cmd, ChatControl, help)
 	Script.AddActionFallback(cmd .. " ", help)
 end
 
 function gadget:Shutdown()
-	gadgetHandler:RemoveChatAction("sharenobuilders", ChatControl)
+	handler:RemoveChatAction("sharenobuilders", ChatControl)
 end
 
 local function AddRefusal(team, msg)

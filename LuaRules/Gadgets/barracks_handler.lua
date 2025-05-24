@@ -1,4 +1,4 @@
-local gadget = NewGadget()
+local gadget = handler:NewGadget()
 
 function gadget:GetInfo()
 	return {
@@ -12,7 +12,7 @@ function gadget:GetInfo()
 	}
 end
 
-if not gadgetHandler:IsSyncedCode() then
+if not handler:IsSyncedCode() then
 	return gadget
 end
 

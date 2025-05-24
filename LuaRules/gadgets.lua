@@ -1,7 +1,10 @@
 -- (C) 2025 Slashscreen, 2007 Dave Rogers; Licensed under the terms of the GNU GPL, v3 or later.
 
-local addon_handler = VFS.Include("utils/addon_handler.lua")
+local AddonHandler = VFS.Include("utils/addon_handler.lua")
+local ActionHandler = VFS.Include("utils/action_handler.lua")
 local callins = VFS.Include("LuaRules/callins.lua")
+
+local action_handler = ActionHandler.new()
 
 --- @class GadgetHandlerProxy: AddonHandlerProxy
 --- @field RaiseGadget fun(handler: GadgetHandlerProxy) Raises the gadget.
@@ -28,61 +31,70 @@ local callins = VFS.Include("LuaRules/callins.lua")
 --- @return GadgetHandlerProxy
 local function wrap_gadget_handler(handler, gadget)
 	return {
-		RaiseGadget = function(_)
-			handler:RequestAddonRaise(gadget)
+		handler_gadget = gadget,
+		RaiseGadget = function(self)
+			handler:RequestAddonRaise(self.handler_gadget)
 		end,
-		LowerGadget = function(_)
-			handler:RequestAddonLower(gadget)
+		LowerGadget = function(self)
+			handler:RequestAddonLower(self.handler_gadget)
 		end,
-		RemoveGadget = function(_)
-			handler:RequestAddonRemoval(gadget)
+		RemoveGadget = function(self)
+			handler:RequestAddonRemoval(self.handler_gadget)
 		end,
 		IsSyncedCode = function(_)
 			return handler:IsSyncedCode()
 		end,
-		RegisterCMDID = function(_, id)
-			handler:RegisterCMDID(gadget, id)
+		RegisterCMDID = function(self, id)
+			handler:RegisterCMDID(self.handler_gadget, id)
 		end,
-		RegisterGlobal = function(_, name, value)
-			return handler:RegisterGlobal(gadget, name, value)
+		RegisterGlobal = function(self, name, value)
+			return handler:RegisterGlobal(self.handler_gadget, name, value)
 		end,
-		DeregisterGlobal = function(_, name)
-			return handler:DeregisterGlobal(gadget, name)
+		DeregisterGlobal = function(self, name)
+			return handler:DeregisterGlobal(self.handler_gadget, name)
 		end,
-		SetGlobal = function(_, name, value)
-			return handler:SetGlobal(gadget, name, value)
+		SetGlobal = function(self, name, value)
+			return handler:SetGlobal(self.handler_gadget, name, value)
 		end,
-		AddChatAction = function(_, cmd, func, help)
-			return actionHandler.AddChatAction(gadget, cmd, func, help)
+		AddChatAction = function(self, cmd, func, help)
+			return action_handler.AddChatAction(self.handler_gadget, cmd, func, help)
 		end,
-		RemoveChatAction = function(_, cmd)
-			return actionHandler.RemoveChatAction(gadget, cmd)
+		RemoveChatAction = function(self, cmd)
+			return action_handler.RemoveChatAction(self.handler_gadget, cmd)
 		end,
-		IsMouseOwner = function(_)
-			return (handler.mouse_owner == gadget)
+		IsMouseOwner = function(self)
+			return (handler.mouse_owner == self.handler_gadget)
 		end,
-		DisownMouse = function(_)
-			if handler.mouse_owner == gadget then
+		DisownMouse = function(self)
+			if handler.mouse_owner == self.handler_gadget then
 				handler.mouse_owner = nil
 			end
 		end,
-		--[[AddSyncAction = function(_, cmd, func, help)
-			if handler:IsSyncedCode() then
-				return nil
-			end
-			return actionHandler.AddSyncAction(gadget, cmd, func, help)
+		NewGadget = function(self)
+			local g = {}
+			self.handler_gadget = g
+			return g
 		end,
-		RemoveSyncAction = function(_, cmd)
+		AddSyncAction = function(self, cmd, func, help)
 			if handler:IsSyncedCode() then
 				return nil
 			end
-			return actionHandler.RemoveSyncAction(gadget, cmd)
-		end,]]
+			return action_handler.AddSyncAction(self.handler_gadget, cmd, func, help)
+		end,
+		RemoveSyncAction = function(self, cmd)
+			if handler:IsSyncedCode() then
+				return nil
+			end
+			return action_handler.RemoveSyncAction(self.handler_gadget, cmd)
+		end,
 	}
 end
 
 --- @class GadgetHandler: AddonHandler
-local GadgetHandler = addon_handler.new(callins, {
+local GadgetHandler = AddonHandler.new(callins, {
 	wrapper_func = wrap_gadget_handler,
-	log_section = "Gadgets",
+	log_section = "Gadget",
+	system = VFS.Include("LuaRules/system.lua"),
 })
+
+GadgetHandler:LoadFromDirectory("LuaRules/Gadgets")

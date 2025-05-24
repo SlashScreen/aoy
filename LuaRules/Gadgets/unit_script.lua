@@ -23,7 +23,7 @@ To do:
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
-local gadget = NewGadget()
+local gadget = handler:NewGadget()
 function gadget:GetInfo()
 	return {
 		name = "Lua unit script framework",
@@ -36,7 +36,7 @@ function gadget:GetInfo()
 	}
 end
 
-if not gadgetHandler:IsSyncedCode() then
+if not handler:IsSyncedCode() then
 	return false
 end
 

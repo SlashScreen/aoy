@@ -10,7 +10,7 @@
 --
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
-local gadget = NewGadget()
+local gadget = handler:NewGadget()
 
 function gadget:GetInfo()
 	return {
@@ -61,7 +61,7 @@ local CMD_CANCEL_SHARE = 33999
 --------------------------------------------------------------------------------
 --  COMMON
 --------------------------------------------------------------------------------
-if gadgetHandler:IsSyncedCode() then
+if handler:IsSyncedCode() then
 	--------------------------------------------------------------------------------
 	--  SYNCED
 	--------------------------------------------------------------------------------
@@ -131,27 +131,27 @@ if gadgetHandler:IsSyncedCode() then
 	--------------------------------------------------------------------------------
 
 	function gadget:Initialize()
-		gadgetHandler:RegisterCMDID(CMD_CANCEL_SHARE)
+		handler:RegisterCMDID(CMD_CANCEL_SHARE)
 		_G.shareFrames = frames
 
 		local cmd, help
 
 		cmd = "sharedelay"
 		help = " [0|1]:  delayed unit sharing, useful for comm ends games"
-		gadgetHandler:AddChatAction(cmd, ChatControl, help)
+		handler:AddChatAction(cmd, ChatControl, help)
 		Script.AddActionFallback(cmd .. " ", help)
 
 		cmd = "stopshare"
 		help = ":  cancel all queued unit transfers for your team"
-		gadgetHandler:AddChatAction(cmd, StopShare, help)
+		handler:AddChatAction(cmd, StopShare, help)
 		Script.AddActionFallback(cmd, help)
 	end
 
 	function gadget:Shutdown()
-		gadgetHandler:RemoveChatAction("sharedelay")
+		handler:RemoveChatAction("sharedelay")
 		Script.RemoveActionFallback("sharedelay")
 
-		gadgetHandler:RemoveChatAction("stopshare")
+		handler:RemoveChatAction("stopshare")
 		Script.RemoveActionFallback("stopshare")
 
 		for _, unitID in ipairs(Spring.GetAllUnits()) do

@@ -10,7 +10,7 @@
 --
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
-local gadget = NewGadget()
+local gadget = handler:NewGadget()
 
 function gadget:GetInfo()
 	return {
@@ -28,7 +28,7 @@ end
 --------------------------------------------------------------------------------
 
 -- synced only
-if not gadgetHandler:IsSyncedCode() then
+if not handler:IsSyncedCode() then
 	return false
 end
 
@@ -89,12 +89,12 @@ local playerQuitIsDead = true
 
 function gadget:GameOver()
 	-- remove ourself after successful game over
-	gadgetHandler:RemoveGadget()
+	handler:RemoveGadget()
 end
 
 function gadget:Initialize()
 	if teamDeathMode == "none" then
-		gadgetHandler:RemoveGadget()
+		handler:RemoveGadget()
 		return
 	end
 
@@ -107,7 +107,7 @@ function gadget:Initialize()
 	end
 
 	if teamCount < 2 then -- sandbox mode ( possibly gaia + possibly one player)
-		gadgetHandler:RemoveGadget()
+		handler:RemoveGadget()
 		return
 	elseif teamCount == 2 then
 		playerQuitIsDead = false -- let player quit & rejoin in 1v1

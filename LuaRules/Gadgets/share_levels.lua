@@ -10,7 +10,7 @@
 --
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
-local gadget = NewGadget()
+local gadget = handler:NewGadget()
 
 function gadget:GetInfo()
 	return {
@@ -174,16 +174,16 @@ end
 --------------------------------------------------------------------------------
 
 function gadget:Initialize()
-	if not gadgetHandler:IsSyncedCode() then
-		gadgetHandler:RemoveGadget()
+	if not handler:IsSyncedCode() then
+		handler:RemoveGadget()
 		return
 	end
-	gadgetHandler:AddChatAction(cmdName, ChatControl, help)
+	handler:AddChatAction(cmdName, ChatControl, help)
 	Script.AddActionFallback(cmdName .. " ", help)
 end
 
 function gadget:Shutdown()
-	gadgetHandler:RemoveChatAction(cmdName, ChatControl)
+	handler:RemoveChatAction(cmdName, ChatControl)
 end
 
 --------------------------------------------------------------------------------

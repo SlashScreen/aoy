@@ -1,4 +1,4 @@
-local gadget = NewGadget()
+local gadget = handler:NewGadget()
 
 function gadget:GetInfo()
 	return {
@@ -41,10 +41,10 @@ for unit_def_id, unit_def in pairs(UnitDefs) do
 end
 
 function gadget:Initialize()
-	gadgetHandler:RegisterCMDID(CMD_POSSESS_UNIT)
+	handler:RegisterCMDID(CMD_POSSESS_UNIT)
 end
 
-if gadgetHandler:IsSyncedCode() then
+if handler:IsSyncedCode() then
 	--- @param unit_id UnitID
 	--- @param target_id UnitID
 	--- @param target_def_id UnitDefID

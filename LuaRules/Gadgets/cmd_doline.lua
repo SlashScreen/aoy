@@ -10,7 +10,7 @@
 --
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
-local gadget = NewGadget()
+local gadget = handler:NewGadget()
 
 function gadget:GetInfo()
 	return {
@@ -65,22 +65,22 @@ end
 --------------------------------------------------------------------------------
 
 function gadget:Initialize()
-	if gadgetHandler:IsSyncedCode() then
-		gadgetHandler:AddChatAction("run", RunCmd, " <string>:  execute synced lua commands")
-		gadgetHandler:AddChatAction("echo", EchoCmd, " <string>:  execute synced lua commands, print the output")
+	if handler:IsSyncedCode() then
+		handler:AddChatAction("run", RunCmd, " <string>:  execute synced lua commands")
+		handler:AddChatAction("echo", EchoCmd, " <string>:  execute synced lua commands, print the output")
 	else
-		gadgetHandler:AddChatAction("urun", RunCmd, " <string>:  execute unsynced lua commands")
-		gadgetHandler:AddChatAction("uecho", EchoCmd, " <string>:  execute unsynced lua commands, print the output")
+		handler:AddChatAction("urun", RunCmd, " <string>:  execute unsynced lua commands")
+		handler:AddChatAction("uecho", EchoCmd, " <string>:  execute unsynced lua commands, print the output")
 	end
 end
 
 function gadget:Shutdown()
-	if gadgetHandler:IsSyncedCode() then
-		gadgetHandler:RemoveChatAction("run")
-		gadgetHandler:RemoveChatAction("echo")
+	if handler:IsSyncedCode() then
+		handler:RemoveChatAction("run")
+		handler:RemoveChatAction("echo")
 	else
-		gadgetHandler:RemoveChatAction("urun")
-		gadgetHandler:RemoveChatAction("uecho")
+		handler:RemoveChatAction("urun")
+		handler:RemoveChatAction("uecho")
 	end
 end
 

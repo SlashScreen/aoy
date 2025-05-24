@@ -1,7 +1,7 @@
 local INITIAL_FIND_RADIUS = 500
 local SEARCH_RADIUS_INCREMENT = 300
 
-local gadget = NewGadget()
+local gadget = handler:NewGadget()
 
 --[[
 We make the following assumptions: 

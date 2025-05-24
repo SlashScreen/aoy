@@ -53,6 +53,7 @@ end
 --- @field SG table Addon shared globals
 --- @field operation_queue {type: "add"|"remove"|"layer", addon: Addon, new_layer: integer?}[]
 --- @field mouse_owner Addon?
+--- @field system table globals for the addon environment
 local addon_handler = {
 	addons = {},
 	addon_callin_map = {},
@@ -106,6 +107,7 @@ local addon_handler = {
 	globals = {},
 	operation_queue = {},
 	mouse_owner = nil,
+	system = {},
 }
 
 --- @param callin_list table<string, fun(addon_handler: AddonHandler, fn_name: string, addons: Addon[], ...: any)>
@@ -114,6 +116,7 @@ local addon_handler = {
 --- 	validation_func: (fun(self: AddonHandler, addon: Addon): string?)?,
 --- 	wrapper_func: (fun(self: AddonHandler, addon: Addon): AddonHandlerProxy)?,
 --- 	log_section: string?,
+--- 	system: table?,
 --- }
 --- @return AddonHandler
 function addon_handler.new(callin_list, settings)
@@ -127,6 +130,7 @@ function addon_handler.new(callin_list, settings)
 	self.wrapper_func = settings.wrapper_func or addon_handler.wrapper_func
 	self.log_section = settings.log_section or addon_handler.log_section
 	self.callin_list = callin_list
+	self.system = settings.system or addon_handler.system
 
 	-- Register callins
 	--[[
@@ -140,8 +144,7 @@ function addon_handler.new(callin_list, settings)
 			local addons_list = self.addon_callin_map[fn_name]
 			local values = { func(self, fn_name, addons_list, ...) }
 			self:ProcessOperationQueue()
-			--- @diagnostic disable-next-line: deprecated
-			return table.unpack(values)
+			return unpack(values)
 		end
 		-- If this manager has a function for this callin, call it first.
 		if self[fn_name] then
@@ -149,11 +152,9 @@ function addon_handler.new(callin_list, settings)
 				local self_values = { self[fn_name](self, ...) }
 				local addons_values = { run_loop(...) }
 				if #self_values == 0 then -- if we return nil from the self function, defer to the others.
-					--- @diagnostic disable-next-line: deprecated
-					return table.unpack(addons_values)
+					return unpack(addons_values)
 				end
-				--- @diagnostic disable-next-line: deprecated
-				return table.unpack(self_values)
+				return unpack(self_values)
 			end
 		else
 			_G[fn_name] = run_loop
@@ -169,9 +170,10 @@ end
 
 --- @param directory string
 function addon_handler:LoadFromDirectory(directory)
+	Spring.Log(self.log_section, LOG.INFO, "Loading addons from " .. directory)
 	self.suppress_sort = true
 	local syncedHandler = Script.GetSynced()
-	local addon_files = VFS.DirList(directory, "*.lua", nil, true)
+	local addon_files = VFS.DirList(directory, "*.lua")
 	for _, file in ipairs(addon_files) do
 		local addon = self:LoadAddon(file)
 		if addon then
@@ -196,6 +198,8 @@ end
 --- @param file string Filepath of the addon code
 --- @return Addon? addon Nil if failed
 function addon_handler:LoadAddon(file)
+	Spring.Echo("Loading addon " .. file)
+
 	local basename, path = get_basename(file)
 
 	-- Load text from disk
@@ -216,10 +220,12 @@ function addon_handler:LoadAddon(file)
 	local env = {
 		_G = _G,
 		SG = self.SG,
+		handler = self:wrapper_func({}), --- @diagnostic disable-line: missing-fields
 	}
 	env.include = function(f)
 		return VFS.Include(f, env, VFSMODE)
 	end
+	setmetatable(env, { __index = self.system })
 
 	-- Set environment for chunk
 	setfenv(chunk, env)
@@ -230,8 +236,13 @@ function addon_handler:LoadAddon(file)
 		Spring.Log(self.log_section, LOG.ERROR, "Failed to load: " .. file .. "  (" .. tostring(res) .. ")")
 		return nil
 	end
+	if res == false then -- Return false means "quiet death"
+		return nil
+	end
+	if res == nil then -- Return nil means no addon
+		return nil
+	end
 	local addon = res --[[@as Addon]]
-	env.handler = self:wrapper_func(addon)
 
 	self:FinalizeAddon(addon, path, basename)
 
@@ -242,8 +253,11 @@ function addon_handler:LoadAddon(file)
 		return nil
 	end
 
-	-- Add to known info, if not already present
 	local addon_info = addon.info
+	if addon.info.enabled == false then -- skip if not enabled
+		return nil
+	end
+	-- Add to known info, if not already present
 	local known_info = self.known_addons[addon_info.name]
 	if known_info then
 		if known_info.active then
@@ -269,12 +283,17 @@ end
 --- @param filename string
 --- @param basename string
 function addon_handler:FinalizeAddon(addon, filename, basename)
+	if addon == nil then
+		Spring.Log(self.log_section, "warning", "Attempted to finalize nil addon at filename " .. filename)
+		return
+	end
 	--- @diagnostic disable-next-line: missing-fields
 	local ai = {
 		filename = filename,
 		basename = basename,
 	} --- @type AddonInfo
 
+	Spring.Echo("Addon is: " .. tostring(addon))
 	if addon.GetInfo then
 		local info = addon:GetInfo()
 		ai.name = info.name or basename
@@ -309,6 +328,7 @@ function addon_handler:AddAddon(addon)
 	end
 
 	self.addon_callin_map[addon] = {}
+	self.addon_implemented_callins[addon] = {}
 	local implemented_list = self.addon_implemented_callins[addon]
 	-- Create a list of implemented callins by looping through the callin list and checking if that's a function in the addon
 	for listname, _ in pairs(self.callin_list) do

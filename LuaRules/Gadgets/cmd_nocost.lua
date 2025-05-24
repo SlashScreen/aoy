@@ -10,7 +10,7 @@
 --
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
-local gadget = NewGadget()
+local gadget = handler:NewGadget()
 
 function gadget:GetInfo()
 	return {
@@ -60,20 +60,20 @@ end
 
 function gadget:Initialize()
 	-- Only for synced
-	if (not gadgetHandler:IsSyncedCode()) or (Script.GetName() ~= "LuaRules") then
-		gadgetHandler:RemoveGadget()
+	if (not handler:IsSyncedCode()) or (Script.GetName() ~= "LuaRules") then
+		handler:RemoveGadget()
 		return
 	end
 	local cmd, help
 
 	cmd = "nc"
 	help = " [0|1]:  reversible nocost  (requires cheating)"
-	gadgetHandler:AddChatAction(cmd, NoCost, help)
+	handler:AddChatAction(cmd, NoCost, help)
 	Script.AddActionFallback(cmd .. " ", help)
 end
 
 function gadget:Shutdown()
-	gadgetHandler:RemoveChatAction("nocost")
+	handler:RemoveChatAction("nocost")
 end
 
 function gadget:UnitCreated(unitID, unitDefID, unitTeam)

@@ -10,7 +10,7 @@
 --
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
-local gadget = NewGadget()
+local gadget = handler:NewGadget()
 
 function gadget:GetInfo()
 	return {
@@ -150,8 +150,8 @@ local function ChatControl(cmd, line, words, playerID)
 end
 
 function gadget:Initialize()
-	if not gadgetHandler:IsSyncedCode() then
-		gadgetHandler:RemoveGadget()
+	if not handler:IsSyncedCode() then
+		handler:RemoveGadget()
 		return
 	end
 	local cmd, help
@@ -170,12 +170,12 @@ function gadget:Initialize()
 	--  h = h..cmd..' enemy [0|1]:  control enemy unit and resource sharing\n'
 	--  h = h..cmd..' enemy res [0|1]:  control enemy resource sharing\n'
 	help = h
-	gadgetHandler:AddChatAction(cmd, ChatControl, help)
+	handler:AddChatAction(cmd, ChatControl, help)
 	Script.AddActionFallback(cmd .. " ", help)
 end
 
 function gadget:Shutdown()
-	gadgetHandler:RemoveChatAction("sharectrl", ChatControl)
+	handler:RemoveChatAction("sharectrl", ChatControl)
 end
 
 function gadget:AllowResourceTransfer(oldTeam, newTeam, type, amount)
