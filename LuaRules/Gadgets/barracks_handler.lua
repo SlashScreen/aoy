@@ -1,3 +1,5 @@
+local gadget = handler:NewGadget()
+
 function gadget:GetInfo()
 	return {
 		name = "Barracks Handler",
@@ -10,8 +12,8 @@ function gadget:GetInfo()
 	}
 end
 
-if not gadgetHandler:IsSyncedCode() then
-	return
+if not handler:IsSyncedCode() then
+	return gadget
 end
 
 local IterableMap = VFS.Include("LuaRules/Gadgets/Include/IterableMap.lua")
@@ -67,7 +69,8 @@ local function SetupConstructionOptions(unitID, ud)
 	IterableMap.Add(barrackUnits, unitID, barracks)
 end
 
-function gadget:UnitCreated(unitID, unitDefID)
+function gadget:UnitCreated(unitID, unitDefID, ...)
+	Spring.Echo("on unit created", unitID, unitDefID, ...)
 	local ud = UnitDefs[unitDefID]
 	if ud.customParams.build_1 then
 		SetupConstructionOptions(unitID, ud)
@@ -179,3 +182,5 @@ function gadget:AllowCommand(unitID, unitDefID, teamID, cmdID, cmdParams, cmdOpt
 	end
 	return true
 end
+
+return gadget

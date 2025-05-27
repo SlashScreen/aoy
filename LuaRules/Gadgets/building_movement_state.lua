@@ -1,5 +1,5 @@
 --- @module "Include/types"
-local gadget = gadget --- @type Gadget
+local gadget = handler:NewGadget()
 
 function gadget:GetInfo()
 	return {
@@ -53,7 +53,7 @@ local function is_movable(unit_def_id)
 	end
 end
 
-if gadgetHandler:IsSyncedCode() then
+if handler:IsSyncedCode() then
 	---@param unit_id UnitID
 	---@param unit_def_id UnitDefID
 	---@param team_id TeamID
@@ -85,8 +85,8 @@ if gadgetHandler:IsSyncedCode() then
 	end
 
 	function gadget:Initialize()
-		gadgetHandler:RegisterCMDID(CMD_SIT_DOWN)
-		gadgetHandler:RegisterCMDID(CMD_STAND_UP)
+		handler:RegisterCMDID(CMD_SIT_DOWN)
+		handler:RegisterCMDID(CMD_STAND_UP)
 	end
 
 	function gadget:UnitCreated(unit_id)
@@ -97,12 +97,14 @@ if gadgetHandler:IsSyncedCode() then
 	end
 else
 	function gadget:Initialize()
-		gadgetHandler:RegisterCMDID(CMD_SIT_DOWN)
+		handler:RegisterCMDID(CMD_SIT_DOWN)
 		Spring.SetCustomCommandDrawData(CMD_SIT_DOWN, CMD.MOVE)
 		Spring.AssignMouseCursor("Sit Down", "cursorfight", true, true)
 
-		gadgetHandler:RegisterCMDID(CMD_STAND_UP)
+		handler:RegisterCMDID(CMD_STAND_UP)
 		Spring.SetCustomCommandDrawData(CMD_STAND_UP, CMD.MOVE)
 		Spring.AssignMouseCursor("Stand Up", "cursorfight", true, true)
 	end
 end
+
+return gadget

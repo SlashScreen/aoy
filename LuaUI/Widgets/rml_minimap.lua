@@ -6,13 +6,13 @@ end
 local widget = widget --- @type Widget
 
 local DATA_MODEL_NAME = "minimap_model"
-local MINIMAP_ELEMENT_ID = "widget"
+local MINIMAP_ELEMENT_ID = "map-panel"
 
 function widget:GetInfo()
 	return {
 		name = "AOY Minimap Panel",
 		desc = "Minimap Panel",
-		author = "Vileblood",
+		author = "Slashscreen",
 		date = "Present Day, Present Time",
 		license = "https://unlicense.org/",
 		layer = -828888,
@@ -30,15 +30,21 @@ local init_model = {}
 --- @param width integer
 --- @param height integer
 local function set_minimap_geo(x, y, width, height)
-	Spring.SendCommands(
+	--[[Spring.SendCommands(
 		"minimap geo " .. tostring(x) .. " " .. tostring(y) .. " " .. tostring(width) .. " " .. tostring(height)
-	)
-	--gl.ConfigMiniMap(x, y, width, height)
+	)]]
+	gl.ConfigMiniMap(x, y, width, height)
 end
 
 --- @param element RmlUi.Element
 local function match_minimap_to_element(element)
-	set_minimap_geo(element.absolute_left, element.absolute_top, element.client_width, element.client_height)
+	local x_offset = (element.client_width - element.client_height) / 2 -- Used to keep it centered
+	set_minimap_geo(
+		element.absolute_left + x_offset,
+		document.client_height - element.absolute_top - element.client_height,
+		element.client_height,
+		element.client_height
+	)
 end
 
 function widget:Initialize()
@@ -56,9 +62,11 @@ function widget:Initialize()
 	document:Show()
 
 	--gl.SetSlaveMode(true)
+	gl.SlaveMiniMap(true)
 
 	local minimap_element = document:GetElementById(MINIMAP_ELEMENT_ID)
 	match_minimap_to_element(minimap_element)
+	Spring.SetConfigInt("HardwareCursor", 1)
 
 	--gl.DrawMiniMap()
 	--gl.SlaveMiniMap(true)
@@ -66,6 +74,7 @@ function widget:Initialize()
 	Spring.Echo("Initialized Minimap")
 end
 
+<<<<<<< HEAD
 function widget.DrawScreenPost()
 	--gl.DrawMiniMap(false)
 end
@@ -76,6 +85,11 @@ end
 
 function widget:GetTooltip(x, y)
 	return "Minimap"
+=======
+function widget:DrawScreenPost()
+	--Spring.Echo("Draw post " .. os.clock())
+	gl.DrawMiniMap()
+>>>>>>> new-gadget-handler
 end
 
 function widget:Shutdown()
