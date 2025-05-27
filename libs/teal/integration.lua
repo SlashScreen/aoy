@@ -1,5 +1,10 @@
+-- (C) 2025 Slashscreen, MIT license
+-- Allows Recoil to load Teal files from VFS.
+
 local tl = VFS.Include("libs/teal/tl.lua")
 local vanilla_include = VFS.Include
+
+TEAL_ENABLED = true
 
 VFS.Include = function(path, environment, mode) --- @diagnostic disable-line
 	if path:find(".tl") then

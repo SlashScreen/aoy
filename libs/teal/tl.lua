@@ -1,25 +1,8 @@
-local _tl_compat
-if (tonumber((_VERSION or ""):match("[%d.]*$")) or 0) < 5.3 then
-	local p, m = pcall(require, "compat53.module")
-	if p then
-		_tl_compat = m
-	end
-end
-local assert = _tl_compat and _tl_compat.assert or assert
-local debug = _tl_compat and _tl_compat.debug or debug
-local io = _tl_compat and _tl_compat.io or io
-local ipairs = _tl_compat and _tl_compat.ipairs or ipairs
-local load = _tl_compat and _tl_compat.load or load
-local math = _tl_compat and _tl_compat.math or math
-local _tl_math_maxinteger = math.maxinteger or math.pow(2, 53)
-local os = _tl_compat and _tl_compat.os or os
-local package = _tl_compat and _tl_compat.package or package
-local pairs = _tl_compat and _tl_compat.pairs or pairs
-local string = _tl_compat and _tl_compat.string or string
-local table = _tl_compat and _tl_compat.table or table
-local type = type
-local utf8 = _tl_compat and _tl_compat.utf8 or utf8
-local VERSION = "0.24.6+dev"
+local os = {
+	getenv = function(_)
+		return nil
+	end,
+}
 
 local prelude = [=====[
 do
@@ -1502,15 +1485,12 @@ do
 			)
 			return #ps.tokens
 		end
-		table.insert(
-			ps.errs,
-			{
-				filename = ps.filename,
-				y = ps.tokens[i].y,
-				x = ps.tokens[i].x,
-				msg = assert(msg, "syntax error, but no error message provided"),
-			}
-		)
+		table.insert(ps.errs, {
+			filename = ps.filename,
+			y = ps.tokens[i].y,
+			x = ps.tokens[i].x,
+			msg = assert(msg, "syntax error, but no error message provided"),
+		})
 		return math.min(#ps.tokens, i + 1)
 	end
 
@@ -10564,19 +10544,15 @@ do
 			elseif c == "q" then
 				table.insert(
 					results,
-					a_type(
-						node,
-						"union",
-						{
-							types = {
-								a_type(node, "string", {}),
-								a_type(node, "number", {}),
-								a_type(node, "integer", {}),
-								a_type(node, "boolean", {}),
-								a_type(node, "nil", {}),
-							},
-						}
-					)
+					a_type(node, "union", {
+						types = {
+							a_type(node, "string", {}),
+							a_type(node, "number", {}),
+							a_type(node, "integer", {}),
+							a_type(node, "boolean", {}),
+							a_type(node, "nil", {}),
+						},
+					})
 				)
 			elseif c == "p" or c == "s" then
 				table.insert(results, a_type(node, "any", {}))
@@ -10967,19 +10943,15 @@ do
 					end
 				end
 
-				rets = a_type(
-					node,
-					"tuple",
-					{
-						tuple = {
-							a_function(node, {
-								min_arity = 0,
-								args = a_type(node, "tuple", { tuple = {} }),
-								rets = a_type(node, "tuple", { tuple = items }),
-							}),
-						},
-					}
-				)
+				rets = a_type(node, "tuple", {
+					tuple = {
+						a_function(node, {
+							min_arity = 0,
+							args = a_type(node, "tuple", { tuple = {} }),
+							rets = a_type(node, "tuple", { tuple = items }),
+						}),
+					},
+				})
 			end
 
 			return (self:type_check_function_call(node, a, b, argdelta, nil, rets))
@@ -11016,17 +10988,13 @@ do
 
 				local replarg_type
 
-				local expected_pat_return = a_type(
-					node,
-					"union",
-					{
-						types = {
-							a_type(node, "string", {}),
-							a_type(node, "integer", {}),
-							a_type(node, "number", {}),
-						},
-					}
-				)
+				local expected_pat_return = a_type(node, "union", {
+					types = {
+						a_type(node, "string", {}),
+						a_type(node, "integer", {}),
+						a_type(node, "number", {}),
+					},
+				})
 				if self:is_a(trepl, expected_pat_return) then
 					replarg_type = expected_pat_return
 				elseif trepl.typename == "map" then
@@ -11051,18 +11019,14 @@ do
 				end
 
 				if replarg_type then
-					args = a_type(
-						node,
-						"tuple",
-						{
-							tuple = {
-								a_type(node, "string", {}),
-								a_type(node, "string", {}),
-								replarg_type,
-								has_fourth and a_type(node, "integer", {}) or nil,
-							},
-						}
-					)
+					args = a_type(node, "tuple", {
+						tuple = {
+							a_type(node, "string", {}),
+							a_type(node, "string", {}),
+							replarg_type,
+							has_fourth and a_type(node, "integer", {}) or nil,
+						},
+					})
 				end
 			end
 
@@ -11242,15 +11206,10 @@ do
 
 		if is_array and is_map then
 			self.errs:add(node, "cannot determine type of table literal")
-			t = a_type(
-				node,
-				"map",
-				{
-					keys = self:expand_type(node, keys, a_type(node, "integer", {})),
-					values = 
-self:expand_type(node, values, elements),
-				}
-			)
+			t = a_type(node, "map", {
+				keys = self:expand_type(node, keys, a_type(node, "integer", {})),
+				values = self:expand_type(node, values, elements),
+			})
 		elseif is_record and is_array then
 			t = a_type(node, "record", {
 				fields = fields,
@@ -14095,7 +14054,7 @@ tl.load = function(input, chunkname, mode, ...)
 		return nil, err
 	end
 
-	return load(code, chunkname, mode, ...)
+	return load(loadstring(code, chunkname), chunkname, mode, ...)
 end
 
 tl.version = function()
