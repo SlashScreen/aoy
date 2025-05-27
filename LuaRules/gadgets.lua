@@ -6,6 +6,8 @@ local callins = VFS.Include("LuaRules/callins.lua")
 
 local action_handler = ActionHandler.new()
 
+local GADGETS_PATH = "LuaRules/Gadgets"
+
 --- @class GadgetHandlerProxy: AddonHandlerProxy
 --- @field RaiseGadget fun(handler: GadgetHandlerProxy) Raises the gadget.
 --- @field LowerGadget fun(handler: GadgetHandlerProxy) Lowers the gadget.
@@ -95,6 +97,15 @@ local GadgetHandler = AddonHandler.new(callins, {
 	wrapper_func = wrap_gadget_handler,
 	log_section = "Gadget",
 	system = VFS.Include("LuaRules/system.lua"),
+	validation_func = function(_, gadget)
+		if gadget.GetTooltip and not gadget.IsAbove then
+			return "Gadget has GetTooltip() but not IsAbove()"
+		end
+		if gadget.TweakGetTooltip and not gadget.TweakIsAbove then --- @diagnostic disable-line undeclared-fields
+			return "Gadget has TweakGetTooltip() but not TweakIsAbove()"
+		end
+		return nil
+	end,
 })
 
-GadgetHandler:LoadFromDirectory("LuaRules/Gadgets")
+GadgetHandler:LoadFromDirectory(GADGETS_PATH)

@@ -33,6 +33,7 @@ function gadget:GetInfo()
 		license = "GPL v2",
 		layer = 0,
 		enabled = true, --  loaded by default?
+		handler = true,
 	}
 end
 
@@ -481,15 +482,6 @@ local scripts = {}
 -- This environment is used as prototype for the unit script instances.
 -- (To save on time copying and space for a copy for each and every unit.)
 local prototypeEnv
-do
-	local script = {}
-	for k, v in pairs(System) do
-		script[k] = v
-	end
-	--script._G = _G  -- the global table. (Update: _G points to unit environment now)
-	script.GG = GG -- the shared table (shared with gadgets!)
-	prototypeEnv = script
-end
 
 local function Basename(filename)
 	return filename:match("[^\\/:]*$") or filename
@@ -516,7 +508,7 @@ local function LoadScript(scriptName, filename)
 end
 
 function gadget:Initialize()
-	Spring.Log(section, LOG.INFO, string.format("Loading gadget: %-18s  <%s>", self.ghInfo.name, self.ghInfo.basename))
+	Spring.Log(section, LOG.INFO, string.format("Loading gadget: %-18s  <%s>", self.info.name, self.info.basename))
 
 	-- This initialization code has following properties:
 	--  * all used scripts are loaded => early syntax error detection
@@ -553,6 +545,16 @@ function gadget:Initialize()
 				LoadScript(unitDef.scriptName, filename)
 			end
 		end
+	end
+
+	do
+		local script = {}
+		for k, v in pairs(raw_handler.system) do
+			script[k] = v
+		end
+		--script._G = _G  -- the global table. (Update: _G points to unit environment now)
+		script.GG = raw_handler.SG -- the shared table (shared with gadgets!)
+		prototypeEnv = script
 	end
 
 	-- Fake UnitCreated events for existing units. (for '/luarules reload')

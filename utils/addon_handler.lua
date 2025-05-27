@@ -198,8 +198,6 @@ end
 --- @param file string Filepath of the addon code
 --- @return Addon? addon Nil if failed
 function addon_handler:LoadAddon(file)
-	Spring.Echo("Loading addon " .. file)
-
 	local basename, path = get_basename(file)
 
 	-- Load text from disk
@@ -236,12 +234,11 @@ function addon_handler:LoadAddon(file)
 		Spring.Log(self.log_section, LOG.ERROR, "Failed to load: " .. file .. "  (" .. tostring(res) .. ")")
 		return nil
 	end
-	if res == false then -- Return false means "quiet death"
+	if res == nil or res == false then -- Return false means "quiet death"
+		Spring.Log(self.log_section, LOG.INFO, "Addon at file " .. file .. " requested silent death")
 		return nil
 	end
-	if res == nil then -- Return nil means no addon
-		return nil
-	end
+
 	local addon = res --[[@as Addon]]
 
 	self:FinalizeAddon(addon, path, basename)
@@ -271,7 +268,7 @@ function addon_handler:LoadAddon(file)
 	end
 	known_info.active = true
 
-	if addon.info.handler then
+	if addon_info.handler then
 		env.raw_handler = self
 	end
 
@@ -293,7 +290,6 @@ function addon_handler:FinalizeAddon(addon, filename, basename)
 		basename = basename,
 	} --- @type AddonInfo
 
-	Spring.Echo("Addon is: " .. tostring(addon))
 	if addon.GetInfo then
 		local info = addon:GetInfo()
 		ai.name = info.name or basename
@@ -302,6 +298,7 @@ function addon_handler:FinalizeAddon(addon, filename, basename)
 		ai.author = info.author or ""
 		ai.license = info.license or ""
 		ai.enabled = info.enabled or false
+		ai.handler = info.handler or false
 	else
 		ai.name = basename
 		ai.layer = 0
