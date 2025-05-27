@@ -3,6 +3,8 @@ if not RmlUi then
 	return false
 end
 
+local widget = handler:NewWidget() --- @type Widget
+
 function widget:GetInfo()
 	return {
 		name = "Demo RML Gui",
@@ -59,3 +61,5 @@ function widget:Shutdown()
 		RmlUi.RemoveContext(widget.whInfo.name)
 	end
 end
+
+return widget

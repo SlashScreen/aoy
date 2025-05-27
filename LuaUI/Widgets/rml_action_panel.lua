@@ -20,7 +20,7 @@
 
 -- *heading
 
-local widget = widget --- @type Widget
+local widget = handler:NewWidget() --- @type Widget
 
 if not RmlUi then
 	Spring.Echo("No RmlUI!")
@@ -129,12 +129,12 @@ local function override_default_menu()
 	local function layoutHandler(xIcons, yIcons, cmdCount, commands)
 		unit_commands = commands
 
-		widgetHandler:CommandsChanged()
+		handler:CommandsChanged()
 
 		return "", xIcons, yIcons, {}, {}, {}, {}, {}, {}, {}, { [1337] = 9001 }
 	end
 
-	widgetHandler:ConfigLayoutHandler(layoutHandler)
+	handler:ConfigLayoutHandler(layoutHandler)
 end
 
 local function clear_menu()
@@ -289,3 +289,5 @@ function widget:Shutdown()
 		RmlUi.RemoveContext(widget.whInfo.name)
 	end
 end
+
+return widget

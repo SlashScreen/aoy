@@ -38,8 +38,8 @@ end
 
 --- @class AddonHandler
 --- @field addons Addon[]
---- @field addon_callin_map table<string, Addon[]>
---- @field addon_implemented_callins table<Addon, string[]>
+--- @field addon_callin_map table<string, Addon[]> Maps callin names to lists of addons that implement them
+--- @field addon_implemented_callins table<Addon, string[]> Maps addons to the list of callins they implement
 --- @field order_list table<string, number>
 --- @field known_addons table<string, {active: boolean, filepath: string}> This keeps track of previously registered addons, so it can fetch their filepaths right away
 --- @field suppress_sort boolean Set to true to stop it from sorting addons when they are added or removed from the list. Used as an optimization during startup to avoid sorting over and over again as a million addons are loaded at once.
@@ -170,6 +170,7 @@ end
 
 --- @param directory string
 function addon_handler:LoadFromDirectory(directory)
+	Spring.Echo("Loading addons from " .. directory)
 	Spring.Log(self.log_section, LOG.INFO, "Loading addons from " .. directory)
 	self.suppress_sort = true
 	local syncedHandler = Script.GetSynced()
@@ -324,7 +325,7 @@ function addon_handler:AddAddon(addon)
 		return
 	end
 
-	self.addon_callin_map[addon] = {}
+	--self.addon_callin_map[addon] = {}
 	self.addon_implemented_callins[addon] = {}
 	local implemented_list = self.addon_implemented_callins[addon]
 	-- Create a list of implemented callins by looping through the callin list and checking if that's a function in the addon

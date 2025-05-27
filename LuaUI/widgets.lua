@@ -2,11 +2,12 @@
 
 local AddonHandler = VFS.Include("utils/addon_handler.lua")
 local ActionHandler = VFS.Include("utils/action_handler.lua")
-local callins = VFS.Include("LuaRules/callins.lua")
+local callins = VFS.Include("LuaUI/callins.lua")
+Spring.Echo(tostring(#callins) .. " callins loaded")
 
 local action_handler = ActionHandler.new()
 
-local WIDGETS_PATH = "LuaUI/Widgets"
+local WIDGETS_PATH = "luaui/widgets"
 
 --- @class WidgetHandlerProxy: AddonHandlerProxy
 --- @field RaiseWidget fun(handler: WidgetHandlerProxy) Raises the widget.
@@ -37,26 +38,27 @@ local WIDGETS_PATH = "LuaUI/Widgets"
 --- @return WidgetHandlerProxy
 local function wrap_widget_handler(handler, widget)
 	local wh = {
-		RaiseWidget = function(_)
-			handler:RequestAddonRaise(widget)
+		handler_widget = widget,
+		RaiseWidget = function(self)
+			handler:RequestAddonRaise(self.handler_widget)
 		end,
-		LowerWidget = function(_)
-			handler:RequestAddonLower(widget)
+		LowerWidget = function(self)
+			handler:RequestAddonLower(self.handler_widget)
 		end,
-		RemoveWidget = function(_)
-			handler:RequestAddonRemoval(widget)
+		RemoveWidget = function(self)
+			handler:RequestAddonRemoval(self.handler_widget)
 		end,
-		GetCommands = function(_)
+		GetCommands = function(self)
 			return handler.commands
 		end,
-		InTweakMode = function(_)
+		InTweakMode = function(self)
 			return handler.tweak_mode
 		end,
-		IsMouseOwner = function(_)
-			return (handler.mouse_owner == widget)
+		IsMouseOwner = function(self)
+			return (handler.mouse_owner == self.handler_widget)
 		end,
-		DisownMouse = function(_)
-			if handler.mouse_owner == widget then
+		DisownMouse = function(self)
+			if handler.mouse_owner == self.handler_widget then
 				handler.mouse_owner = nil
 			end
 		end,
@@ -68,18 +70,18 @@ local function wrap_widget_handler(handler, widget)
 			handler:RemoveWidgetCallIn(name, widget)
 		end,]]
 
-		AddAction = function(_, cmd, func, data, types)
-			return action_handler:AddAction(widget, cmd, func, data, types)
+		AddAction = function(self, cmd, func, data, types)
+			return action_handler:AddAction(self.handler_widget, cmd, func, data, types)
 		end,
-		RemoveAction = function(_, cmd, types)
-			return action_handler:RemoveAction(widget, cmd, types)
+		RemoveAction = function(self, cmd, types)
+			return action_handler:RemoveAction(self.handler_widget, cmd, types)
 		end,
 
-		AddSyncAction = function(_, cmd, func, help)
-			return action_handler:AddSyncAction(widget, cmd, func, help)
+		AddSyncAction = function(self, cmd, func, help)
+			return action_handler:AddSyncAction(self.handler_widget, cmd, func, help)
 		end,
-		RemoveSyncAction = function(_, cmd)
-			return action_handler:RemoveSyncAction(widget, cmd)
+		RemoveSyncAction = function(self, cmd)
+			return action_handler:RemoveSyncAction(self.handler_widget, cmd)
 		end,
 
 		--[[AddLayoutCommand = function(_, cmd)
@@ -90,14 +92,19 @@ local function wrap_widget_handler(handler, widget)
 			end
 		end,]]
 
-		RegisterGlobal = function(_, name, value)
-			return handler:RegisterGlobal(widget, name, value)
+		RegisterGlobal = function(self, name, value)
+			return handler:RegisterGlobal(self.handler_widget, name, value)
 		end,
-		DeregisterGlobal = function(_, name)
-			return handler:DeregisterGlobal(widget, name)
+		DeregisterGlobal = function(self, name)
+			return handler:DeregisterGlobal(self.handler_widget, name)
 		end,
-		SetGlobal = function(_, name, value)
-			return handler:SetGlobal(widget, name, value)
+		SetGlobal = function(self, name, value)
+			return handler:SetGlobal(self.handler_widget, name, value)
+		end,
+		NewWidget = function(self)
+			local w = {}
+			self.handler_widget = w
+			return w
 		end,
 
 		--[[ConfigLayoutHandler = function(_, d)

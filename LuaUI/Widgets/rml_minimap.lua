@@ -3,7 +3,7 @@ if not RmlUi then
 	return false
 end
 
-local widget = widget --- @type Widget
+local widget = handler:NewWidget() --- @type Widget
 
 local DATA_MODEL_NAME = "minimap_model"
 local MINIMAP_ELEMENT_ID = "map-panel"
@@ -74,22 +74,9 @@ function widget:Initialize()
 	Spring.Echo("Initialized Minimap")
 end
 
-<<<<<<< HEAD
-function widget.DrawScreenPost()
-	--gl.DrawMiniMap(false)
-end
-
-function widget:IsAbove(x, y)
-	return widget.rmlContext:IsMouseInteracting()
-end
-
-function widget:GetTooltip(x, y)
-	return "Minimap"
-=======
 function widget:DrawScreenPost()
 	--Spring.Echo("Draw post " .. os.clock())
 	gl.DrawMiniMap()
->>>>>>> new-gadget-handler
 end
 
 function widget:Shutdown()
@@ -101,3 +88,5 @@ function widget:Shutdown()
 		RmlUi.RemoveContext(widget.whInfo.name)
 	end
 end
+
+return widget

@@ -1,3 +1,5 @@
+Spring.Echo("Attempting to load callins...")
+
 local function default_loop(_, fn_name, widgets, ...)
 	for _, gadget in ipairs(widgets) do
 		gadget[fn_name](widgets, ...)
@@ -25,7 +27,7 @@ end
 local function do_nothing(_, _, _, _) end
 
 --- @type table<string, fun(self: WidgetHandler, ...):...>
-local callins = {
+return {
 	-- Game lifecycle events
 	GamePreload = default_loop,
 	GameStart = default_loop,
@@ -267,5 +269,3 @@ local callins = {
 	TweakIsAbove = do_nothing,
 	TweakGetTooltip = do_nothing,
 }
-
-return callins

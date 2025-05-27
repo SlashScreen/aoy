@@ -15,7 +15,7 @@ if not RmlUi then
 	return false
 end
 
-local widget = widget --- @type Widget
+local widget = handler:NewWidget() --- @type Widget
 
 local DATA_MODEL_NAME = "info_panel_model"
 
@@ -80,3 +80,5 @@ function widget:Shutdown()
 		RmlUi.RemoveContext(widget.whInfo.name)
 	end
 end
+
+return widget
