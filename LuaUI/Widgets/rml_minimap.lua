@@ -57,7 +57,7 @@ function widget:Initialize()
 	document = widget.rmlContext:LoadDocument("LuaUi/Widgets/hud/minimap_panel.rml", widget) --[[@as RmlUi.Document]]
 	assert(document ~= nil, "Failed to load document")
 
-	--RmlUi.SetDebugContext(widget.whInfo.name)
+	--RmlUi.SetDebugContext(widget.info.name)
 	document:ReloadStyleSheet()
 	document:Show()
 
@@ -85,7 +85,7 @@ function widget:Shutdown()
 	end
 
 	if widget.rmlContext then
-		RmlUi.RemoveContext(widget.whInfo.name)
+		RmlUi.RemoveContext(widget.info.name)
 	end
 end
 

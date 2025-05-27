@@ -2,7 +2,7 @@
 
 local AddonHandler = VFS.Include("utils/addon_handler.lua")
 local ActionHandler = VFS.Include("utils/action_handler.lua")
-local callins = VFS.Include("LuaUI/callins.lua")
+local callins = VFS.Include("LuaUI/callins.lua", nil, VFS.GAME)
 Spring.Echo(tostring(#callins) .. " callins loaded")
 
 local action_handler = ActionHandler.new()
@@ -106,10 +106,13 @@ local function wrap_widget_handler(handler, widget)
 			self.handler_widget = w
 			return w
 		end,
-
-		--[[ConfigLayoutHandler = function(_, d)
-			handler:ConfigLayoutHandler(d) -- TODO
-		end,]]
+		ConfigLayoutHandler = function(_, d)
+			handler:ConfigLayoutHandler(d)
+		end,
+		CommandsChanged = function(_)
+			CommandsChanged() --- @diagnostic disable-line
+			-- See LuaUI/callins.lua for the CommandsChanged() function.
+		end,
 	}
 
 	if handler:IsSyncedCode() then
@@ -126,7 +129,7 @@ end
 local WidgetHandler = AddonHandler.new(callins, {
 	wrapper_func = wrap_widget_handler,
 	log_section = "LuaUI",
-	system = VFS.Include("LuaUI/system.lua"), -- TODO
+	system = VFS.Include("LuaUI/system.lua", nil, VFS.GAME), -- TODO
 	--- @param _ WidgetHandler
 	--- @param widget Widget
 	--- @return string?
@@ -167,6 +170,10 @@ function WidgetHandler:WidgetAt(x, y)
 		end
 	end
 	return nil
+end
+
+function WidgetHandler:ConfigLayoutHandler(layout_handler)
+	ConfigLayoutHandler(layout_handler) --- @diagnostic disable-line
 end
 
 Spring.SendCommands({

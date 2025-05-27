@@ -29,7 +29,7 @@ end
 local dm_handle
 
 function widget:Initialize()
-	widget.rmlContext = RmlUi.CreateContext(widget.whInfo.name)
+	widget.rmlContext = RmlUi.CreateContext(widget.info.name)
 
 	-- use the DataModel handle to set values
 	-- only keys declared at the DataModel's creation can be used
@@ -58,7 +58,7 @@ function widget:Shutdown()
 		document:Close()
 	end
 	if widget.rmlContext then
-		RmlUi.RemoveContext(widget.whInfo.name)
+		RmlUi.RemoveContext(widget.info.name)
 	end
 end
 
