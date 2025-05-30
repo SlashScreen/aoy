@@ -155,7 +155,7 @@ if handler:IsSyncedCode() then
 		Script.RemoveActionFallback("stopshare")
 
 		for _, unitID in ipairs(Spring.GetAllUnits()) do
-			local cmdDescID = Spring.FindUnitCmdDesc(unitID, CMD_CANCEL_SHARE)
+			local cmdDescID = Spring.FindUnitCmdDesc(unitID) -- , CMD_CANCEL_SHARE
 			if cmdDescID then
 				Spring.RemoveUnitCmdDesc(unitID, cmdDescID)
 			end
@@ -211,7 +211,7 @@ if handler:IsSyncedCode() then
 		shares[unitID] = nil
 		frames[unitID] = nil
 
-		local cmdDescID = Spring.FindUnitCmdDesc(unitID, CMD_CANCEL_SHARE)
+		local cmdDescID = Spring.FindUnitCmdDesc(unitID) -- , CMD_CANCEL_SHARE
 		if cmdDescID then
 			Spring.RemoveUnitCmdDesc(unitID, cmdDescID)
 		end
@@ -356,12 +356,12 @@ else
 
 	function gadget:DrawWorld()
 		local frames = SYNCED.shareFrames
-		if (frames == nil) or (snext(frames) == nil) then
+		if (frames == nil) or (next(frames) == nil) then -- snext
 			return
 		end
 		local nowFrame = GetGameFrame()
 		local myAllyTeam = GetLocalAllyTeamID()
-		for unitID, frame in spairs(frames) do
+		for unitID, frame in pairs(frames) do -- spairs
 			if GetUnitAllyTeam(unitID) == myAllyTeam then
 				local x, y, z = GetUnitPosition(unitID)
 				if x then

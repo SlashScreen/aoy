@@ -1,6 +1,4 @@
---- @diagnostic disable-next-line: undefined-global
-local handler = handler --- @type GadgetHandlerProxy
-local gadget = handler:NewGadget() --- @type Gadget
+local gadget = handler:NewGadget()
 
 function gadget:GetInfo()
 	return {

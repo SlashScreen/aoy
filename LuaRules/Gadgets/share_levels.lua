@@ -183,7 +183,7 @@ function gadget:Initialize()
 end
 
 function gadget:Shutdown()
-	handler:RemoveChatAction(cmdName, ChatControl)
+	handler:RemoveChatAction(cmdName) -- , ChatControl
 end
 
 --------------------------------------------------------------------------------
@@ -203,7 +203,6 @@ function gadget:GameFrame()
 			SetTeamShareLevel(team, "e", energyLevel)
 		end
 	end
-	return false
 end
 
 function gadget:AllowResourceLevel(teamID, type, level)

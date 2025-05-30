@@ -46,7 +46,11 @@ local guardingUnits = {}
 
 function gadget:Initialize()
 	for _, unitID in pairs(Spring.GetAllUnits()) do
-		gadget:UnitCreated(unitID, Spring.GetUnitDefID(unitID))
+		gadget:UnitCreated(
+			unitID,
+			Spring.GetUnitDefID(unitID) --[[@as integer]],
+			Spring.GetUnitTeam(unitID) --[[@as integer]]
+		)
 	end
 end
 
@@ -63,6 +67,9 @@ end
 
 local function isInsideMap(unitID)
 	local x, _, z = spGetUnitPosition(unitID)
+	if not x then
+		return false
+	end
 	return spIsPosInMap(x, z)
 end
 
@@ -81,9 +88,9 @@ local function maybeCancelGuard(unitID, cmdTag, guardeeID, frame)
 end
 
 function gadget:GameFrame(f)
-	if f % 69 == 0 then
+	if f % 69 == 0 then -- :/
 		for unitID, _ in pairs(guardingUnits) do
-			local cmdID, cmdOptions, cmdTag, cmdParam1 = spGetUnitCurrentCommand(unitID)
+			local cmdID, cmdOptions, cmdTag, cmdParam1 = spGetUnitCurrentCommand(unitID, 1)
 			if cmdID and math_bit_and(cmdOptions, CMD_INTERNAL) == CMD_INTERNAL then
 				cmdID, cmdOptions, cmdTag, cmdParam1 = spGetUnitCurrentCommand(unitID, 2)
 			end

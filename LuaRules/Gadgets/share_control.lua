@@ -175,7 +175,7 @@ function gadget:Initialize()
 end
 
 function gadget:Shutdown()
-	handler:RemoveChatAction("sharectrl", ChatControl)
+	handler:RemoveChatAction("sharectrl") -- , ChatControl
 end
 
 function gadget:AllowResourceTransfer(oldTeam, newTeam, type, amount)

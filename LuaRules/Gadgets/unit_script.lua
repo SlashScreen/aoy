@@ -129,10 +129,10 @@ local sp_SetDeathScriptFinished = Spring.UnitScript.SetDeathScriptFinished
 local LUA_WEAPON_MIN_INDEX = 1
 local LUA_WEAPON_MAX_INDEX = LUA_WEAPON_MIN_INDEX + 31
 
-local UNITSCRIPT_DIR = (UNITSCRIPT_DIR or "scripts/"):lower()
-local VFSMODE = VFS.ZIP_ONLY
+local UNITSCRIPT_DIR = "scripts/"
+local VFSMODE = VFS.ZIP_FIRST
 if Spring.IsDevLuaEnabled() then
-	VFSMODE = VFS.RAW_ONLY
+	VFSMODE = VFS.RAW_FIRST
 end
 
 -- needed here too, and gadget handler doesn't expose it
@@ -246,7 +246,7 @@ end
 local function RunOnError(thread)
 	local fun = thread.onerror
 	if fun then
-		local good, err = pcall(fun, err)
+		local good, err = pcall(fun)
 		if not good then
 			Spring.Log(section, LOG.ERROR, "error in error handler: " .. tostring(err))
 		end
@@ -465,8 +465,10 @@ end
 
 local scriptHeader = VFS.LoadFile("gamedata/unit_script_header.lua", VFSMODE)
 
--- Newlines (and comments) are stripped to not change line numbers in stacktraces.
-scriptHeader = scriptHeader:gsub("%-%-[^\r\n]*", ""):gsub("[\r\n]", " ")
+if scriptHeader then
+	-- Newlines (and comments) are stripped to not change line numbers in stacktraces.
+	scriptHeader = scriptHeader:gsub("%-%-[^\r\n]*", ""):gsub("[\r\n]", " ")
+end
 
 --[[
 Dictionary mapping script name (without path or extension) to a Lua chunk which
@@ -561,7 +563,11 @@ function gadget:Initialize()
 	local allUnits = Spring.GetAllUnits()
 	for i = 1, #allUnits do
 		local unitID = allUnits[i]
-		gadget:UnitCreated(unitID, Spring.GetUnitDefID(unitID))
+		gadget:UnitCreated(
+			unitID,
+			Spring.GetUnitDefID(unitID) --[[@as integer]],
+			Spring.GetUnitTeam(unitID) --[[@as integer]]
+		)
 	end
 end
 
@@ -692,6 +698,10 @@ function gadget:UnitCreated(unitID, unitDefID)
 	-- by localizing the necessary globals.
 
 	local pieces = Spring.GetUnitPieceMap(unitID)
+	if not pieces then
+		Spring.Log(section, LOG.ERROR, "Unit script for unitID " .. unitID .. " has no pieces defined.")
+		return
+	end
 	local env = {
 		unitID = unitID,
 		unitDefID = unitDefID,

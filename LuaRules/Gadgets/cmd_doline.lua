@@ -43,7 +43,7 @@ local function RunCmd(cmd, line, words, playerID)
 	if not AllowAction(playerID) then
 		return true
 	end
-	local chunk, err = loadstring(line, "run", _G)
+	local chunk, err = loadstring(line, "run") -- TODO: _G
 	if chunk then
 		chunk()
 	end
@@ -54,7 +54,7 @@ local function EchoCmd(cmd, line, words, playerID)
 	if not AllowAction(playerID) then
 		return true
 	end
-	local chunk, err = loadstring("return " .. line, "echo", _G)
+	local chunk, err = loadstring("return " .. line, "echo") -- TODO: _G
 	if chunk then
 		Spring.Echo(chunk())
 	end

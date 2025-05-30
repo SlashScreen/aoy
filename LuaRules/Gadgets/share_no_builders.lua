@@ -90,7 +90,7 @@ function gadget:Initialize()
 end
 
 function gadget:Shutdown()
-	handler:RemoveChatAction("sharenobuilders", ChatControl)
+	handler:RemoveChatAction("sharenobuilders") -- ChatControl
 end
 
 local function AddRefusal(team, msg)
@@ -106,6 +106,9 @@ local function TeamHasBuilder(teamID) end
 
 local function TeamCanBeTaken(teamID)
 	local players = Spring.GetPlayerList(teamID, true)
+	if not players then
+		return false
+	end
 	for _, playerID in ipairs(players) do
 		local name, active, spec = Spring.GetPlayerInfo(playerID)
 		if active or not spec then
@@ -117,6 +120,9 @@ end
 
 local function TeamHasNoBuilders(teamID)
 	local units = Spring.GetTeamUnits(teamID)
+	if not units then
+		return false
+	end
 	for _, unitID in ipairs(units) do
 		local ud = UnitDefs[Spring.GetUnitDefID(unitID)]
 		if ud and ud.builder then

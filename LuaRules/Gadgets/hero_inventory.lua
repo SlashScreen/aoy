@@ -66,7 +66,7 @@ if handler:IsSyncedCode() then
 	local inventory = {}
 
 	--- Pick up an item
-	--- @param item string
+	--- @param item integer
 	--- @param unit_id integer
 	--- @return boolean, boolean
 	local function pick_up_item(item, unit_id)
@@ -78,6 +78,10 @@ if handler:IsSyncedCode() then
 		end
 
 		local fx, fy, fz = Spring.GetFeaturePosition(item)
+		if not fx or not fy or not fz then
+			Spring.ClearUnitGoal(unit_id)
+			return true, true
+		end
 		local ux, _, uz = Spring.GetUnitPosition(unit_id)
 		local distSq = (ux - fx) * (ux - fx) + (uz - fz) * (uz - fz)
 		if distSq > PICKUP_DIST * PICKUP_DIST then
@@ -92,7 +96,7 @@ if handler:IsSyncedCode() then
 
 	function gadget:CommandFallback(unit_id, unit_def_id, unit_team, cmd_id, cmd_params, cmd_options)
 		if cmd_id == CMD_PICK_UP_ITEM then
-			local item = (cmd_params[1] or 0) - Game.maxUnits
+			local item = (cmd_params[1] or 0) - Game.maxUnits --[[@as integer]]
 			return pick_up_item(item, unit_id)
 		end
 	end
