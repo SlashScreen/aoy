@@ -23,6 +23,7 @@ local GADGETS_PATH = "LuaRules/Gadgets"
 --- @field DisownMouse fun(handler: GadgetHandlerProxy) Disowns the mouse if the gadget is the owner.
 --- @field AddSyncAction fun(handler: GadgetHandlerProxy, cmd: string, func: function, help: string):any Adds a sync action for the gadget.
 --- @field RemoveSyncAction fun(handler: GadgetHandlerProxy, cmd: string):any Removes a sync action for the gadget.
+--- @field NewGadget fun(handler: GadgetHandlerProxy):Gadget Creates a new gadget instance.
 
 --- @class GadgetInfoPacket: AddonInfoPacket
 
