@@ -16,7 +16,7 @@ end
 --- @alias TeamID integer
 
 handler = handler or {} --- @type GadgetHandlerProxy
-raw_handler = raw_handler or {} --- @type GadgetHandler
+raw_handler = raw_handler or {} --- @type GadgetHandler?
 include = VFS.Include
 SG = SG or {} --- @type table
 UnitDefs = UnitDefs or {} --- @type table<UnitDefID, table>
