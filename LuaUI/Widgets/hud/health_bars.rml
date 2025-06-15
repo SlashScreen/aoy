@@ -1,0 +1,34 @@
+<rml>
+	<head>
+		<style>
+			body {
+				height: 100%;
+				width: 100%;
+				font-family: "Josefin Sans";
+				font-size: 16dp;
+				pointer-events: none;
+			}
+
+			#widget {
+				position: absolute;
+				background: #00000000;
+				bottom: 0;
+				left: 0;
+				padding: 3dp;
+				display: flex;
+				flex-direction: column;
+				height: 30vh;
+				width: 40vh;
+				gap: 3dp;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="widget" data-model="health_bars_model">
+			<div data-for="bar: bars">
+                <progress value="bar.value" max="bar.max_value" style="position: fixed; bottom: bar.position.y; left: bar.position.x"></progress>
+            </div>
+		</div>
+	</body>
+</rml>
