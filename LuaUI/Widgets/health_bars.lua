@@ -1,7 +1,8 @@
 local UPDATES_PER_SECOND = 25
 local GL_QUADS = GL.QUADS
-local BAR_WIDTH = 40
-local BAR_HEIGHT = 10
+local BAR_WIDTH = 80
+local BAR_HEIGHT = 20
+local MAX_HEALTHBARS = 512
 
 --- @diagnostic disable-next-line
 local widget = handler:NewWidget() --- @type Widget
@@ -21,12 +22,14 @@ end
 
 local shader = gl.CreateShader({
 	fragment = VFS.LoadFile("LuaUI/Widgets/Shaders/health_bar.frag.glsl"),
+	vertex = VFS.LoadFile("LuaUI/Widgets/Shaders/health_bar.vert.glsl"),
 })
 
 local timer = 0.0
 local visible_units = {} --- @type UnitID[]
 -- TODO: Figure out how to structure this
 local bars_to_draw = {} --- @type {id: UnitID, x: number, y: number, progress: number}[]
+local inst_vbo = {} --- @type VBO
 
 local GetVisibleUnits = Spring.GetVisibleUnits
 local GetUnitHealth = Spring.GetUnitHealth
@@ -43,25 +46,12 @@ TODO:
 
 --#region hot loops
 
--- Every frame * bars
---- @param progress number
---- @param x number
---- @param y number
---- @param width number
---- @param height number
-local function draw_bar(progress, x, y, width, height)
-	glVertex(x, y)
-	glVertex(x, y + height)
-	glVertex(x + width, y + height)
-	glVertex(x + width, y)
-	glUniform("progress", progress)
-end
-
 -- Every frame
 local function draw_bars()
-	for _, bar in ipairs(bars_to_draw) do
-		glBeginEnd(GL_QUADS, draw_bar, bar.progress, bar.x, bar.y, BAR_WIDTH, BAR_HEIGHT)
-	end
+	local num_bars = #bars_to_draw
+	gl.UseShader(shader)
+	inst_vbo:DrawArrays(GL.QUADS, num_bars * 4, 0, num_bars, 0)
+	gl.UseShader(0)
 end
 
 -- Every update frame (1/UPDATES_PER_SECOND)
@@ -88,6 +78,30 @@ local function add_bar(unit_id)
 		y = 0,
 		progress = 1.0,
 	})
+end
+
+local function merge_tables(t1, t2)
+	for _, value in ipairs(t2) do
+		table.insert(t1, value)
+	end
+end
+
+local function update_all_buffers()
+	local data = {}
+
+	for _, bar in ipairs(bars_to_draw) do
+		merge_tables(data, {
+			bar.x,
+			bar.y,
+
+			BAR_WIDTH,
+			BAR_HEIGHT,
+
+			bar.progress,
+		})
+	end
+
+	inst_vbo:Upload(data)
 end
 
 -- TODO: Too many loops.
@@ -120,12 +134,26 @@ local function process_visible_units()
 	for i = #to_remove, 1, -1 do
 		table.remove(bars_to_draw, i)
 	end
+
+	update_all_buffers()
 end
 
 --#endregion bar management
 --#region widget
 
-function widget:Initialize() end
+function widget:Initialize()
+	local vbo = gl.GetVBO(GL.ARRAY_BUFFER, true)
+	if vbo == nil then
+		return
+	end
+	vbo:Define(MAX_HEALTHBARS, {
+		{ id = 0, name = "pos", size = 2, type = GL.INT },
+		{ id = 1, name = "width", size = 1, type = GL.UNSIGNED_INT },
+		{ id = 2, name = "height", size = 1, type = GL.UNSIGNED_INT },
+		{ id = 3, name = "progress", size = 1 },
+	})
+	inst_vbo = vbo
+end
 
 function widget:Update(dt)
 	timer = timer + (dt or (1 / 20))
