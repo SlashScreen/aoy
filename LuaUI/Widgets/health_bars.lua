@@ -3,6 +3,8 @@ local GL_TRIANGLES = GL.TRIANGLES
 local BAR_WIDTH = 80
 local BAR_HEIGHT = 20
 local MAX_HEALTHBARS = 512
+local FRONT_COLOR = { 0.0, 1.0, 0.0 }
+local BACK_COLOR = { 0.1, 0.1, 0.1 }
 
 --- @diagnostic disable-next-line
 local widget = handler:NewWidget() --- @type Widget
@@ -36,6 +38,9 @@ local GetVisibleUnits = Spring.GetVisibleUnits
 local GetUnitHealth = Spring.GetUnitHealth
 local GetUnitViewPosition = Spring.GetUnitViewPosition
 local glUseShader = gl.UseShader
+local glUnifromMatrix = gl.UniformMatrix
+local table_insert = table.insert
+local table_remove = table.remove
 
 --[[
 TODO:
@@ -49,6 +54,7 @@ TODO:
 local function draw_bars()
 	local num_bars = #bars_to_draw
 	glUseShader(shader)
+	glUnifromMatrix("cameraViewProj", "camprj")
 	inst_vao:DrawElements(GL_TRIANGLES, 6, 0, num_bars, 0, 0)
 	glUseShader(0)
 end
@@ -71,7 +77,7 @@ end
 
 --- @param unit_id UnitID
 local function add_bar(unit_id)
-	table.insert(bars_to_draw, {
+	table_insert(bars_to_draw, {
 		id = unit_id,
 		x = 0,
 		y = 0,
@@ -81,7 +87,7 @@ end
 
 local function merge_tables(t1, t2)
 	for _, value in ipairs(t2) do
-		table.insert(t1, value)
+		table_insert(t1, value)
 	end
 end
 
@@ -109,7 +115,7 @@ local function process_visible_units()
 	local visible_set = {} --- @type table<UnitID, true>
 
 	for _, id in ipairs(visible_units) do
-		table.insert(visible_set, true)
+		visible_set[id] = true
 	end
 
 	-- gather to add and remove
@@ -118,7 +124,7 @@ local function process_visible_units()
 
 	for index, bar in ipairs(bars_to_draw) do -- gather remove
 		if not visible_set[bar.id] then
-			table.insert(to_remove, index)
+			table_insert(to_remove, index)
 		end
 		present_set[bar.id] = true
 	end
@@ -131,7 +137,7 @@ local function process_visible_units()
 
 	-- remove in reverse to prevent ordering issues
 	for i = #to_remove, 1, -1 do
-		table.remove(bars_to_draw, i)
+		table_remove(bars_to_draw, i)
 	end
 
 	update_all_buffers()
@@ -166,6 +172,10 @@ function widget:Initialize()
 	set_screen_uniform()
 
 	inst_vao:AttachInstanceBuffer(inst_vbo)
+
+	-- TODO: abstract bars
+	gl.Uniform("frontColor", unpack(FRONT_COLOR))
+	gl.Uniform("backColor", unpack(BACK_COLOR))
 end
 
 function widget:Update(dt)

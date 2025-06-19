@@ -1,6 +1,7 @@
 #version 460
 
 uniform ivec2 screenDimensions;
+uniform mat4 cameraViewProj;
 
 in vec4 positionAndProgress;
 in ivec2 barDimensions;
@@ -16,13 +17,11 @@ const vec2 BAR_VERT[6] = vec2[6](
 );
 
 void main() {
-    //vec3 camPos = gl_ModelViewMatrixInverse[3].xyz;
+    // Billboard shader, adjusting based on distance from camera
     vec3 WS_pos = positionAndProgress.xyz;
     vec2 barVert = BAR_VERT[gl_VertexID];
 
-    vec3 WS_cameraRight = vec3(gl_ModelViewMatrix[0][0], gl_ModelViewMatrix[1][0], gl_ModelViewMatrix[2][0]);
-    vec3 WS_cameraUp = vec3(gl_ModelViewMatrix[0][1], gl_ModelViewMatrix[1][1], gl_ModelViewMatrix[2][1]);
-
-    vec2 billboardSize = vec2(1.0, 1.0); // TODO: Calculate via screen size pixels
-    vec3 WS_vertexPos = WS_pos + (WS_cameraRight * barVert.x * billboardSize.x) + (WS_cameraUp * barVert.y * billboardSize.y);
+    gl_Position = cameraViewProj * vec4(WS_pos, 1.0);
+    gl_Position /= gl_Position.w;
+    gl_Position.xy += barVert * (screenDimensions / barDimensions);
 }

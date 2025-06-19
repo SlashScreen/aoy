@@ -1,15 +1,17 @@
 #version 460
 
-uniform float progress;
-uniform vec3 back_color;
-uniform vec3 front_color;
+uniform vec3 backColor;
+uniform vec3 frontColor;
+uniform ivec2 screenDimensions;
 
-uniform vec2 viewPortSize;
+in vec4 positionAndProgress;
 
 void main() {
-    vec2 uv = gl_FragCoord.xy / viewPortSize;
+    float progress = positionAndProgress.a;
+    vec2 uv = gl_FragCoord.xy / screenDimensions;
+
     float fac = step(progress, uv.x);
-    vec3 col = mix(front_color, back_color, fac);
+    vec3 col = mix(frontColor, backColor, fac);
 
     gl_FragColor = vec4(col, 1.0);
 }
