@@ -4,14 +4,16 @@ uniform vec3 backColor;
 uniform vec3 frontColor;
 uniform ivec2 screenDimensions;
 
-in vec4 positionAndProgress;
+in vec4 positionAndProgress_out;
+
+out vec4 colorOut;
 
 void main() {
-    float progress = positionAndProgress.a;
+    float progress = positionAndProgress_out.a;
     vec2 uv = gl_FragCoord.xy / screenDimensions;
 
     float fac = step(progress, uv.x);
     vec3 col = mix(frontColor, backColor, fac);
 
-    gl_FragColor = vec4(col, 1.0);
+    colorOut = vec4(col, 1.0);
 }

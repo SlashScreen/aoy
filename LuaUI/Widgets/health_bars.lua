@@ -3,8 +3,6 @@ local GL_TRIANGLES = GL.TRIANGLES
 local BAR_WIDTH = 80
 local BAR_HEIGHT = 20
 local MAX_HEALTHBARS = 512
-local FRONT_COLOR = { 0.0, 1.0, 0.0 }
-local BACK_COLOR = { 0.1, 0.1, 0.1 }
 
 --- @diagnostic disable-next-line
 local widget = handler:NewWidget() --- @type Widget
@@ -22,23 +20,20 @@ function widget:GetInfo()
 	}
 end
 
-local shader = gl.CreateShader({
-	fragment = VFS.LoadFile("LuaUI/Widgets/Shaders/health_bar.frag.glsl"),
-	vertex = VFS.LoadFile("LuaUI/Widgets/Shaders/health_bar.vert.glsl"),
-})
+local shader = nil --- @type integer?
 
 local timer = 0.0
 local visible_units = {} --- @type UnitID[]
 -- TODO: Figure out how to structure this
-local bars_to_draw = {} --- @type {id: UnitID, x: number, y: number, progress: number}[]
+local bars_to_draw = {} --- @type {id: UnitID, x: number, y: number, z:number, progress: number}[]
 local inst_vao --- @type VAO
 local inst_vbo --- @type VBO
 
 local GetVisibleUnits = Spring.GetVisibleUnits
 local GetUnitHealth = Spring.GetUnitHealth
-local GetUnitViewPosition = Spring.GetUnitViewPosition
+local GetUnitPosition = Spring.GetUnitPosition
 local glUseShader = gl.UseShader
-local glUnifromMatrix = gl.UniformMatrix
+local glUniformMatrix = gl.UniformMatrix
 local table_insert = table.insert
 local table_remove = table.remove
 
@@ -53,9 +48,26 @@ TODO:
 -- Every frame
 local function draw_bars()
 	local num_bars = #bars_to_draw
-	glUseShader(shader)
-	glUnifromMatrix("cameraViewProj", "camprj")
-	inst_vao:DrawElements(GL_TRIANGLES, 6, 0, num_bars, 0, 0)
+	if num_bars == 0 then
+		return
+	end
+
+	local size_x, size_y = Spring.GetScreenGeometry(0)
+	gl.UniformInt("screenDimensions", size_x, size_y)
+
+	gl.Uniform("frontColor", 0.0, 1.0, 0.0)
+	gl.Uniform("backColor", 0.1, 0.1, 0.1)
+
+	if shader == nil then
+		Spring.Echo("Bar shader nil")
+		return
+	end
+	if not glUseShader(shader) then
+		Spring.Echo("Failed to bind health bar shader")
+		return
+	end
+	glUniformMatrix("cameraViewProj", "camprj")
+	inst_vao:DrawArrays(GL_TRIANGLES, 6, 0, num_bars, 0)
 	glUseShader(0)
 end
 
@@ -67,10 +79,11 @@ local function update_bar_info()
 		local health, max_healh = GetUnitHealth(id)
 		bar.progress = health / max_healh
 
-		local x, y, _ = GetUnitViewPosition(id, true)
+		local x, y, z = GetUnitPosition(id)
 		if x then
 			bar.x = x
 			bar.y = y
+			bar.z = z
 		end
 	end
 end
@@ -81,6 +94,7 @@ local function add_bar(unit_id)
 		id = unit_id,
 		x = 0,
 		y = 0,
+		z = 0,
 		progress = 1.0,
 	})
 end
@@ -94,15 +108,19 @@ end
 local function update_all_buffers()
 	local data = {}
 
+	if #bars_to_draw == 0 then
+		return
+	end
+
 	for _, bar in ipairs(bars_to_draw) do
 		merge_tables(data, {
 			bar.x,
 			bar.y,
+			bar.z,
+			bar.progress,
 
 			BAR_WIDTH,
 			BAR_HEIGHT,
-
-			bar.progress,
 		})
 	end
 
@@ -144,23 +162,32 @@ local function process_visible_units()
 end
 
 --#endregion bar management
-
-local function set_screen_uniform()
-	local size_x, size_y = Spring.GetScreenGeometry(0)
-	gl.UniformInt("screenDimensions", size_x, size_y)
-end
-
 --#region widget
 
 function widget:Initialize()
+	shader = gl.CreateShader({
+		fragment = VFS.LoadFile("LuaUI/Widgets/Shaders/health_bar.frag.glsl"),
+		vertex = VFS.LoadFile("LuaUI/Widgets/Shaders/health_bar.vert.glsl"),
+	})
+	Spring.Echo("Bar shader initialized to " .. tostring(shader))
+	if shader == nil then
+		local log = gl.GetShaderLog()
+		Spring.Echo("Shader log: \n" .. log)
+		if #log == 0 then
+			Spring.Echo("Looks like shader linking failed. Make sure your in and out blocks match.")
+		end
+	end
+
 	local vao = gl.GetVAO()
 	if vao == nil then
+		Spring.Echo("Failed to initialize Bar VAO")
 		return
 	end
 	inst_vao = vao
 
 	local vbo = gl.GetVBO(GL.ARRAY_BUFFER, true)
 	if vbo == nil then
+		Spring.Echo("Failed to initialize Bar VBO")
 		return
 	end
 	vbo:Define(MAX_HEALTHBARS, {
@@ -169,13 +196,7 @@ function widget:Initialize()
 	})
 	inst_vbo = vbo
 
-	set_screen_uniform()
-
 	inst_vao:AttachInstanceBuffer(inst_vbo)
-
-	-- TODO: abstract bars
-	gl.Uniform("frontColor", unpack(FRONT_COLOR))
-	gl.Uniform("backColor", unpack(BACK_COLOR))
 end
 
 function widget:Update(dt)
@@ -190,12 +211,7 @@ function widget:Update(dt)
 	end
 end
 
-function widget:ViewResize(_, _)
-	set_screen_uniform()
-end
-
 function widget:DrawWorld()
-	-- TODO: Push and pop whatever
 	draw_bars()
 end
 
