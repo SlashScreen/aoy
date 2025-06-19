@@ -1,4 +1,4 @@
-#version 150 compatibility
+#version 460
 
 uniform float progress;
 uniform vec3 back_color;

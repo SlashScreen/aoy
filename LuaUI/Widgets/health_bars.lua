@@ -1,5 +1,5 @@
 local UPDATES_PER_SECOND = 25
-local GL_QUADS = GL.QUADS
+local GL_TRIANGLES = GL.TRIANGLES
 local BAR_WIDTH = 80
 local BAR_HEIGHT = 20
 local MAX_HEALTHBARS = 512
@@ -29,14 +29,13 @@ local timer = 0.0
 local visible_units = {} --- @type UnitID[]
 -- TODO: Figure out how to structure this
 local bars_to_draw = {} --- @type {id: UnitID, x: number, y: number, progress: number}[]
-local inst_vbo = {} --- @type VBO
+local inst_vao --- @type VAO
+local inst_vbo --- @type VBO
 
 local GetVisibleUnits = Spring.GetVisibleUnits
 local GetUnitHealth = Spring.GetUnitHealth
 local GetUnitViewPosition = Spring.GetUnitViewPosition
-local glVertex = gl.Vertex
-local glUniform = gl.Uniform
-local glBeginEnd = gl.BeginEnd
+local glUseShader = gl.UseShader
 
 --[[
 TODO:
@@ -49,9 +48,9 @@ TODO:
 -- Every frame
 local function draw_bars()
 	local num_bars = #bars_to_draw
-	gl.UseShader(shader)
-	inst_vbo:DrawArrays(GL.QUADS, num_bars * 4, 0, num_bars, 0)
-	gl.UseShader(0)
+	glUseShader(shader)
+	inst_vao:DrawElements(GL_TRIANGLES, 6, 0, num_bars, 0, 0)
+	glUseShader(0)
 end
 
 -- Every update frame (1/UPDATES_PER_SECOND)
@@ -139,20 +138,34 @@ local function process_visible_units()
 end
 
 --#endregion bar management
+
+local function set_screen_uniform()
+	local size_x, size_y = Spring.GetScreenGeometry(0)
+	gl.UniformInt("screenDimensions", size_x, size_y)
+end
+
 --#region widget
 
 function widget:Initialize()
+	local vao = gl.GetVAO()
+	if vao == nil then
+		return
+	end
+	inst_vao = vao
+
 	local vbo = gl.GetVBO(GL.ARRAY_BUFFER, true)
 	if vbo == nil then
 		return
 	end
 	vbo:Define(MAX_HEALTHBARS, {
-		{ id = 0, name = "pos", size = 2, type = GL.INT },
-		{ id = 1, name = "width", size = 1, type = GL.UNSIGNED_INT },
-		{ id = 2, name = "height", size = 1, type = GL.UNSIGNED_INT },
-		{ id = 3, name = "progress", size = 1 },
+		{ id = 0, name = "posAndProgress" }, -- vec4
+		{ id = 1, name = "dimensions", size = 2, type = GL.UNSIGNED_INT },
 	})
 	inst_vbo = vbo
+
+	set_screen_uniform()
+
+	inst_vao:AttachInstanceBuffer(inst_vbo)
 end
 
 function widget:Update(dt)
@@ -165,6 +178,10 @@ function widget:Update(dt)
 
 		update_bar_info()
 	end
+end
+
+function widget:ViewResize(_, _)
+	set_screen_uniform()
 end
 
 function widget:DrawWorld()
