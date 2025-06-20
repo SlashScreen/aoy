@@ -8,7 +8,7 @@ uniform mat4 cameraViewProj;
 in vec4 positionAndProgress;
 in ivec2 barDimensions;
 
-out vec4 vtx_pos;
+out vec4 vtxPos;
 out vec4 positionAndProgress_out;
 flat out ivec2 barDimensions_out;
 
@@ -28,9 +28,9 @@ void main() {
     vec3 WS_pos = positionAndProgress.xyz;
     vec2 barVert = BAR_VERT[gl_VertexID];
 
-    vtx_pos = cameraViewProj * vec4(WS_pos, 1.0);
-    vtx_pos /= gl_Position.w;
-    vtx_pos.xy += barVert * (screenDimensions / barDimensions);
+    vtxPos = cameraViewProj * vec4(WS_pos, 1.0);
+    vtxPos /= gl_Position.w;
+    vtxPos.xy += barVert * (vec2(screenDimensions) / vec2(barDimensions));
 
     positionAndProgress_out = positionAndProgress;
     barDimensions_out = barDimensions;

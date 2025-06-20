@@ -3,8 +3,11 @@
 uniform vec3 backColor;
 uniform vec3 frontColor;
 uniform ivec2 screenDimensions;
+uniform mat4 cameraViewProj;
 
+in vec4 vtxPos;
 in vec4 positionAndProgress_out;
+flat in ivec2 barDimensions_out;
 
 out vec4 colorOut;
 
