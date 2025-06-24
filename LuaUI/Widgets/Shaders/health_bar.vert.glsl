@@ -15,11 +15,11 @@ flat out ivec2 barDimensions_out;
 // Lookup table for the indices of the bar quad
 const vec2 BAR_VERT[6] = vec2[6](
     vec2(-0.5, 0.5), // UL
+    vec2(0.5, -0.5), // LR
     vec2(0.5, 0.5), // UR
-    vec2(0.5, -0.5), // LR
     vec2(-0.5, 0.5), // UL
-    vec2(0.5, -0.5), // LR
-    vec2(-0.5, -0.5) // LL
+    vec2(-0.5, -0.5), // LL
+    vec2(0.5, -0.5) // LR
 );
 
 void main() {

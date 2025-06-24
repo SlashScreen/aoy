@@ -66,7 +66,7 @@ local function draw_bars()
 		Spring.Echo("Failed to bind health bar shader")
 		return
 	end
-	glUniformMatrix("cameraViewProj", "camprj")
+	glUniformMatrix("cameraViewProj", "viewprojection")
 	inst_vao:DrawArrays(GL_TRIANGLES, 6, 0, num_bars, 0)
 	glUseShader(0)
 end
