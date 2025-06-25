@@ -66,7 +66,6 @@ local function draw_bars()
 		Spring.Echo("Failed to bind health bar shader")
 		return
 	end
-	glUniformMatrix("cameraViewProj", "viewprojection")
 	inst_vao:DrawArrays(GL_TRIANGLES, 6, 0, num_bars, 0)
 	glUseShader(0)
 end
@@ -100,13 +99,30 @@ local function add_bar(unit_id)
 end
 
 local function merge_tables(t1, t2)
-	for _, value in ipairs(t2) do
-		table_insert(t1, value)
+	for i = 1, #t2 do
+		t1[#t1 + 1] = t2[i]
+	end
+	return t1
+end
+
+--- @param o table
+local function dump(o)
+	if type(o) == "table" then
+		local s = "{ "
+		for k, v in pairs(o) do
+			if type(k) ~= "number" then
+				k = '"' .. k .. '"'
+			end
+			s = s .. "[" .. k .. "] = " .. dump(v) .. ","
+		end
+		return s .. "} "
+	else
+		return tostring(o)
 	end
 end
 
 local function update_all_buffers()
-	local data = {}
+	local data = {} --- @type number[]
 
 	if #bars_to_draw == 0 then
 		return
@@ -123,6 +139,8 @@ local function update_all_buffers()
 			BAR_HEIGHT,
 		})
 	end
+
+	Spring.Echo("Data: " .. dump(data))
 
 	inst_vbo:Upload(data)
 end
@@ -217,6 +235,8 @@ end
 
 function widget:Shutdown()
 	gl.DeleteShader(shader)
+	inst_vao:Delete() -- good practice, will be GCed otherwise in some time
+	inst_vbo:Delete() -- good practice, will be GCed otherwise in some time
 end
 
 --#endregion
