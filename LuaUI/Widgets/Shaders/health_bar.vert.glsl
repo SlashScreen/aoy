@@ -95,10 +95,10 @@ const vec2 BAR_VERT[6] = vec2[6](
 
 void main() {
     // Billboard shader, adjusting based on distance from camera
-    vec4 WS_pos = vec4(positionAndProgress.xyz, 0.0);
+    vec4 WS_pos = vec4(positionAndProgress.xyz, 1.0);
     vec2 barVert = BAR_VERT[gl_VertexID % 6];
 
-    gl_Position = cameraViewProj * WS_pos + vec4(0.0, 100.0, 0.0, 0.0);
+    gl_Position = cameraViewProj * WS_pos;
     gl_Position /= gl_Position.w;
     gl_Position.xy += barVert * vec2(0.05, 0.01) ;//(vec2(dimensions) / vec2(screenDimensions));
 
