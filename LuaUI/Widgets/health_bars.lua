@@ -33,32 +33,13 @@ local GetVisibleUnits = Spring.GetVisibleUnits
 local GetUnitHealth = Spring.GetUnitHealth
 local GetUnitPosition = Spring.GetUnitPosition
 local glUseShader = gl.UseShader
-local glUniformMatrix = gl.UniformMatrix
 local table_insert = table.insert
 local table_remove = table.remove
 
 --[[
 TODO:
-- Progress bars
 - Only when damaged or when key is pressed
 ]]
-
---- @param tbl table
---- @param indent integer?
---- @return string
-function DumpTable(tbl, indent)
-	indent = indent or 0
-	local result = ""
-	local prefix = string.rep("  ", indent)
-	for k, v in pairs(tbl) do
-		if type(v) == "table" then
-			result = result .. prefix .. tostring(k) .. ":\n" .. DumpTable(v, indent + 1)
-		else
-			result = result .. prefix .. tostring(k) .. ": " .. tostring(v) .. "\n"
-		end
-	end
-	return result
-end
 
 --#region hot loops
 
@@ -69,12 +50,6 @@ local function draw_bars()
 		return
 	end
 
-	local size_x, size_y = Spring.GetScreenGeometry(0)
-	gl.UniformInt("screenDimensions", size_x, size_y)
-
-	gl.Uniform("frontColor", 0.0, 1.0, 0.0)
-	gl.Uniform("backColor", 0.1, 0.1, 0.1)
-
 	if shader == nil then
 		Spring.Echo("Bar shader nil")
 		return
@@ -83,19 +58,8 @@ local function draw_bars()
 		Spring.Echo("Failed to bind health bar shader")
 		return
 	end
+
 	inst_vao:DrawArrays(GL_TRIANGLES, 6, 0, num_bars, 0)
-
-	--[[ local mouseX, mouseY = Spring.GetMouseState()
-	Spring.Echo("Mouse coordinates: (" .. mouseX .. ", " .. mouseY .. ")")
-	local desc, args = Spring.TraceScreenRay(mouseX, mouseY, true)
-	if desc ~= nil and args ~= nil then
-		local x = args[1]
-		local y = args[2]
-		local z = args[3]
-		Spring.Echo("World coordinates: (" .. x .. ", " .. y .. ", " .. z .. ")")
-	end --]]
-
-	--Spring.Echo("Dump table: ", DumpTable(inst_vbo:Download()))
 
 	glUseShader(0)
 end
@@ -213,9 +177,13 @@ end
 --#region widget
 
 function widget:Initialize()
+	local size_x, size_y = Spring.GetScreenGeometry(0)
+
 	shader = gl.CreateShader({
 		fragment = VFS.LoadFile("LuaUI/Widgets/Shaders/health_bar.frag.glsl"),
 		vertex = VFS.LoadFile("LuaUI/Widgets/Shaders/health_bar.vert.glsl"),
+		uniformFloat = { backColor = { 0.1, 0.1, 0.1 }, frontColor = { 0.0, 1.0, 0.0 } },
+		uniformInt = { screenDimensions = { size_x, size_y } },
 	})
 	Spring.Echo("Bar shader initialized to " .. tostring(shader))
 	if shader == nil then

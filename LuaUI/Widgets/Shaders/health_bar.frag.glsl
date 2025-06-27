@@ -14,7 +14,7 @@ void main() {
     vec2 uv = gl_FragCoord.xy / screenDimensions;
 
     float fac = step(progress, uv.x);
-    vec3 col = mix(vec3(0.1, 0.1, 0.1), vec3(0.0, 1.0, 0.0), fac);
+    vec3 col = mix(backColor, frontColor, fac);
 
     colorOut = vec4(col, 1.0);
 }
