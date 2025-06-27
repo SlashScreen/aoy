@@ -43,6 +43,23 @@ TODO:
 - Only when damaged or when key is pressed
 ]]
 
+--- @param tbl table
+--- @param indent integer?
+--- @return string
+function DumpTable(tbl, indent)
+	indent = indent or 0
+	local result = ""
+	local prefix = string.rep("  ", indent)
+	for k, v in pairs(tbl) do
+		if type(v) == "table" then
+			result = result .. prefix .. tostring(k) .. ":\n" .. DumpTable(v, indent + 1)
+		else
+			result = result .. prefix .. tostring(k) .. ": " .. tostring(v) .. "\n"
+		end
+	end
+	return result
+end
+
 --#region hot loops
 
 -- Every frame
@@ -67,6 +84,19 @@ local function draw_bars()
 		return
 	end
 	inst_vao:DrawArrays(GL_TRIANGLES, 6, 0, num_bars, 0)
+
+	--[[ local mouseX, mouseY = Spring.GetMouseState()
+	Spring.Echo("Mouse coordinates: (" .. mouseX .. ", " .. mouseY .. ")")
+	local desc, args = Spring.TraceScreenRay(mouseX, mouseY, true)
+	if desc ~= nil and args ~= nil then
+		local x = args[1]
+		local y = args[2]
+		local z = args[3]
+		Spring.Echo("World coordinates: (" .. x .. ", " .. y .. ", " .. z .. ")")
+	end --]]
+
+	--Spring.Echo("Dump table: ", DumpTable(inst_vbo:Download()))
+
 	glUseShader(0)
 end
 
@@ -78,12 +108,25 @@ local function update_bar_info()
 		local health, max_healh = GetUnitHealth(id)
 		bar.progress = health / max_healh
 
-		local x, y, z = GetUnitPosition(id)
+		local mouseX, mouseY = Spring.GetMouseState()
+		Spring.Echo("Mouse coordinates: (" .. mouseX .. ", " .. mouseY .. ")")
+		local desc, args = Spring.TraceScreenRay(mouseX, mouseY, true)
+		if desc ~= nil and args ~= nil then
+			local x = args[1]
+			local y = args[2]
+			local z = args[3]
+			Spring.Echo("World coordinates: (" .. x .. ", " .. y .. ", " .. z .. ")")
+			bar.x = x
+			bar.y = y
+			bar.z = z
+		end -- off map
+
+		--[[ local x, y, z = GetUnitPosition(id)
 		if x then
 			bar.x = x
 			bar.y = y
 			bar.z = z
-		end
+		end ]]
 	end
 end
 
