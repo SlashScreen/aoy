@@ -1,0 +1,37 @@
+[game]
+{
+	[allyteam0]
+	{
+		numallies = 0;
+	}
+
+	gametype = Severed Moon: Arms of Yarm $VERSION;
+	hostip = 0.0.0.0;
+	hostport = 52796;
+	ishost = 1;
+	mapname = Canis River v1.4;
+	[modoptions]
+	{
+	}
+
+	myplayername = You;
+	[player0]
+	{
+		countrycode = ;
+		isfromdemo = 0;
+		name = You;
+		spectator = 0;
+		team = 0;
+	}
+
+	startpostype = 0;
+	[team0]
+	{
+		allyteam = 0;
+		handicap = 0;
+		rgbcolor = 0.8 0.0 0.0;
+		side = 0;
+		teamleader = 0;
+	}
+
+}

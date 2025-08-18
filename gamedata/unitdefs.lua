@@ -11,6 +11,8 @@
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+ComposedUnit = VFS.Include("utils/units/unit.lua")
+
 local unitDefs = {}
 
 local shared = {} -- shared amongst the lua unitdef environments
@@ -38,26 +40,6 @@ if VFS.FileExists(preProcFile) then
 	VFS.Include(preProcFile)
 	UnitDefs = nil
 	Shared = nil
-end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---
---  Load the FBI unitdef files
---
-
-local fbiFiles = VFS.DirList("units/", "*.fbi", nil, true)
-
-for _, filename in ipairs(fbiFiles) do
-	local ud, err = FBI.Parse(filename)
-	if ud == nil then
-		Spring.Log(section, LOG.ERROR, "Error parsing " .. filename .. ": " .. err)
-	elseif ud.unitname == nil then
-		Spring.Log(section, LOG.ERROR, "Missing unitName in " .. filename)
-	else
-		ud.unitname = string.lower(ud.unitname)
-		unitDefs[ud.unitname] = ud
-	end
 end
 
 --------------------------------------------------------------------------------

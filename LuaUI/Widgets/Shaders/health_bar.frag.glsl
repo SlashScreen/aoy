@@ -11,10 +11,7 @@ in DataVS {
 out vec4 colorOut;
 
 void main() {
-    vec2 uv = gl_FragCoord.xy / screenDimensions;
-
-    float fac = step(progress, uv.x);
-    vec3 col = mix(backColor, frontColor, fac);
+    vec3 col = mix(backColor, frontColor, progress);
 
     colorOut = vec4(col, 1.0);
 }
