@@ -11,7 +11,8 @@
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-ComposedUnit = VFS.Include("utils/units/unit.lua")
+local composed_unit = VFS.Include("utils/units/unit.lua")
+Spring.Echo("ComposedUnit loaded")
 
 local unitDefs = {}
 
@@ -20,8 +21,6 @@ local shared = {} -- shared amongst the lua unitdef environments
 local preProcFile = "gamedata/unitdefs_pre.lua"
 local postProcFile = "gamedata/unitdefs_post.lua"
 
-local FBI = FBIparser or VFS.Include("gamedata/parse_fbi.lua")
-local TDF = TDFparser or VFS.Include("gamedata/parse_tdf.lua")
 local DownloadBuilds = VFS.Include("gamedata/download_builds.lua")
 
 local system = VFS.Include("gamedata/system.lua")
@@ -54,6 +53,7 @@ local luaFiles = VFS.DirList("units/", "*.lua", nil, true)
 for _, filename in ipairs(luaFiles) do
 	local udEnv = {}
 	udEnv._G = udEnv
+	udEnv.ComposedUnit = composed_unit
 	udEnv.Shared = shared
 	udEnv.GetFilename = function()
 		return filename
@@ -63,13 +63,18 @@ for _, filename in ipairs(luaFiles) do
 	if not success then
 		Spring.Log(section, LOG.ERROR, "Error parsing " .. filename .. ": " .. tostring(uds))
 	elseif type(uds) ~= "table" then
-		Spring.Log(section, LOG.ERROR, "Bad return table from: " .. filename)
+		Spring.Log(section, LOG.ERROR, "Bad return table from: " .. filename .. " (got " .. type(uds) .. ")")
 	else
 		for udName, ud in pairs(uds) do
 			if (type(udName) == "string") and (type(ud) == "table") then
 				unitDefs[udName] = ud
+				Spring.Echo("Added Unit " .. udName)
 			else
-				Spring.Log(section, LOG.ERROR, "Bad return table entry from: " .. filename)
+				Spring.Log(
+					section,
+					LOG.ERROR,
+					"Bad return table entry from: " .. filename .. " (got " .. type(udName) .. ", " .. type(ud) .. ")"
+				)
 			end
 		end
 	end

@@ -11,7 +11,7 @@ local default = {
 	idleTime = 0,
 	buildCostMetal = 0.0,
 	buildCostEnergy = 0.0,
-	buildTime = 0.0,
+	buildTime = 1.0,
 	mass = 0.0,
 	reclaimable = true,
 	capturable = true,
@@ -252,13 +252,16 @@ local function merge_tables(t1, t2)
 	end
 end
 
---- @alias UnitComponent table
+--- @class UnitComponent
+--- @field name string
+--- @field component table
+--- @field mutators fun(self: UnitDef)[]?
 
 -- Load Unit Components
 
 local components = {} --- @type {string: UnitComponent}
 
-for _, filename in ipairs(VFS.DirList("unit_components/", "*.lua", nil, true)) do
+for _, filename in ipairs(VFS.DirList("unit_components/components", "*.lua", nil, true)) do
 	local success, tbl = pcall(VFS.Include, filename, _G)
 	if not success then
 		Spring.Log("unit.lua", LOG.ERROR, "Bad return table from: " .. filename)
@@ -271,23 +274,6 @@ for _, filename in ipairs(VFS.DirList("unit_components/", "*.lua", nil, true)) d
 	components[tbl.name] = tbl.component
 end
 
--- Load Weapon Defs
-
-local weapon_defs = {} --- @type {string: WeaponDef}
-
-for _, filename in ipairs(VFS.DirList("weapondefs/", "*.lua", nil, true)) do
-	local success, tbl = pcall(VFS.Include, filename, _G)
-	if not success then
-		Spring.Log("unit.lua", LOG.ERROR, "Bad return table from: " .. filename)
-	end
-
-	if type(tbl) ~= "table" then
-		Spring.Log("unit.lua", LOG.ERROR, "Bad return table from: " .. filename)
-	end
-
-	weapon_defs[tbl.name] = tbl
-end
-
 -- * UNIT
 
 --- @class ComposedUnit : UnitDef
@@ -298,7 +284,7 @@ local Unit = {}
 --- @param desc string
 --- @param config table
 --- @return ComposedUnit
-function Unit.New(name, id, desc, config)
+function Unit.New(name, desc, id, config)
 	local output = {}
 	for key, value in pairs(default) do
 		output[key] = value
@@ -335,25 +321,10 @@ function Unit:Is(...)
 	end
 end
 
---- Add a weapon def to a unit
---- @param ... string
---- @return ComposedUnit
-function Unit:AddWeaponDefs(...)
-	for i = 1, select("#", ...) do
-		local name = select(i, ...)
-		local wd = weapon_defs[name]
-		if wd then
-			self.weaponDefs[name] = wd
-		end
-		return self
-	end
-end
-
---- @return {string: UnitDef}
 function Unit:Wrap()
-	local tbl = {}
-	tbl[self.unit_id] = self
-	return lowerkeys(tbl)
+	local t = {}
+	t[self.unit_id] = self
+	return t
 end
 
 return Unit

@@ -1,45 +1,28 @@
-return lowerkeys({
-	human_citadel = {
-		name = [[Citadel]],
-		description = [[The heart of any human invasion force.]],
-		category = [[LAND BUILDING]],
-		footprintX = 4,
-		footprintZ = 4,
+return ComposedUnit.New("Base Tent", "The base of operations for the demons. Can make engineers.", "demon_base_tent", {
+	category = [[LAND]],
+	footprintX = 4,
+	footprintZ = 4,
 
-		objectName = "humans/buildings/human_citadel.s3o",
-		script = "scripts/humans/buildings/human_citadel.lua",
+	objectName = "humans/buildings/human_citadel.s3o",
+	script = "scripts/humans/buildings/human_citadel.lua",
+	health = 1000,
 
-		health = 1000,
-		metalCost = 150,
-		buildPic = [[demon/engineer_placeholder.dds]],
+	speed = 20,
+	turnRate = 300,
+	sightDistance = 560,
+	acceleration = 1.5,
+	brakeRate = 2.4,
+	movementClass = [[KBOT2]],
 
-		canMove = 1,
-		canattack = 0,
-
-		speed = 20,
-		turnRate = 300,
-		sightDistance = 560,
-		acceleration = 1.5,
-		brakeRate = 2.4,
-		movementClass = [[KBOT2]],
-
-		collisionVolumeOffsets = [[0 -8 -25]],
-		collisionVolumeScales = [[110 46 0]],
-		collisionVolumeType = [[cylY]],
-		yardmap = "yyyy yyyy yyyy yyyy",
-
-		corpse = "",
-		explodeAs = "",
-		selfDestructAs = "",
-
-		builder = true,
-		workerTime = 1,
-
-		customParams = {
-			is_factory = true,
-			build_1 = [[human_andros]],
-
-			movable_building = true,
-		},
-	},
+	collisionVolumeOffsets = [[0 -8 -25]],
+	collisionVolumeScales = [[110 46 0]],
+	collisionVolumeType = [[cylY]],
+	yardmap = "yyyy yyyy yyyy yyyy",
 })
+	:Is(
+		"MovableBuilding",
+		"Builder",
+		VFS.Include("unit_components/component_factories/buildable.lua")("demon/engineer_placeholder.dds", 10, 150),
+		VFS.Include("unit_components/component_factories/factory.lua")("human_andros")
+	)
+	:Wrap()

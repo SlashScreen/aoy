@@ -1,9 +1,9 @@
 return ComposedUnit.New(
 	"Pyry",
-	"This somewhat shy demon is in charge of forging a highway through the Tarsal Islands. She's pretty handy with a spear.",
+	"This unassuming demon is in charge of forging a highway through the Tarsal Islands. She's pretty handy with a pair of boomerangs.",
 	"demon_pyry",
 	{
-		category = [[LAND SMALL TOOFAST HERO]],
+		category = [[LAND SMALL TOOFAST]],
 		acceleration = 1.5,
 		brakeRate = 2.4,
 
@@ -16,9 +16,6 @@ return ComposedUnit.New(
 		-- allowNonBlockingAim = true,
 		objectName = [[spherebot.s3o]],
 		script = [[cloakraid.lua]],
-
-		canmove = 1,
-		canattack = 1,
 
 		sightDistance = 560,
 		speed = 115.5,
@@ -42,5 +39,4 @@ return ComposedUnit.New(
 	}
 )
 	:Is("Hero")
-	:AddWeaponDefs("Crush")
 	:Wrap()
