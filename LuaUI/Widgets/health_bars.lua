@@ -99,22 +99,6 @@ local function merge_tables(t1, t2)
 	return t1
 end
 
---- @param o table
-local function dump(o)
-	if type(o) == "table" then
-		local s = "{ "
-		for k, v in pairs(o) do
-			if type(k) ~= "number" then
-				k = '"' .. k .. '"'
-			end
-			s = s .. "[" .. k .. "] = " .. dump(v) .. ","
-		end
-		return s .. "} "
-	else
-		return tostring(o)
-	end
-end
-
 local function update_all_buffers()
 	local data = {} --- @type number[]
 
@@ -133,8 +117,6 @@ local function update_all_buffers()
 			BAR_HEIGHT,
 		})
 	end
-
-	Spring.Echo("Data: " .. dump(data))
 
 	inst_vbo:Upload(data)
 end

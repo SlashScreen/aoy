@@ -5,7 +5,7 @@ return ComposedUnit.New("Glaive Melee", "Test melee", "testmelee", {
 	footprintX = 2,
 	footprintZ = 2,
 	health = 230,
-	movementClass = [[KBOT2]],
+	movementclass = [[KBOT2]],
 	noAutoFire = false,
 	-- allowNonBlockingAim = true,
 	objectName = [[spherebot.s3o]],

@@ -31,7 +31,7 @@ return ComposedUnit.New(
 
 		weapons = {
 			{
-				def = [[Crush]],
+				def = [[Boomerangs]],
 				badTargetCategory = [[FIXEDWING]],
 				onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
 			},

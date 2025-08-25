@@ -9,9 +9,9 @@ return {
 	mutators = {
 		function(self)
 			if self.category:sub(-1) == " " then
-				self.category = self.category + "HERO"
+				self.category = self.category .. "HERO"
 			else
-				self.category = self.category + " HERO"
+				self.category = self.category .. " HERO"
 			end
 		end,
 	},

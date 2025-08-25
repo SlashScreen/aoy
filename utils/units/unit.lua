@@ -123,7 +123,7 @@ local default = {
 	useSmoothMesh = false,
 	maxFuel = 0.0,
 	refuelTime = 0.0,
-	minAirbasePower = 0.0,
+	minAirbasePower = 1.0,
 	canLoopbackAttack = false,
 	wingDrag = 0.0,
 	wingAngle = 0.0,
@@ -205,7 +205,7 @@ local default = {
 	showPlayerName = false,
 	showNanoFrame = false,
 	unitRestricted = 0,
-	power = 0.0,
+	power = 1.0,
 	weapons = {
 		-- Example weapon entry
 		-- {
@@ -271,7 +271,7 @@ for _, filename in ipairs(VFS.DirList("unit_components/components", "*.lua", nil
 		Spring.Log("unit.lua", LOG.ERROR, "Bad return table from: " .. filename)
 	end
 
-	components[tbl.name] = tbl.component
+	components[tbl.name] = tbl
 end
 
 -- * UNIT
@@ -282,22 +282,17 @@ local Unit = {}
 
 --- @param name string
 --- @param desc string
---- @param config table
+--- @param config table?
 --- @return ComposedUnit
 function Unit.New(name, desc, id, config)
-	local output = {}
-	for key, value in pairs(default) do
-		output[key] = value
-	end
-	if config then
-		for key, value in pairs(config) do
-			output[key] = value
-		end
-	end
+	local output = config or {}
+
 	output.name = name
 	output.description = desc
 	output.unit_id = id
+
 	setmetatable(output, { __index = Unit })
+
 	return output
 end
 
@@ -311,10 +306,16 @@ function Unit:Is(...)
 		if type(name) == "string" then
 			local c = components[name]
 			if c then
-				merge_tables(self, c)
+				merge_tables(self, c.component)
+				for _, m in ipairs(c.mutators or {}) do
+					m(self)
+				end
 			end
 		else
-			merge_tables(self, name)
+			merge_tables(self, name.component)
+			for _, m in ipairs(name.mutators or {}) do
+				m(self)
+			end
 		end
 
 		return self
