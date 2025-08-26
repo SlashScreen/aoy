@@ -42,38 +42,21 @@ end
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --
---  Load the TDF weapondef files
---
-
-local tdfFiles = VFS.DirList("weapons/", "*.tdf", nil, true)
-
-for _, filename in ipairs(tdfFiles) do
-	local wds, err = TDF.Parse(filename)
-	if wds == nil then
-		Spring.Log(section, "Error parsing " .. filename .. ": " .. err)
-	else
-		for name, wd in pairs(wds) do
-			weaponDefs[name] = wd
-		end
-	end
-end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---
 --  Load the raw LUA format weapondef files
 --  (these will override the TDF versions)
 --
 
 local luaFiles = VFS.DirList("weapons/", "*.lua", nil, true)
 
+local wdEnv = {}
+wdEnv._G = wdEnv
+wdEnv.Shared = shared
+wdEnv.GetFilename = function()
+	return wdEnv.filename
+end
+
 for _, filename in ipairs(luaFiles) do
-	local wdEnv = {}
-	wdEnv._G = wdEnv
-	wdEnv.Shared = shared
-	wdEnv.GetFilename = function()
-		return filename
-	end
+	wdEnv.filename = filename
 	setmetatable(wdEnv, { __index = system })
 	local success, wds = pcall(VFS.Include, filename, wdEnv)
 	if not success then
