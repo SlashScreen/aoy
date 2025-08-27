@@ -14,7 +14,7 @@ return ComposedUnit.New("Glaive", "Light Raider Bot", "cloakraid", {
 
 	weapons = {
 		{
-			def = [[EMG]],
+			name = [[EMG]],
 			badTargetCategory = [[FIXEDWING]],
 			onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
 		},

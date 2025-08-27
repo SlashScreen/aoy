@@ -8,54 +8,6 @@
 --  Copyright (C) 2007.
 --  Licensed under the terms of the GNU GPL, v2 or later.
 --
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---
---  Utility that traverses a table tree and converts string keys to lowercase
---
---  NOTE:  metatable are not affected  (pairs() does not use them)
---
-
-local lowerkeys
-
-do
-	local lowerMap = {}
-
-	local function lowerkeys2(t)
-		if lowerMap[t] then
-			return -- avoid recursion / repetition
-		end
-
-		lowerMap[t] = true
-
-		local changes = {}
-		for k, v in pairs(t) do
-			if type(k) == "string" then
-				local l = string.lower(k)
-				if l ~= k then
-					if t[l] == nil then
-						changes[l] = v
-					end
-					t[k] = nil
-				end
-			end
-			if type(v) == "table" then
-				lowerkeys2(v)
-			end
-		end
-
-		-- insert new keys outside of the pairs() loop
-		for k, v in pairs(changes) do
-			t[k] = v
-		end
-	end
-
-	lowerkeys = function(t)
-		lowerMap = {}
-		lowerkeys2(t)
-		return t -- convenience, do not mistake this for a copy
-	end
-end
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -77,7 +29,6 @@ local system = {
 	Spring = Spring,
 
 	--  Custom functions
-	lowerkeys = lowerkeys,
 	reftable = reftable,
 
 	--  Custom tables

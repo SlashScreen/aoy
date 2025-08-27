@@ -35,4 +35,4 @@ for i = 1, #model_names do
 	trees[name] = new_tree
 end
 
-return lowerkeys(trees)
+return trees

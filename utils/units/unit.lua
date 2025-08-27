@@ -12,8 +12,6 @@ local default = {
 
 	canAttack = true,
 	canMove = true,
-	canPatrol = true,
-	canFight = true,
 
 	health = 230,
 	metalCost = 65,
