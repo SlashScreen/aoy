@@ -25,7 +25,7 @@ return ComposedUnit.New("Glaive Melee", "Test melee", "testmelee", {
 
 	weapons = {
 		{
-			def = [[Spike]],
+			name = [[Spike]],
 			badTargetCategory = [[FIXEDWING]],
 			onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
 		},

@@ -1,19 +1,17 @@
 --- @type {string: WeaponDef}
 return {
-	Boomerangs = {
-		Name = "Boomerangs",
+	Rapid_Boomerangs = {
+		Name = "Rapid Boomerangs",
 		weaponType = "Cannon",
 
 		damage = {
-			default = 150,
+			default = 8.48,
 		},
 		noSelfDamage = true,
 
 		range = 232,
 		weaponVelocity = 870,
 
-		burst = 2,
 		burstRate = 0.35,
-		reloadTime = 2.0,
 	},
 }

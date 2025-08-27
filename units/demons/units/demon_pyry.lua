@@ -9,7 +9,7 @@ return ComposedUnit.New(
 
 		footprintX = 2,
 		footprintZ = 2,
-		health = 230,
+		health = 500,
 		metalCost = 65,
 		movementClass = [[KBOT2]],
 		noAutoFire = false,
@@ -31,7 +31,7 @@ return ComposedUnit.New(
 
 		weapons = {
 			{
-				def = [[Boomerangs]],
+				name = [[Boomerangs]],
 				badTargetCategory = [[FIXEDWING]],
 				onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
 			},

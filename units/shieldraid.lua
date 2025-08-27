@@ -16,7 +16,7 @@ return ComposedUnit.New("Bandit", "Medium-light raider bot", "shieldraid", {
 
 	weapons = {
 		{
-			def = [[LASER]],
+			name = [[LASER]],
 		},
 	},
 })
