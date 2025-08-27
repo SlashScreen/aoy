@@ -19,7 +19,7 @@ return {
 		},
 
 		damage = {
-			default = 300.1,
+			default = 100,
 		},
 
 		explosionGenerator = [[custom:BEAMWEAPON_HIT_ORANGE]],

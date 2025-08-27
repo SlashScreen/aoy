@@ -31,7 +31,7 @@ return ComposedUnit.New(
 
 		weapons = {
 			{
-				name = [[Slice]],
+				name = [[Spike]],
 				badTargetCategory = [[FIXEDWING]],
 				onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
 			},
