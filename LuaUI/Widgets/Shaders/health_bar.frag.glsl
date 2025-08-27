@@ -6,12 +6,13 @@ uniform ivec2 screenDimensions;
 
 in DataVS {
     float progress;
+    float factor;
 };
 
 out vec4 colorOut;
 
 void main() {
-    vec3 col = mix(backColor, frontColor, progress);
+    vec3 col = mix(backColor, frontColor, step(factor, progress));
 
     colorOut = vec4(col, 1.0);
 }

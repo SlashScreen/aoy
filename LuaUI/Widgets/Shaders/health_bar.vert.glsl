@@ -9,6 +9,7 @@ layout (location = 1) in ivec2 dimensions;
 
 out DataVS {
     float progress;
+	float factor;
 };
 
 // Engine provided UBOs
@@ -93,6 +94,16 @@ const vec2 BAR_VERT[6] = vec2[6](
     vec2(-0.5, -0.5)  // LL
 );
 
+// Lookup table for the progress multiplier from right to left
+const float BAR_PROGRESS[6] = float[6](
+	0.0, // UL
+	1.0, // UR
+	1.0, // LR
+	0.0, // UL
+	1.0, // LR
+	0.0 // LL
+);
+
 void main() {
     // Billboard shader, adjusting based on distance from camera
     vec4 WS_pos = vec4(positionAndProgress.xyz, 1.0);
@@ -103,4 +114,5 @@ void main() {
     gl_Position.xy += barVert * vec2(0.05, 0.01) ;//(vec2(dimensions) / vec2(screenDimensions));
 
     progress = positionAndProgress.w;
+	factor = BAR_PROGRESS[gl_VertexID % 6];
 }
