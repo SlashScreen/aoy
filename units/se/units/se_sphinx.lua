@@ -1,9 +1,9 @@
 return ComposedUnit.New(
-	"Slugger",
-	"If the Guards aren't enough, call in their genetic cousins. These lumbering beasts are sure to beat pretty much anything to a pulp.",
-	"demon_slugger",
+	"Sphinx",
+	"These huge demons are a bit slow, but can easily smash structures. Believe it or not, they are the same species as the Harpy, just in a different form.",
+	GetFilenameTrimmed(),
 	{
-		category = [[LAND SMALL TOOFAST]],
+		category = "LAND FLESHY DEMON SIEGE",
 		acceleration = 1.5,
 		brakeRate = 2.4,
 
@@ -18,7 +18,7 @@ return ComposedUnit.New(
 		script = [[cloakraid.lua]],
 
 		sightDistance = 560,
-		speed = 115.5,
+		speed = 30,
 		turnRate = 3000,
 
 		collisionVolumeOffsets = [[0 -2 0]],
@@ -30,11 +30,10 @@ return ComposedUnit.New(
 		selfDestructAs = "",
 
 		weapons = {
-
 			{
 				name = [[Crush]],
-				badTargetCategory = [[FIXEDWING]],
-				onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
+				badTargetCategory = "IMMUNE_PHYSICAL",
+				onlyTargetCategory = "LAND AIR BUILDING",
 			},
 		},
 	}

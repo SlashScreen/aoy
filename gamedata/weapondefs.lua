@@ -18,8 +18,6 @@ local shared = {} -- shared amongst the lua weapondef environments
 local preProcFile = "gamedata/weapondefs_pre.lua"
 local postProcFile = "gamedata/weapondefs_post.lua"
 
-local TDF = TDFparser or VFS.Include("gamedata/parse_tdf.lua")
-
 local system = VFS.Include("gamedata/system.lua")
 VFS.Include("gamedata/VFSUtils.lua") -- for legacy code that might need its contents
 
@@ -47,12 +45,26 @@ end
 --
 
 local luaFiles = VFS.DirList("weapons/", "*.lua", nil, true)
+local function find_last(haystack, needle)
+	local i = haystack:match(".*" .. needle .. "()")
+	if i == nil then
+		return nil
+	else
+		return i
+	end
+end
 
+local suffix_length = #".lua"
 local wdEnv = {}
 wdEnv._G = wdEnv
 wdEnv.Shared = shared
 wdEnv.GetFilename = function()
 	return wdEnv.filename
+end
+wdEnv.GetFilenameTrimmed = function()
+	local trimmed = wdEnv.filename:sub(1, #wdEnv.filename - suffix_length)
+	local idx = find_last(trimmed, "/") or 1
+	return trimmed:sub(idx)
 end
 
 for _, filename in ipairs(luaFiles) do

@@ -1,9 +1,9 @@
 return ComposedUnit.New(
-	"Harpy",
-	"These odd demons are a bit standoffish, but hey, they can fly, and that's invaluable in these circumstances. Believe it or not, they are the same species as the Sphinx, just in a different form.",
-	"demon_harpy",
+	"Iwwy",
+	"A Witch mortician from a distant land who has come to learn more about the outside world. Witch moritcians are also skilled necromancers.",
+	GetFilenameTrimmed(),
 	{
-		category = [[AIR SMALL TOOFAST]],
+		category = "LAND FLESHY DEMON",
 		acceleration = 1.5,
 		brakeRate = 2.4,
 
@@ -32,9 +32,11 @@ return ComposedUnit.New(
 		weapons = {
 			{
 				name = [[Slice]],
-				badTargetCategory = [[FIXEDWING]],
-				onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
+				badTargetCategory = "IMMUNE_PHYSICAL",
+				onlyTargetCategory = "LAND",
 			},
 		},
 	}
-):Wrap()
+)
+	:Is("Hero")
+	:Wrap()

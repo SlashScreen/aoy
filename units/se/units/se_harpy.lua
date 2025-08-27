@@ -1,9 +1,9 @@
 return ComposedUnit.New(
-	"Witch Mortician",
-	"The Witches are human-like demons from the far-off land of Through-and-Through. Spiritually-attuned, they can see the unseen. The morticians practice the traditional Witch art of Necromancy. It's a whole thing.",
-	"demon_witch_mortician",
+	"Harpy",
+	"These odd demons are a bit standoffish, but hey, they can fly, and that's invaluable in these circumstances. Believe it or not, they are the same species as the Sphinx, just in a different form.",
+	GetFilenameTrimmed(),
 	{
-		category = [[LAND SMALL TOOFAST]],
+		category = "AIR BONY DEMON",
 		acceleration = 1.5,
 		brakeRate = 2.4,
 
@@ -32,8 +32,8 @@ return ComposedUnit.New(
 		weapons = {
 			{
 				name = [[Slice]],
-				badTargetCategory = [[FIXEDWING]],
-				onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
+				badTargetCategory = "IMMUNE_PHYSICAL",
+				onlyTargetCategory = "LAND AIR WATER BUILDING",
 			},
 		},
 	}

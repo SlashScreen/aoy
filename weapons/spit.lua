@@ -12,7 +12,7 @@ return {
 		},
 
 		damage = {
-			default = 8.48,
+			default = 30,
 		},
 
 		duration = 0.02,
@@ -24,8 +24,8 @@ return {
 		interceptedByShieldType = 1,
 		leadLimit = 0,
 		noSelfDamage = true,
-		range = 232,
-		reloadtime = 0.1,
+		range = 500,
+		reloadtime = 0.4,
 		rgbColor = [[1 0 0]],
 		soundTrigger = true,
 		thickness = 2.55,

@@ -1,4 +1,6 @@
-return ComposedUnit.New("Glaive Melee", "Test melee", "testmelee", {
+return ComposedUnit.New("Glaive Melee", "Test melee", GetFilenameTrimmed(), {
+	category = "LAND MACHINE",
+
 	acceleration = 1.5,
 	brakeRate = 2.4,
 
@@ -26,8 +28,8 @@ return ComposedUnit.New("Glaive Melee", "Test melee", "testmelee", {
 	weapons = {
 		{
 			name = [[Spike]],
-			badTargetCategory = [[FIXEDWING]],
-			onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
+			badTargetCategory = "IMMUNE_PHYSICAL",
+			onlyTargetCategory = "LAND AIR WATER BUILDING",
 		},
 	},
 })

@@ -49,15 +49,30 @@ end
 --
 
 local luaFiles = VFS.DirList("units/", "*.lua", nil, true)
-
-for _, filename in ipairs(luaFiles) do
-	local udEnv = {}
-	udEnv._G = udEnv
-	udEnv.ComposedUnit = composed_unit
-	udEnv.Shared = shared
-	udEnv.GetFilename = function()
-		return filename
+local function find_last(haystack, needle)
+	local i = haystack:match(".*" .. needle .. "()")
+	if i == nil then
+		return nil
+	else
+		return i
 	end
+end
+
+local suffix_length = #".lua"
+local udEnv = {}
+udEnv._G = udEnv
+udEnv.ComposedUnit = composed_unit
+udEnv.Shared = shared
+udEnv.GetFilename = function()
+	return udEnv.filename
+end
+udEnv.GetFilenameTrimmed = function()
+	local trimmed = udEnv.filename:sub(1, #udEnv.filename - suffix_length)
+	local idx = find_last(trimmed, "/") or 1
+	return trimmed:sub(idx)
+end
+for _, filename in ipairs(luaFiles) do
+	udEnv.filename = filename
 	setmetatable(udEnv, { __index = system })
 	local success, uds = pcall(VFS.Include, filename, udEnv)
 	if not success then

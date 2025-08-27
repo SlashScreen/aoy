@@ -1,15 +1,15 @@
 return ComposedUnit.New(
-	"Guard",
-	"In case of danger, call a guard. These are necessary for pushing back the hostile fauna of Anvilhead.",
-	"demon_guard",
+	"Pyry",
+	"This timid gargoyle is in charge of forging a highway through the Tarsal Islands. She's pretty handy with a pair of boomerangs.",
+	GetFilenameTrimmed(),
 	{
-		category = [[LAND SMALL TOOFAST]],
+		category = "LAND FLESHY DEMON",
 		acceleration = 1.5,
 		brakeRate = 2.4,
 
 		footprintX = 2,
 		footprintZ = 2,
-		health = 230,
+		health = 500,
 		metalCost = 65,
 		movementClass = [[KBOT2]],
 		noAutoFire = false,
@@ -31,10 +31,12 @@ return ComposedUnit.New(
 
 		weapons = {
 			{
-				name = [[Spike]],
-				badTargetCategory = [[FIXEDWING]],
-				onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
+				name = [[Boomerangs]],
+				badTargetCategory = "IMMUNE_PHYSICAL",
+				onlyTargetCategory = "LAND AIR WATER BUILDING",
 			},
 		},
 	}
-):Wrap()
+)
+	:Is("Hero")
+	:Wrap()

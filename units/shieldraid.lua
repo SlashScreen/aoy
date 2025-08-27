@@ -1,4 +1,6 @@
-return ComposedUnit.New("Bandit", "Medium-light raider bot", "shieldraid", {
+return ComposedUnit.New("Bandit", "Medium-light raider bot", GetFilenameTrimmed(), {
+	category = "LAND MACHINE",
+
 	footprintX = 2,
 	footprintZ = 2,
 	health = 340,
@@ -17,6 +19,8 @@ return ComposedUnit.New("Bandit", "Medium-light raider bot", "shieldraid", {
 	weapons = {
 		{
 			name = [[LASER]],
+			badTargetCategory = "IMMUNE_PHYSICAL",
+			onlyTargetCategory = "LAND AIR WATER BUILDING",
 		},
 	},
 })

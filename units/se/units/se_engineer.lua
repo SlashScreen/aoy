@@ -1,7 +1,7 @@
 return ComposedUnit.New(
 	"Engineer",
 	"These engineers may be in a little above their pay grade, but they are invaluable for building structures. They can't, however, fight for anything.",
-	"demon_engineer",
+	GetFilenameTrimmed(),
 	{
 		category = [[LAND SMALL TOOFAST]],
 		acceleration = 1.5,

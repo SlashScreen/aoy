@@ -1,15 +1,16 @@
 return ComposedUnit.New(
-	"Andros",
-	"These creepy automatons make up the bulk of the Human invasion force.",
-	"human_andros",
+	"Slugger",
+	"If the Guards aren't enough, call in their genetic cousins. These lumbering beasts are sure to beat pretty much anything to a pulp.",
+	GetFilenameTrimmed(),
 	{
-		category = [[LAND SMALL TOOFAST]],
+		category = "LAND FLESHY DEMON",
 		acceleration = 1.5,
 		brakeRate = 2.4,
 
 		footprintX = 2,
 		footprintZ = 2,
 		health = 230,
+		metalCost = 65,
 		movementClass = [[KBOT2]],
 		noAutoFire = false,
 		-- allowNonBlockingAim = true,
@@ -29,17 +30,12 @@ return ComposedUnit.New(
 		selfDestructAs = "",
 
 		weapons = {
+
 			{
-				name = [[Slice]],
-				badTargetCategory = [[FIXEDWING]],
-				onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
+				name = [[Crush]],
+				badTargetCategory = "IMMUNE_PHYSICAL",
+				onlyTargetCategory = "LAND BUILDING",
 			},
 		},
 	}
-)
-	:Is(
-		"Builder",
-		VFS.Include("unit_components/component_factories/harvests.lua")(20, 50),
-		VFS.Include("unit_components/component_factories/buildable.lua")("demon/engineer_placeholder.dds", 10, 65)
-	)
-	:Wrap()
+):Wrap()

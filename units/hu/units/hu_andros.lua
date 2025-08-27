@@ -1,16 +1,15 @@
 return ComposedUnit.New(
-	"Spitter",
-	"This virulent local fauna not only spits acid, but eagerly follows anyone with a commanding presence. No one is quite sure why.",
-	"demon_spitter",
+	"Andros",
+	"These creepy automatons make up the bulk of the Human invasion force.",
+	GetFilenameTrimmed(),
 	{
-		category = [[LAND SMALL TOOFAST]],
+		category = "LAND MACHINE",
 		acceleration = 1.5,
 		brakeRate = 2.4,
 
 		footprintX = 2,
 		footprintZ = 2,
 		health = 230,
-		metalCost = 65,
 		movementClass = [[KBOT2]],
 		noAutoFire = false,
 		-- allowNonBlockingAim = true,
@@ -31,10 +30,16 @@ return ComposedUnit.New(
 
 		weapons = {
 			{
-				name = [[Spit]],
-				badTargetCategory = [[FIXEDWING]],
-				onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
+				name = [[Slice]],
+				badTargetCategory = "IMMUNE_PHYSICAL",
+				onlyTargetCategory = "LAND BUILDING",
 			},
 		},
 	}
-):Wrap()
+)
+	:Is(
+		"Builder",
+		VFS.Include("unit_components/component_factories/harvests.lua")(20, 50),
+		VFS.Include("unit_components/component_factories/buildable.lua")("demon/engineer_placeholder.dds", 10, 65)
+	)
+	:Wrap()

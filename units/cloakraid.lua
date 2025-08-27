@@ -1,5 +1,5 @@
-return ComposedUnit.New("Glaive", "Light Raider Bot", "cloakraid", {
-	category = [[LAND SMALL TOOFAST]],
+return ComposedUnit.New("Glaive", "Light Raider Bot", GetFilenameTrimmed(), {
+	category = "LAND MACHINE",
 
 	objectName = [[spherebot.s3o]],
 	script = [[cloakraid.lua]],
@@ -15,8 +15,8 @@ return ComposedUnit.New("Glaive", "Light Raider Bot", "cloakraid", {
 	weapons = {
 		{
 			name = [[EMG]],
-			badTargetCategory = [[FIXEDWING]],
-			onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
+			badTargetCategory = "IMMUNE_PHYSICAL",
+			onlyTargetCategory = "LAND AIR WATER BUILDING",
 		},
 	},
 })

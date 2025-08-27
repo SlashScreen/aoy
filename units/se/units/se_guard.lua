@@ -1,15 +1,15 @@
 return ComposedUnit.New(
-	"Pyry",
-	"This unassuming demon is in charge of forging a highway through the Tarsal Islands. She's pretty handy with a pair of boomerangs.",
-	"demon_pyry",
+	"Guard",
+	"In case of danger, call a guard. These are necessary for pushing back the hostile fauna of Anvilhead.",
+	GetFilenameTrimmed(),
 	{
-		category = [[LAND SMALL TOOFAST]],
+		category = "LAND FLESHY DEMON",
 		acceleration = 1.5,
 		brakeRate = 2.4,
 
 		footprintX = 2,
 		footprintZ = 2,
-		health = 500,
+		health = 230,
 		metalCost = 65,
 		movementClass = [[KBOT2]],
 		noAutoFire = false,
@@ -31,12 +31,10 @@ return ComposedUnit.New(
 
 		weapons = {
 			{
-				name = [[Boomerangs]],
-				badTargetCategory = [[FIXEDWING]],
-				onlyTargetCategory = [[FIXEDWING LAND SINK TURRET SHIP SWIM FLOAT GUNSHIP HOVER]],
+				name = [[Spike]],
+				badTargetCategory = "IMMUNE_PHYSICAL",
+				onlyTargetCategory = "LAND BUILDING",
 			},
 		},
 	}
-)
-	:Is("Hero")
-	:Wrap()
+):Wrap()
