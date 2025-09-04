@@ -7,8 +7,8 @@ return ComposedUnit.New(
 		footprintX = 4,
 		footprintZ = 4,
 
-		objectName = "demons/buildings/demon_base_tent.s3o",
-		script = "scripts/demons/buildings/demon_base_tent.lua",
+		objectName = "se/buildings/demon_base_tent.s3o",
+		script = "scripts/se/buildings/demon_base_tent.lua",
 		health = 1000,
 
 		sightDistance = 560,

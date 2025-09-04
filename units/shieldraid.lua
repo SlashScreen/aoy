@@ -15,14 +15,7 @@ return ComposedUnit.New("Bandit", "Medium-light raider bot", GetFilenameTrimmed(
 	acceleration = 1.5,
 	brakeRate = 2.4,
 	turnRate = 3000,
-
-	weapons = {
-		{
-			name = [[LASER]],
-			badTargetCategory = "IMMUNE_PHYSICAL",
-			onlyTargetCategory = "LAND AIR WATER BUILDING",
-		},
-	},
 })
 	:Is(VFS.Include("unit_components/component_factories/buildable.lua")("demon/engineer_placeholder.dds", 10, 75))
+	:AddWeapon("LASER", { "LAND", "AIR", "WATER", "BUILDING" })
 	:Wrap()

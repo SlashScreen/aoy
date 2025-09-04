@@ -28,13 +28,7 @@ return ComposedUnit.New(
 		corpse = "",
 		explodeAs = "",
 		selfDestructAs = "",
-
-		weapons = {
-			{
-				name = [[Slice]],
-				badTargetCategory = "IMMUNE_PHYSICAL",
-				onlyTargetCategory = "LAND AIR WATER BUILDING",
-			},
-		},
 	}
-):Wrap()
+)
+	:AddWeapon("Slice", { "LAND", "AIR", "WATER", "BUILDING" })
+	:Wrap()

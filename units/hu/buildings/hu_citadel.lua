@@ -7,8 +7,8 @@ return ComposedUnit.New(
 		footprintX = 4,
 		footprintZ = 4,
 
-		objectName = "humans/buildings/human_citadel.s3o",
-		script = "scripts/humans/buildings/human_citadel.lua",
+		objectName = "hu/buildings/human_citadel.s3o",
+		script = "scripts/hu/buildings/human_citadel.lua",
 		health = 1000,
 
 		speed = 20,

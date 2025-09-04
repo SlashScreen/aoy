@@ -51,12 +51,6 @@ end)
 --  NOTE: the keys have to be lower case
 --
 
-Spring.Echo("unit defs: ", inspect(DEFS.unitDefs))
-Spring.Echo("feature defs: ", inspect(DEFS.featureDefs))
-Spring.Echo("weapon defs: ", inspect(DEFS.weaponDefs))
-Spring.Echo("armor defs: ", inspect(DEFS.armorDefs))
-Spring.Echo("move defs: ", inspect(DEFS.moveDefs))
-
 return {
 	unitdefs = DEFS.unitDefs,
 	featuredefs = DEFS.featureDefs,

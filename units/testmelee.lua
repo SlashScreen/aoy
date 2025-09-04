@@ -24,14 +24,7 @@ return ComposedUnit.New("Glaive Melee", "Test melee", GetFilenameTrimmed(), {
 	corpse = "",
 	explodeAs = "",
 	selfDestructAs = "",
-
-	weapons = {
-		{
-			name = [[Spike]],
-			badTargetCategory = "IMMUNE_PHYSICAL",
-			onlyTargetCategory = "LAND AIR WATER BUILDING",
-		},
-	},
 })
 	:Is(VFS.Include("unit_components/component_factories/buildable.lua")("demon/engineer_placeholder.dds", 10, 65))
+	:AddWeapon("Spike", { "LAND", "BUILDING" })
 	:Wrap()

@@ -28,15 +28,8 @@ return ComposedUnit.New(
 		corpse = "",
 		explodeAs = "",
 		selfDestructAs = "",
-
-		weapons = {
-			{
-				name = [[Slice]],
-				badTargetCategory = "IMMUNE_PHYSICAL",
-				onlyTargetCategory = "LAND",
-			},
-		},
 	}
 )
 	:Is("Hero")
+	:AddWeapon("Slice", { "LAND", "BUILDING" })
 	:Wrap()

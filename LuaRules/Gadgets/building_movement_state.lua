@@ -5,7 +5,7 @@ function gadget:GetInfo()
 	return {
 		name = "Building Movement State",
 		desc = "Handles transitioning from a mobile building to a stationary one and vice versa",
-		author = "Vileblood",
+		author = "Slashscreen",
 		date = "Present Day, Present Time",
 		license = "LGPL-3.0-or-later",
 		layer = 0,

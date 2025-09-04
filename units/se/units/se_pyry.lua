@@ -15,7 +15,7 @@ return ComposedUnit.New(
 		noAutoFire = false,
 		-- allowNonBlockingAim = true,
 		objectName = [[spherebot.s3o]],
-		script = [[cloakraid.lua]],
+		script = [[scripts/basic_unit.lua]],
 
 		sightDistance = 560,
 		speed = 115.5,
@@ -28,15 +28,8 @@ return ComposedUnit.New(
 		corpse = "",
 		explodeAs = "",
 		selfDestructAs = "",
-
-		weapons = {
-			{
-				name = [[Boomerangs]],
-				badTargetCategory = "IMMUNE_PHYSICAL",
-				onlyTargetCategory = "LAND AIR WATER BUILDING",
-			},
-		},
 	}
 )
 	:Is("Hero")
+	:AddWeapon("Boomerangs", { "LAND", "AIR", "WATER", "BUILDING" })
 	:Wrap()

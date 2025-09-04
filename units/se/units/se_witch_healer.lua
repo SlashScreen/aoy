@@ -28,7 +28,5 @@ return ComposedUnit.New(
 		corpse = "",
 		explodeAs = "",
 		selfDestructAs = "",
-
-		weapons = {},
 	}
 ):Wrap()

@@ -27,14 +27,6 @@ return ComposedUnit.New(
 		corpse = "",
 		explodeAs = "",
 		selfDestructAs = "",
-
-		weapons = {
-			{
-				name = [[Slice]],
-				badTargetCategory = "IMMUNE_PHYSICAL",
-				onlyTargetCategory = "LAND BUILDING",
-			},
-		},
 	}
 )
 	:Is(
@@ -42,4 +34,5 @@ return ComposedUnit.New(
 		VFS.Include("unit_components/component_factories/harvests.lua")(20, 50),
 		VFS.Include("unit_components/component_factories/buildable.lua")("demon/engineer_placeholder.dds", 10, 65)
 	)
+	:AddWeapon("Slice", { "LAND", "BUILDING" })
 	:Wrap()

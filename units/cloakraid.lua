@@ -11,14 +11,7 @@ return ComposedUnit.New("Glaive", "Light Raider Bot", GetFilenameTrimmed(), {
 	corpse = "",
 	explodeAs = "",
 	selfDestructAs = "",
-
-	weapons = {
-		{
-			name = [[EMG]],
-			badTargetCategory = "IMMUNE_PHYSICAL",
-			onlyTargetCategory = "LAND AIR WATER BUILDING",
-		},
-	},
 })
 	:Is(VFS.Include("unit_components/component_factories/buildable.lua")("demon/engineer_placeholder.dds", 10, 65))
+	:AddWeapon("EMG", { "LAND", "AIR", "WATER", "BUILDING" })
 	:Wrap()

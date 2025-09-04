@@ -18,7 +18,6 @@ local default = {
 	movementClass = [[KBOT2]],
 	noAutoFire = false,
 	objectName = [[spherebot.s3o]],
-	script = [[cloakraid.lua]],
 }
 
 --- @param t1 table
@@ -106,6 +105,22 @@ function Unit:Is(...)
 
 		return self
 	end
+
+	return self
+end
+
+--- Add a weapon
+--- @param name string
+--- @param target_categories string[]
+function Unit:AddWeapon(name, target_categories)
+	local weapon = {
+		name = name,
+		onlyTargetCategory = table.concat(target_categories, " "),
+	}
+
+	self.weapons = self.weapons or {} -- give it weapons if not already given
+
+	table.insert(self.weapons, weapon)
 
 	return self
 end
