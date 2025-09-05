@@ -79,6 +79,7 @@ return {
 	unpack = unpack,
 	select = select,
 	dofile = dofile,
+	load = load,
 	loadfile = loadfile,
 	loadstring = loadstring,
 	require = require,

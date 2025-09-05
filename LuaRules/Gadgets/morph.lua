@@ -13,21 +13,24 @@ function gadget:GetInfo()
 end
 
 local CMD_MORPH = Spring.Utilities.CMD.MORPH
+-- The morph command has a buffer of 100 so there are a maximum of 100 morphs in the game right now.
+-- This is entirely arbitrary but it should be enough, even with mods.
 
 -- probably isn't the ideal way to do this but I am very tired
+-- "If it ain't broke, don't fix it." - Sun Tzu, The Art of War
 
 --- @type table<integer, string[]>
-local def_morph_list = {}
+local def_morph_list = {} -- units to list of morphs they have, for assigning commands
 --- @type table<integer, CommandDescription>
-local commands = {}
+local commands = {} -- Command ID to command description
 --- @type table<string, integer>
-local morph_to_id = {}
+local morph_to_id = {} -- morph destination to command ID
 --- @type table<integer, {
 --- cost_money: integer,
 --- cost_wood: integer,
 --- research?: string,
 --- target: string}>
-local morph_metadata = {}
+local morph_metadata = {} -- Command ID to morph metadata, used for commands
 
 Spring.Echo("Loading morphs")
 
@@ -43,7 +46,7 @@ for unit_def_id, unit_def in pairs(UnitDefs) do
 		Spring.Echo(unit_def.name .. " has morphs")
 
 		local morph_table = Deserialize(morphs)
-		local mlist = {}
+		local mlist = {} -- list of morph targets for the unit
 
 		for _, mdef in ipairs(morph_table) do
 			table.insert(mlist, mdef.morph_to)
@@ -73,13 +76,17 @@ for unit_def_id, unit_def in pairs(UnitDefs) do
 	end
 end
 
+-- FUNCTIONALITY
+
 if handler:IsSyncedCode() then
+	-- SIM
+
 	--- @param unit_id integer
 	--- @param unit_def_id integer
 	--- @param team_id integer
 	--- @param to_unit string
 	local function begin_morph(unit_id, unit_def_id, team_id, to_unit)
-		Spring.Echo("Morphing")
+		Spring.Echo("Morphing to " .. to_unit)
 
 		local x, y, z = Spring.GetUnitPosition(unit_id)
 		if x == nil then
@@ -121,6 +128,8 @@ if handler:IsSyncedCode() then
 		end
 	end
 else
+	-- CLIENT
+
 	function gadget:Initialize()
 		-- Add UI stuff for each morph command
 		for i, _ in pairs(commands) do

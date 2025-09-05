@@ -18,6 +18,9 @@ DEFS = {}
 --------------------------------------------------------------------------------
 local section = "defs.lua"
 
+VFS.Include("utils/globals.lua")
+Spring.Echo("Is load availaible: ", load)
+
 local function LoadDefs(name)
 	local filename = "gamedata/" .. name .. ".lua"
 	local success, result = pcall(VFS.Include, filename)
