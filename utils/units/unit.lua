@@ -19,6 +19,7 @@ local default = {
 	noAutoFire = false,
 	objectName = [[spherebot.s3o]],
 }
+local inspect = VFS.Include("utils/inspect.lua")
 
 --- @param t1 table
 --- @param t2 table
@@ -87,6 +88,7 @@ end
 function Unit:Is(...)
 	for i = 1, select("#", ...) do
 		local name = select(i, ...)
+		--Spring.Echo("Loading component: \n" .. inspect(name))
 
 		if type(name) == "string" then
 			local c = components[name]
@@ -97,14 +99,15 @@ function Unit:Is(...)
 				end
 			end
 		else
-			merge_tables(self, name.component)
-			for _, m in ipairs(name.mutators or {}) do
+			local c = name --[[@as UnitComponent]]
+			merge_tables(self, c.component)
+			for _, m in ipairs(c.mutators or {}) do
 				m(self)
 			end
 		end
-
-		return self
 	end
+
+	--Spring.Echo("Generated unit: " .. inspect(self))
 
 	return self
 end

@@ -17,7 +17,6 @@ DEFS = {}
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 local section = "defs.lua"
-local inspect = VFS.Include("utils/inspect.lua")
 
 local function LoadDefs(name)
 	local filename = "gamedata/" .. name .. ".lua"

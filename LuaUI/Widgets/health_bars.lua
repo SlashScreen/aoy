@@ -66,19 +66,37 @@ end
 
 -- Every update frame (1/UPDATES_PER_SECOND)
 local function update_bar_info()
-	for _, bar in ipairs(bars_to_draw) do
+	local to_remove = {}
+
+	for i, bar in ipairs(bars_to_draw) do
 		local id = bar.id
+		local dead = Spring.GetUnitIsDead(bar.id)
+		to_remove[i] = true
 
-		local health, max_healh = GetUnitHealth(id)
-		bar.progress = health / max_healh
+		if dead == nil or dead == false then
+		else
+			local health, max_healh = GetUnitHealth(id) or 0, 0
+			bar.progress = health / max_healh
 
-		local x, y, z = GetUnitPosition(id)
-		if x then
-			bar.x = x
-			bar.y = y
-			bar.z = z
+			local x, y, z = GetUnitPosition(id)
+			if x then
+				bar.x = x
+				bar.y = y
+				bar.z = z
+			end
 		end
 	end
+
+	-- make the new bars list anything in the old bars list that isn't in the to remove list
+	-- FIXME: really dumb way to do this that will hit the GC, but I am too tired to think of a better way
+	-- So if anyone sees this upon game release... I failed.
+	local new_to_draw = {}
+	for index, value in ipairs(bars_to_draw) do
+		if to_remove[index] == nil then
+			table_insert(new_to_draw, value)
+		end
+	end
+	bars_to_draw = new_to_draw
 end
 
 --- @param unit_id UnitID

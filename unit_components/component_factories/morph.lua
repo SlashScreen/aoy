@@ -7,21 +7,18 @@
 --- @field research string?
 
 --- @param ... MorphDef
---- @return table
+--- @return UnitComponent
 return function(...)
-	-- just in case I need more processing
-
-	--[[ local morphs = {}
-
-	for i = 1, select("#", ...) do
-		local name = select(i, ...)
-		table.insert(morphs, name)
-	end ]]
+	-- This is a stupid way to do this
+	-- I am just directly serializing the table LOL
+	local morph_string = Serialize({ ... })
 
 	return {
 		name = "Morph",
 		component = {
-			morphs = { ... },
+			customParams = {
+				morphs = morph_string,
+			},
 		},
 	}
 end

@@ -14,7 +14,7 @@ return ComposedUnit.New(
 		noAutoFire = false,
 		-- allowNonBlockingAim = true,
 		objectName = [[spherebot.s3o]],
-		script = [[cloakraid.lua]],
+		script = [[scripts/basic_unit.lua]],
 
 		sightDistance = 560,
 		speed = 115.5,
@@ -32,6 +32,13 @@ return ComposedUnit.New(
 	:Is(
 		"Builder",
 		VFS.Include("unit_components/component_factories/harvests.lua")(20, 50),
+		VFS.Include("unit_components/component_factories/morph.lua")({
+			morph_to = "cloakraid",
+			command_name = "Test Morph",
+			desc = "test tooltip",
+			money = 0,
+			wood = 0,
+		}),
 		VFS.Include("unit_components/component_factories/buildable.lua")("demon/engineer_placeholder.dds", 10, 65)
 	)
 	:AddWeapon("Slice", { "LAND", "BUILDING" })

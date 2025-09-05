@@ -15,6 +15,7 @@ end
 local CMD_MORPH = Spring.Utilities.CMD.MORPH
 
 -- probably isn't the ideal way to do this but I am very tired
+
 --- @type table<integer, string[]>
 local def_morph_list = {}
 --- @type table<integer, CommandDescription>
@@ -28,16 +29,23 @@ local morph_to_id = {}
 --- target: string}>
 local morph_metadata = {}
 
+Spring.Echo("Loading morphs")
+
 -- LOAD DEFS
 
 -- loop through units, if there are morph defs, add them to the list of the unit def,
 -- and add them to the command registry if need be
 
 for unit_def_id, unit_def in pairs(UnitDefs) do
-	local morphs = unit_def.customParams.morphs --[[@as MorphDef[]? ]]
+	local morphs = unit_def.customParams.morphs --[[@as string? ]]
+
 	if morphs then
+		Spring.Echo(unit_def.name .. " has morphs")
+
+		local morph_table = Deserialize(morphs)
 		local mlist = {}
-		for _, mdef in ipairs(morphs) do
+
+		for _, mdef in ipairs(morph_table) do
 			table.insert(mlist, mdef.morph_to)
 			-- if we don't have this already
 			if morph_to_id[mdef.morph_to] == nil then
@@ -67,15 +75,20 @@ end
 
 if handler:IsSyncedCode() then
 	--- @param unit_id integer
-	---@param unit_def_id integer
-	---@param team_id integer
-	---@param to_unit string
+	--- @param unit_def_id integer
+	--- @param team_id integer
+	--- @param to_unit string
 	local function begin_morph(unit_id, unit_def_id, team_id, to_unit)
 		Spring.Echo("Morphing")
-		-- TODO
-		-- Delete unit
-		-- Wait and construct
-		-- Spawn new unit
+
+		local x, y, z = Spring.GetUnitPosition(unit_id)
+		if x == nil then
+			return false
+		end
+
+		Spring.DestroyUnit(unit_id)
+		-- TODO: Wait and construct
+		Spring.CreateUnit(to_unit, x, y, z, "e", team_id)
 		return true
 	end
 
@@ -117,3 +130,5 @@ else
 		end
 	end
 end
+
+return gadget

@@ -1,8 +1,8 @@
 return function(icon, time, cost)
 	return {
 		name = "Buildable",
-		buildTime = time,
 		component = {
+			buildTime = time,
 			metalCost = cost,
 			buildPic = icon,
 			customParams = {
