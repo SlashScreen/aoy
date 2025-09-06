@@ -23,9 +23,12 @@ local postProcFile = "gamedata/unitdefs_post.lua"
 
 local DownloadBuilds = VFS.Include("gamedata/download_builds.lua")
 
-local system = VFS.Include("gamedata/system.lua")
+local system = VFS.Include("utils/system.lua")
 VFS.Include("gamedata/VFSUtils.lua") -- for legacy code that might need its contents
 local section = "unitdefs.lua"
+
+Spring.Echo(load and "YAY1!" or "NAY1!")
+Spring.Echo(system.load and "YAY2!" or "NAY2!")
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------

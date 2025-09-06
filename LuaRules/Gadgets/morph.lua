@@ -43,9 +43,7 @@ for unit_def_id, unit_def in pairs(UnitDefs) do
 	local morphs = unit_def.customParams.morphs --[[@as string? ]]
 
 	if morphs then
-		Spring.Echo(unit_def.name .. " has morphs")
-
-		local morph_table = Deserialize(morphs)
+		local morph_table = Script.Deserialize(morphs)
 		local mlist = {} -- list of morph targets for the unit
 
 		for _, mdef in ipairs(morph_table) do

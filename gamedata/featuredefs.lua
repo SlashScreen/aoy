@@ -18,7 +18,7 @@ local shared = {} -- shared amongst the lua featuredef environments
 local preProcFile = "gamedata/featuredefs_pre.lua"
 local postProcFile = "gamedata/featuredefs_post.lua"
 
-local system = VFS.Include("gamedata/system.lua")
+local system = VFS.Include("utils/system.lua")
 VFS.Include("gamedata/VFSUtils.lua") -- for legacy code that might need its contents
 local section = "featuredefs.lua"
 

@@ -18,7 +18,7 @@ local shared = {} -- shared amongst the lua explosiondef environments
 local preProcFile = "gamedata/explosions_pre.lua"
 local postProcFile = "gamedata/explosions_post.lua"
 
-local system = VFS.Include("gamedata/system.lua")
+local system = VFS.Include("utils/system.lua")
 VFS.Include("gamedata/VFSUtils.lua") -- for legacy code that might need its contents
 local section = "explosions.lua"
 

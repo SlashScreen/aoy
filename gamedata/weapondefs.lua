@@ -18,7 +18,7 @@ local shared = {} -- shared amongst the lua weapondef environments
 local preProcFile = "gamedata/weapondefs_pre.lua"
 local postProcFile = "gamedata/weapondefs_post.lua"
 
-local system = VFS.Include("gamedata/system.lua")
+local system = VFS.Include("utils/system.lua")
 VFS.Include("gamedata/VFSUtils.lua") -- for legacy code that might need its contents
 
 local section = "weapondefs.lua"

@@ -6,14 +6,12 @@
 --- @field wood integer
 --- @field research string?
 
-local cbor = VFS.Include("utils/cbor.lua")
-
 --- @param ... MorphDef
 --- @return UnitComponent
 return function(...)
 	-- This is a stupid way to do this
 	-- I am just directly serializing the table LOL
-	local morph_string = cbor.encode({ ... })
+	local morph_string = Script.Serialize({ ... })
 
 	return {
 		name = "Morph",

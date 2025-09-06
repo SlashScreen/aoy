@@ -12,20 +12,24 @@ Spring.Utilities.CMD = {
 	BUILD_UNIT_RANGE_UPPER = 70000,
 }
 
-SIM_TPS = 30 -- if there's an API thing in the future we will use it then
+Spring.Utilities.SIM_TPS = 30 -- if there's an API thing in the future we will use it then
 
-local cbor = VFS.Include("utils/cbor.lua")
+--local cbor = VFS.Include("utils/cbor.lua")
+local serde = VFS.Include("utils/binser.lua")
 
 Spring.Echo("Loading serde")
 
 --- @param tbl table
 --- @return string
-function Serialize(tbl)
-	return cbor.encode(tbl)
+function Script.Serialize(tbl)
+	--return cbor.encode(tbl)
+	return serde.serialize(tbl)
 end
 
 --- @param str string
 --- @return table
-function Deserialize(str)
-	return cbor.decode(str) --loadstring("return" .. str)() or {}
+function Script.Deserialize(str)
+	--return cbor.decode(str) --loadstring("return" .. str)() or {}
+	local res, _ = serde.deserialize(str)
+	return res[1] or {}
 end
