@@ -14,7 +14,7 @@ return ComposedUnit.New(
 		movementClass = [[KBOT2]],
 		noAutoFire = false,
 		-- allowNonBlockingAim = true,
-		objectName = [[spherebot.s3o]],
+		objectName = [[se/units/pyry.glb]],
 		script = [[scripts/basic_unit.lua]],
 
 		sightDistance = 560,

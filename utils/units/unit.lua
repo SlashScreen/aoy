@@ -18,6 +18,7 @@ local default = {
 	movementClass = [[KBOT2]],
 	noAutoFire = false,
 	objectName = [[spherebot.s3o]],
+	script = [[scripts/basic_unit.lua]],
 }
 local inspect = VFS.Include("utils/inspect.lua")
 
@@ -32,7 +33,7 @@ local function merge_tables(t1, t2)
 				t1[key] = value
 			end
 		else
-			t1[key] = value
+			t1[key] = t1[key] or value
 		end
 	end
 end
@@ -106,8 +107,6 @@ function Unit:Is(...)
 			end
 		end
 	end
-
-	--Spring.Echo("Generated unit: " .. inspect(self))
 
 	return self
 end
